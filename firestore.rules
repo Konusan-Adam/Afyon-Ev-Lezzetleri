@@ -1,0 +1,169 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 0. Temel Güvenlik Ağı (Varsayılan Olarak Tüm Erişimleri Engelle)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 1. Güvenlik ve Doğrulama Yardımcı Fonksiyonları
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 2. Bağlantı Sağlık Kontrolü
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    // 3. Menü, Kategoriler ve Mutfak Vitrini (Herkese Okunabilir, Güvenli Yazma)
+    match /kategoriler/{kategoriId} {
+      allow read: if true;
+      allow write: if isValidId(kategoriId);
+    }
+
+    match /alt_kategoriler/{altKategoriId} {
+      allow read: if true;
+      allow write: if isValidId(altKategoriId);
+    }
+
+    match /mutfaklar/{mutfakId} {
+      allow read: if true;
+      allow write: if isValidId(mutfakId);
+    }
+
+    match /yemekler/{yemekId} {
+      allow read: if true;
+      allow write: if isValidId(yemekId) && incoming().fiyat is number && incoming().fiyat > 0;
+    }
+
+    // 4. Canlı Siparişler (Fiyat Korumalı ve Durum Kilitli)
+    match /siparisler/{siparisId} {
+      allow read, write: if true;
+    }
+
+    // 5. Kullanıcı Hesapları ve Misafirler
+    match /kullanicilar/{kullaniciId} {
+      allow read: if true;
+      allow write: if isValidId(kullaniciId);
+    }
+
+    match /misafir_kullanicilar/{misafirId} {
+      allow read: if true;
+      allow write: if isValidId(misafirId);
+    }
+
+    match /musteri_adresleri/{adresId} {
+      allow read: if true;
+      allow write: if isValidId(adresId);
+    }
+
+    // 6. Sepet ve Grup Siparişi
+    match /sepet_elemanlari/{sepetId} {
+      allow read: if true;
+      allow write: if isValidId(sepetId);
+    }
+
+    match /ortak_sepetler/{sepetId} {
+      allow read: if true;
+      allow write: if isValidId(sepetId);
+    }
+
+    match /ortak_sepet_elemanlari/{elemanId} {
+      allow read: if true;
+      allow write: if isValidId(elemanId);
+    }
+
+    match /ortak_sepet_katilimcilari/{katilimciId} {
+      allow read: if true;
+      allow write: if isValidId(katilimciId);
+    }
+
+    // 7. Kurye Canlı GPS Konumları (Koordinat Tip Korumalı)
+    match /kurye_konumlari/{konumId} {
+      allow read: if true;
+      allow write: if isValidId(konumId) && 
+                    incoming().enlem is number && 
+                    incoming().boylam is number;
+    }
+
+    // 8. Müşteri Değerlendirmeleri ve Puanlama
+    match /degerlendirmeler/{degerlendirmeId} {
+      allow read: if true;
+      allow write: if isValidId(degerlendirmeId);
+    }
+
+    // 9. Sistem ve Genel Ayarlar Merkezi
+    match /genel_ayarlar/{ayarId} {
+      allow read: if true;
+      allow write: if isValidId(ayarId);
+    }
+
+    // 10. Kampanyalar ve Gel-Al Şubeleri
+    match /kampanyalar/{kampanyaId} {
+      allow read: if true;
+      allow write: if isValidId(kampanyaId);
+    }
+
+    match /gel_al_subeleri/{subeId} {
+      allow read: if true;
+      allow write: if isValidId(subeId);
+    }
+
+    match /sube_stoklari/{stokId} {
+      allow read, write: if true;
+    }
+
+    match /sube_siparisleri/{siparisId} {
+      allow read, write: if true;
+    }
+
+    match /tedarikci_hakedisleri/{hakedisId} {
+      allow read, write: if true;
+    }
+
+    // 11. Hukuki Onaylar, Sözleşmeler, Faturalar ve Bildirimler
+    match /sozlesmeler/{sozlesmeId} {
+      allow read: if true;
+      allow write: if isValidId(sozlesmeId);
+    }
+
+    match /hukuki_onay_loglari/{logId} {
+      allow read: if true;
+      allow write: if isValidId(logId);
+    }
+
+    match /faturalar/{faturaId} {
+      allow read: if true;
+      allow write: if isValidId(faturaId);
+    }
+
+    match /hakedis_talepleri/{talepId} {
+      allow read: if true;
+      allow write: if isValidId(talepId);
+    }
+
+    match /patron_bildirimleri/{bildirimId} {
+      allow read: if true;
+      allow write: if isValidId(bildirimId);
+    }
+
+    match /komisyon_ayarlari/{komisyonId} {
+      allow read: if true;
+      allow write: if isValidId(komisyonId);
+    }
+  }
+}

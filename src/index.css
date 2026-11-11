@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .anasayfa-genislik {
+    max-width: 1300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  h1, h2, h3, .font-serif-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+}
+
+html.acik-tema body {
+  background-color: #FAF4EB;
+  color: #2D1033;
+}
+
+html.koyu-tema body {
+  background-color: #180A1A;
+  color: #FFFFFF;
+}
+
+/* 🌞 AÇIK TEMA KÜRESEL UYARLAMASI */
+html.acik-tema main,
+html.acik-tema [class*="bg-[#1A0A1D]"],
+html.acik-tema [class*="bg-[#130713]"],
+html.acik-tema [class*="bg-[#180A1A]"],
+html.acik-tema [class*="bg-[#0C020E]"],
+html.acik-tema [class*="bg-[#0F0411]"],
+html.acik-tema [class*="bg-[#1D0A20]"] {
+  background-color: #FAF4EB !important;
+}
+
+html.acik-tema [class*="bg-[#240E2A]"],
+html.acik-tema [class*="bg-[#230C28]"],
+html.acik-tema [class*="bg-[#200A25]"],
+html.acik-tema [class*="bg-[#2B0E33]"],
+html.acik-tema [class*="bg-[#2A0E30]"] {
+  background-color: #FFFFFF !important;
+  border-color: #E8D8C8 !important;
+}
+
+html.acik-tema [class*="text-purple-200"],
+html.acik-tema [class*="text-purple-300"],
+html.acik-tema [class*="text-gray-400"] {
+  color: #644669 !important;
+}
+
+html.acik-tema [class*="border-purple-900"],
+html.acik-tema [class*="border-purple-950"],
+html.acik-tema [class*="border-[#3A1642]"],
+html.acik-tema [class*="border-[#3E1646]"] {
+  border-color: #E6D5C3 !important;
+}
+
+html.acik-tema h1:not([class*="text-amber"]),
+html.acik-tema h2:not([class*="text-amber"]),
+html.acik-tema h3:not([class*="text-amber"]),
+html.acik-tema h4:not([class*="text-amber"]) {
+  color: #260B2C !important;
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F3ECE2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4C3B3;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8B1E10;
+}

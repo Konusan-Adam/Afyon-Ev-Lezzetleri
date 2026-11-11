@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "Afyon Ev Lezzetleri",
+  "short_name": "Afyon Ev Lezzetleri",
+  "description": "Afyonkarahisar Ev Lezzetleri - Geleneksel Bükme, Mantı, Keşkek ve Tencere Yemekleri",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#120516",
+  "theme_color": "#1D0A20",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

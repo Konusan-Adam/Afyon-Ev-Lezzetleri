@@ -1,0 +1,370 @@
+{
+  "entities": {
+    "Kategori": {
+      "title": "Kategori",
+      "description": "Afyon Ev Lezzetleri yemek kategorisi",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "ad": { "type": "string", "maxLength": 100 },
+        "slug": { "type": "string", "maxLength": 100 },
+        "ikon": { "type": "string", "maxLength": 100 },
+        "aciklama": { "type": "string", "maxLength": 255 }
+      },
+      "required": ["id", "ad", "slug"]
+    },
+    "AltKategori": {
+      "title": "AltKategori",
+      "description": "Kategoriye bağlı alt lezzet kırılımı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "kategori_id": { "type": "string", "maxLength": 64 },
+        "ad": { "type": "string", "maxLength": 100 },
+        "slug": { "type": "string", "maxLength": 100 },
+        "sira": { "type": "number" },
+        "aktif": { "type": "boolean" }
+      },
+      "required": ["id", "kategori_id", "ad"]
+    },
+    "Mutfak": {
+      "title": "Mutfak",
+      "description": "Ev hanımı veya yerel lezzet mutfağı bilgileri",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "ad": { "type": "string", "maxLength": 120 },
+        "aciklama": { "type": "string", "maxLength": 500 },
+        "adres": { "type": "string", "maxLength": 250 },
+        "mahalle": { "type": "string", "maxLength": 100 },
+        "ilce": { "type": "string", "maxLength": 100 },
+        "puan": { "type": "number" },
+        "degerlendirme_sayisi": { "type": "number" },
+        "gorsel_url": { "type": "string", "maxLength": 1000 },
+        "acik_mi": { "type": "boolean" },
+        "onayli_mi": { "type": "boolean" },
+        "onay_durumu": { "type": "string", "maxLength": 50 },
+        "min_siparis_tutari": { "type": "number" },
+        "teslimat_ucreti": { "type": "number" }
+      },
+      "required": ["id", "ad", "puan"]
+    },
+    "Yemek": {
+      "title": "Yemek",
+      "description": "Mutfaklara ait geleneksel yemek veya tatlı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "mutfak_id": { "type": "string", "maxLength": 64 },
+        "baslik": { "type": "string", "maxLength": 150 },
+        "aciklama": { "type": "string", "maxLength": 1000 },
+        "fiyat": { "type": "number" },
+        "kategori": { "type": "string", "maxLength": 100 },
+        "gorsel_url": { "type": "string", "maxLength": 1000 },
+        "puan": { "type": "number" },
+        "stokta_var_mi": { "type": "boolean" },
+        "gunluk_stok": { "type": "number" },
+        "kalan_stok": { "type": "number" },
+        "birim": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "mutfak_id", "baslik", "fiyat", "kategori"]
+    },
+    "Siparis": {
+      "title": "Siparis",
+      "description": "Müşteri tarafından verilen sipariş kaydı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "siparisKodu": { "type": "string", "maxLength": 50 },
+        "siparis_kodu": { "type": "string", "maxLength": 50 },
+        "musteri_id": { "type": "string", "maxLength": 64 },
+        "musteri_adi": { "type": "string", "maxLength": 100 },
+        "musteri_telefon": { "type": "string", "maxLength": 30 },
+        "misafir_mi": { "type": "boolean" },
+        "teslimat_adresi_metni": { "type": "string", "maxLength": 500 },
+        "mutfak_id": { "type": "string", "maxLength": 64 },
+        "kurye_id": { "type": "string", "maxLength": 64 },
+        "durum": { "type": "string", "maxLength": 50 },
+        "durum_aciklamasi": { "type": "string", "maxLength": 200 },
+        "toplam_tutar": { "type": "number" },
+        "teslimat_ucreti": { "type": "number" },
+        "odeme_yontemi": { "type": "string", "maxLength": 50 },
+        "olusturma_tarihi": { "type": "string", "maxLength": 50 },
+        "tahmini_teslimat": { "type": "string", "maxLength": 50 },
+        "pinKodu": { "type": "string", "maxLength": 10 }
+      },
+      "required": ["id", "mutfak_id", "toplam_tutar", "durum"]
+    },
+    "Kullanici": {
+      "title": "Kullanici",
+      "description": "Sistem kullanıcısı, müşteri, aşçı veya kurye profili",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "ad_soyad": { "type": "string", "maxLength": 100 },
+        "telefon": { "type": "string", "maxLength": 30 },
+        "eposta": { "type": "string", "maxLength": 150 },
+        "rol": { "type": "string", "maxLength": 50 },
+        "isletme_adi": { "type": "string", "maxLength": 150 },
+        "sube_id": { "type": "string", "maxLength": 64 },
+        "ilce": { "type": "string", "maxLength": 100 },
+        "onayli_mi": { "type": "boolean" }
+      },
+      "required": ["ad_soyad", "rol"]
+    },
+    "KuryeKonum": {
+      "title": "KuryeKonum",
+      "description": "Kuryenin canlı anlık konumu ve teslimat takibi",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "siparis_id": { "type": "string", "maxLength": 64 },
+        "kurye_id": { "type": "string", "maxLength": 64 },
+        "kurye_adi": { "type": "string", "maxLength": 100 },
+        "kurye_telefon": { "type": "string", "maxLength": 30 },
+        "enlem": { "type": "number" },
+        "boylam": { "type": "number" },
+        "kalan_dakika": { "type": "number" },
+        "tamamlandi_mi": { "type": "boolean" }
+      },
+      "required": ["siparis_id", "enlem", "boylam"]
+    },
+    "Degerlendirme": {
+      "title": "Degerlendirme",
+      "description": "Mutfak veya yemek değerlendirmesi",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "siparis_id": { "type": "string", "maxLength": 64 },
+        "mutfak_id": { "type": "string", "maxLength": 64 },
+        "musteri_adi": { "type": "string", "maxLength": 100 },
+        "puan": { "type": "number" },
+        "yorum": { "type": "string", "maxLength": 500 },
+        "olusturma_tarihi": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["mutfak_id", "puan"]
+    },
+    "GenelAyar": {
+      "title": "GenelAyar",
+      "description": "Sistem genel operasyon, kurye ve lezzet danışmanı ayarları",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "varsayilan_teslimat_ucreti": { "type": "number" },
+        "ucretsiz_teslimat_limiti": { "type": "number" },
+        "hizmet_bedeli": { "type": "number" },
+        "guncelleme_tarihi": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id"]
+    },
+    "ReklamAyar": {
+      "title": "ReklamAyar",
+      "description": "Vitrin afiş ve reklam yapılandırmaları",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "guncelleme_tarihi": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id"]
+    },
+    "Kampanya": {
+      "title": "Kampanya",
+      "description": "Vitrin ve mobil kampanyaları",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "baslik": { "type": "string", "maxLength": 150 },
+        "aciklama": { "type": "string", "maxLength": 500 },
+        "rozet": { "type": "string", "maxLength": 50 },
+        "buton_metni": { "type": "string", "maxLength": 50 },
+        "hedef_tur": { "type": "string", "maxLength": 50 },
+        "gorsel": { "type": "string", "maxLength": 1000 },
+        "aktif": { "type": "boolean" },
+        "sira": { "type": "number" }
+      },
+      "required": ["id", "baslik"]
+    },
+    "GelAlSubesi": {
+      "title": "GelAlSubesi",
+      "description": "Gel-Al teslimat noktaları ve Şube Vitrini",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "ad": { "type": "string", "maxLength": 150 },
+        "adres": { "type": "string", "maxLength": 300 },
+        "telefon": { "type": "string", "maxLength": 30 },
+        "aktif": { "type": "boolean" },
+        "youtube_canli_yayin_linki": { "type": "string", "maxLength": 500 },
+        "canli_yayin_aktif_mi": { "type": "boolean" },
+        "gorsel": { "type": "string", "maxLength": 500 },
+        "aciklama": { "type": "string", "maxLength": 500 },
+        "acilis_saati": { "type": "string", "maxLength": 10 },
+        "kapanis_saati": { "type": "string", "maxLength": 10 },
+        "hijyen_puani": { "type": "number" },
+        "enlem": { "type": "number" },
+        "boylam": { "type": "number" }
+      },
+      "required": ["id", "ad", "adres"]
+    },
+    "SepetElemani": {
+      "title": "SepetElemani",
+      "description": "Müşteri sepetindeki ürün kaydı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "yemek_id": { "type": "string", "maxLength": 64 },
+        "adet": { "type": "number" },
+        "fiyat": { "type": "number" },
+        "musteri_id": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "yemek_id", "adet"]
+    },
+    "MusteriAdresi": {
+      "title": "MusteriAdresi",
+      "description": "Kullanıcı veya misafir kayıtlı teslimat adresi",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "kullanici_id": { "type": "string", "maxLength": 64 },
+        "baslik": { "type": "string", "maxLength": 100 },
+        "adres_metni": { "type": "string", "maxLength": 500 },
+        "mahalle": { "type": "string", "maxLength": 100 },
+        "ilce": { "type": "string", "maxLength": 100 },
+        "varsayilan_mi": { "type": "boolean" }
+      },
+      "required": ["id", "adres_metni"]
+    },
+    "SubeUrunu": {
+      "title": "SubeUrunu",
+      "description": "Şubede hazır bulunan taze stok ürünü",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "sube_id": { "type": "string", "maxLength": 64 },
+        "ad": { "type": "string", "maxLength": 150 },
+        "aciklama": { "type": "string", "maxLength": 500 },
+        "fiyat": { "type": "number" },
+        "stok_adedi": { "type": "number" },
+        "kategori": { "type": "string", "maxLength": 100 },
+        "gorsel_url": { "type": "string", "maxLength": 1000 },
+        "marka": { "type": "string", "maxLength": 100 },
+        "hazir_mi": { "type": "boolean" },
+        "gunluk_taze_mi": { "type": "boolean" },
+        "tedarikci_id": { "type": "string", "maxLength": 64 },
+        "tedarikci_adi": { "type": "string", "maxLength": 150 },
+        "alis_fiyati": { "type": "number" },
+        "gunluk_gelen_adet": { "type": "number" },
+        "satilan_adet": { "type": "number" }
+      },
+      "required": ["id", "sube_id", "ad", "fiyat", "stok_adedi"]
+    },
+    "SubeSiparisi": {
+      "title": "SubeSiparisi",
+      "description": "Gel-Al teslimat noktasına ve şubeye verilen tezgah sipariş kaydı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "siparis_kodu": { "type": "string", "maxLength": 50 },
+        "sube_id": { "type": "string", "maxLength": 64 },
+        "sube_adi": { "type": "string", "maxLength": 150 },
+        "musteri_id": { "type": "string", "maxLength": 64 },
+        "musteri_adi": { "type": "string", "maxLength": 100 },
+        "musteri_telefon": { "type": "string", "maxLength": 30 },
+        "durum": { "type": "string", "maxLength": 50 },
+        "toplam_tutar": { "type": "number" },
+        "odeme_yontemi": { "type": "string", "maxLength": 50 },
+        "pin_kodu": { "type": "string", "maxLength": 10 },
+        "tahmini_hazirlanma_dakika": { "type": "number" },
+        "olusturma_tarihi": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "sube_id", "toplam_tutar", "durum"]
+    },
+    "TedarikciHakedis": {
+      "title": "TedarikciHakedis",
+      "description": "Şubeye ürün sağlayan tedarikçinin veya ev mutfağının hakediş kaydı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "sube_id": { "type": "string", "maxLength": 64 },
+        "sube_adi": { "type": "string", "maxLength": 150 },
+        "tedarikci_id": { "type": "string", "maxLength": 64 },
+        "tedarikci_adi": { "type": "string", "maxLength": 150 },
+        "urun_id": { "type": "string", "maxLength": 64 },
+        "urun_adi": { "type": "string", "maxLength": 150 },
+        "teslim_adedi": { "type": "number" },
+        "satilan_adet": { "type": "number" },
+        "birim_alis_fiyati": { "type": "number" },
+        "toplam_hakedis": { "type": "number" },
+        "durum": { "type": "string", "maxLength": 50 },
+        "tarih": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "sube_id", "tedarikci_id", "toplam_hakedis", "durum"]
+    }
+  },
+  "firestore": {
+    "/kategoriler/{kategoriId}": {
+      "schema": "Kategori",
+      "description": "Uygulama yemek kategorileri"
+    },
+    "/alt_kategoriler/{altKategoriId}": {
+      "schema": "AltKategori",
+      "description": "Yemek alt kategorileri"
+    },
+    "/mutfaklar/{mutfakId}": {
+      "schema": "Mutfak",
+      "description": "Sistemde kayıtlı yerel ev mutfakları"
+    },
+    "/yemekler/{yemekId}": {
+      "schema": "Yemek",
+      "description": "Mutfaklara ait yemek ve lezzetler"
+    },
+    "/siparisler/{siparisId}": {
+      "schema": "Siparis",
+      "description": "Verilen siparişler"
+    },
+    "/kullanicilar/{kullaniciId}": {
+      "schema": "Kullanici",
+      "description": "Kullanıcı profilleri"
+    },
+    "/kurye_konumlari/{konumId}": {
+      "schema": "KuryeKonum",
+      "description": "Kurye canlı konum verileri"
+    },
+    "/degerlendirmeler/{degerlendirmeId}": {
+      "schema": "Degerlendirme",
+      "description": "Kullanıcı yorumları ve puanlamaları"
+    },
+    "/genel_ayarlar/{ayarId}": {
+      "schema": "GenelAyar",
+      "description": "Genel sistem ve teslimat ayarları"
+    },
+    "/kampanyalar/{kampanyaId}": {
+      "schema": "Kampanya",
+      "description": "Kampanya ve afiş listesi"
+    },
+    "/gel_al_subeleri/{subeId}": {
+      "schema": "GelAlSubesi",
+      "description": "Gel-Al şube ve teslim alma noktaları"
+    },
+    "/sepet_elemanlari/{sepetId}": {
+      "schema": "SepetElemani",
+      "description": "Sepet öğeleri"
+    },
+    "/musteri_adresleri/{adresId}": {
+      "schema": "MusteriAdresi",
+      "description": "Müşteri teslimat adresleri"
+    },
+    "/sube_stoklari/{stokId}": {
+      "schema": "SubeUrunu",
+      "description": "Şube bazlı anlık tezgah stokları"
+    },
+    "/sube_siparisleri/{siparisId}": {
+      "schema": "SubeSiparisi",
+      "description": "Ev mutfaklarından izole, şube bazlı anlık Gel-Al tezgah siparişleri"
+    },
+    "/tedarikci_hakedisleri/{hakedisId}": {
+      "schema": "TedarikciHakedis",
+      "description": "Şube tedarikçi hakedişleri ve patron onay havuzu"
+    }
+  }
+}

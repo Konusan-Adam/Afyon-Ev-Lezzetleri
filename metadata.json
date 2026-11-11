@@ -1,0 +1,8 @@
+{
+  "name": "Afyon Ev Lezzetleri",
+  "description": "Afyonkarahisar Ev Lezzetleri - Geleneksel Bükme, Mantı, Keşkek ve Ekmek Kadayıfı",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
