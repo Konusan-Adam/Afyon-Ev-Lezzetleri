@@ -2,6 +2,7 @@ import React from 'react';
 import { TemaSaglayici } from './OrtakHavuz/TemaHafizasi';
 import { AramaVeFiltreSaglayici } from './OrtakHavuz/AramaVeFiltreHafizasi';
 import { KullaniciSaglayici } from './OrtakHavuz/KullaniciHafizasi';
+import { FavoriSaglayici } from './OrtakHavuz/FavoriHafizasi';
 import { SepetSaglayici } from './OrtakHavuz/SepetHafizasi';
 import { OrtakSepetSaglayici } from './OrtakHavuz/OrtakSepetHafizasi';
 import { SepetSaglayici as OrtakHavuzSepetSaglayici } from './OrtakHavuz/SepetHavuzu';
@@ -17,21 +18,23 @@ export default function App() {
     <TemaSaglayici>
       <AramaVeFiltreSaglayici>
         <KullaniciSaglayici>
-          <OrtakHavuzSepetSaglayici>
-            <SepetSaglayici>
-              <TeslimatSaglayici>
-                <OrtakSepetSaglayici>
-                  <OzelOzelliklerSaglayici>
-                    <OnSiparisSaglayici>
-                      <OtomatikYedeklemeServisi />
-                      <OturumZamanlayicisiServisi />
-                      <AnaSayfaVitrini />
-                    </OnSiparisSaglayici>
-                  </OzelOzelliklerSaglayici>
-                </OrtakSepetSaglayici>
-              </TeslimatSaglayici>
-            </SepetSaglayici>
-          </OrtakHavuzSepetSaglayici>
+          <FavoriSaglayici>
+            <OrtakHavuzSepetSaglayici>
+              <SepetSaglayici>
+                <TeslimatSaglayici>
+                  <OrtakSepetSaglayici>
+                    <OzelOzelliklerSaglayici>
+                      <OnSiparisSaglayici>
+                        <OtomatikYedeklemeServisi />
+                        <OturumZamanlayicisiServisi />
+                        <AnaSayfaVitrini />
+                      </OnSiparisSaglayici>
+                    </OzelOzelliklerSaglayici>
+                  </OrtakSepetSaglayici>
+                </TeslimatSaglayici>
+              </SepetSaglayici>
+            </OrtakHavuzSepetSaglayici>
+          </FavoriSaglayici>
         </KullaniciSaglayici>
       </AramaVeFiltreSaglayici>
     </TemaSaglayici>

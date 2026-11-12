@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Bike, Store, Building2, ChefHat } from 'lucide-react';
+import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Bike, Store, Building2, ChefHat, Heart } from 'lucide-react';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
@@ -290,17 +290,37 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
                   </button>
                 </>
               ) : (
-                <button
-                  type="button"
-                  onClick={paneleGit}
-                  className="w-full py-3 px-4 rounded-2xl bg-[#6D237A] hover:bg-[#852C94] text-white font-bold text-xs flex items-center justify-between border border-[#9633A7] shadow-lg cursor-pointer transition-all"
-                >
-                  <span className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-emerald-300" />
-                    <span>Siparişlerim & Profilim</span>
-                  </span>
-                  <ArrowRight className="w-4 h-4 text-purple-300" />
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={paneleGit}
+                    className="w-full py-3 px-4 rounded-2xl bg-[#6D237A] hover:bg-[#852C94] text-white font-bold text-xs flex items-center justify-between border border-[#9633A7] shadow-lg cursor-pointer transition-all"
+                  >
+                    <span className="flex items-center gap-2">
+                      <UserCheck className="w-4 h-4 text-emerald-300" />
+                      <span>Siparişlerim & Profilim</span>
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-purple-300" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHesapMenusuAcik(false);
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
+                      }
+                      panelDegistir('musteri');
+                    }}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-[#2A0E32] hover:bg-[#3D1448] text-white font-bold text-xs flex items-center justify-between border border-purple-800/60 shadow-md cursor-pointer transition-all"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                      <span>Favori Lezzetlerim</span>
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-purple-300" />
+                  </button>
+                </>
               )}
 
               <button

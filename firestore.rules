@@ -71,6 +71,10 @@ service cloud.firestore {
       allow write: if isValidId(adresId);
     }
 
+    match /musteri_favorileri/{favoriId} {
+      allow read, write: if true;
+    }
+
     // 6. Sepet ve Grup Siparişi
     match /sepet_elemanlari/{sepetId} {
       allow read: if true;

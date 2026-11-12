@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, ShieldCheck, UserCircle, ChefHat, Bike, ChevronDown, Store } from 'lucide-react';
+import { User, LogOut, ShieldCheck, UserCircle, ChefHat, Bike, ChevronDown, Store, Heart } from 'lucide-react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
+import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 import { aktifMisafirSiparisSayisiGetir } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 
@@ -10,6 +11,7 @@ interface UstBarProfilMenusuProps {
 
 export const UstBarProfilMenusu: React.FC<UstBarProfilMenusuProps> = ({ tema = 'koyu' }) => {
   const { aktifKullanici, pencereAc, panelDegistir, cikisYap } = kullaniciHafizasiKullan();
+  const { toplamFavoriSayisi } = favoriHafizasiKullan();
   const [acik, setAcik] = useState(false);
   const [aktifSiparisSayisi, setAktifSiparisSayisi] = useState<number>(aktifMisafirSiparisSayisiGetir());
   const ref = useRef<HTMLDivElement>(null);
@@ -43,6 +45,26 @@ export const UstBarProfilMenusu: React.FC<UstBarProfilMenusuProps> = ({ tema = '
   if (!aktifKullanici) {
     return (
       <div className="flex items-center gap-2">
+        {toplamFavoriSayisi > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
+              }
+              panelDegistir('musteri');
+            }}
+            className={`h-10 px-3 rounded-xl border flex items-center gap-1.5 shadow-xs transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
+              acikMi
+                ? 'bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-800'
+                : 'bg-rose-950/40 hover:bg-rose-900/60 border-rose-800/50 text-rose-300'
+            }`}
+            title="Favorilerim"
+          >
+            <Heart className="w-4 h-4 text-rose-400 fill-rose-500" />
+            <span className="text-xs font-bold">{toplamFavoriSayisi}</span>
+          </button>
+        )}
         {aktifSiparisSayisi > 0 && (
           <button
             type="button"
@@ -142,19 +164,45 @@ export const UstBarProfilMenusu: React.FC<UstBarProfilMenusuProps> = ({ tema = '
               </button>
             </>
           ) : (
-            <button
-              type="button"
-              onClick={() => {
-                panelDegistir('musteri');
-                setAcik(false);
-              }}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
-                acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
-              }`}
-            >
-              <UserCircle className="w-4 h-4 text-blue-400" />
-              <span>Siparişlerim & Profilim</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  panelDegistir('musteri');
+                  setAcik(false);
+                }}
+                className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+                  acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
+                }`}
+              >
+                <UserCircle className="w-4 h-4 text-blue-400" />
+                <span>Siparişlerim & Profilim</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
+                  }
+                  panelDegistir('musteri');
+                  setAcik(false);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+                  acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                  <span>Favorilerim</span>
+                </div>
+                {toplamFavoriSayisi > 0 && (
+                  <span className="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-rose-500/30">
+                    {toplamFavoriSayisi}
+                  </span>
+                )}
+              </button>
+            </>
           )}
 
           <div className={`pt-1 border-t ${acikMi ? 'border-amber-200' : 'border-purple-900/40'}`}>

@@ -13,4 +13,6 @@ export * from './TemaHafizasi';
 export * from './TeslimatHafizasi';
 export * from './SepetTipleri';
 export * from './KullaniciTipleri';
+export * from './FavoriTipleri';
+export * from './FavoriHafizasi';
 export { type MutfakSepetGrubu } from '@/src/MalzemeCekmeceleri/Sepet/sepetGruplayici';

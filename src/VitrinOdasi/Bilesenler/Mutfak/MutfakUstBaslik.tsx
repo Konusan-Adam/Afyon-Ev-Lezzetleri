@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Star, Clock, Bike, ShieldCheck, Heart, Share2, ShoppingBag, Check } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
-import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
+import { sepetHafizasiKullan, favoriHafizasiKullan } from '@/src/OrtakHavuz';
 import { useMutfakTeslimatAyari } from '@/src/MalzemeCekmeceleri/useMutfakTeslimatAyari';
 
 interface MutfakUstBaslikOzellikleri {
@@ -14,8 +14,9 @@ export const MutfakUstBaslik: React.FC<MutfakUstBaslikOzellikleri> = ({
   geriDonTiklandi
 }) => {
   const { toplamUrunSayisi, sepetPaneliAc } = sepetHafizasiKullan();
+  const { mutfakFavoriMi, mutfakFavoriDegistir } = favoriHafizasiKullan();
   const { ayar } = useMutfakTeslimatAyari(mutfak.id);
-  const [favoride, setFavoride] = useState<boolean>(false);
+  const favoride = mutfakFavoriMi(mutfak.id);
   const [kopyalandi, setKopyalandi] = useState<boolean>(false);
 
   const paylasTiklandi = async () => {
@@ -78,7 +79,7 @@ export const MutfakUstBaslik: React.FC<MutfakUstBaslikOzellikleri> = ({
             {/* Favori Butonu */}
             <button
               type="button"
-              onClick={() => setFavoride(!favoride)}
+              onClick={() => mutfakFavoriDegistir(mutfak.id)}
               className={`w-9 h-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center transition-colors cursor-pointer border border-white/20 shadow-md active:scale-95 ${
                 favoride ? 'text-rose-500 fill-rose-500' : 'text-white/90 hover:text-rose-400'
               }`}

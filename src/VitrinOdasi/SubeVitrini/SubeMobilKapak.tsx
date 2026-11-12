@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Info, Share2, Heart, Check, Sparkles, MapPin, CheckCircle2, ShoppingBag, Radio } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
+import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 
 interface SubeMobilKapakProps {
   sube: GelAlSubesi;
@@ -16,7 +17,8 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
   geriDonTiklandi,
   onCanliYayinAc,
 }) => {
-  const [favoride, setFavoride] = useState(false);
+  const { subeFavoriMi, subeFavoriDegistir } = favoriHafizasiKullan();
+  const favoride = subeFavoriMi(sube.id || sube.kimlik || '');
   const [kopyalandi, setKopyalandi] = useState(false);
   const { toplamUrunSayisi, sepetPaneliAc } = sepetHafizasiKullan();
 
@@ -85,11 +87,11 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setFavoride(!favoride)}
+              onClick={() => subeFavoriDegistir(sube.id || sube.kimlik || '')}
               className={`w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 hover:bg-black/80 cursor-pointer active:scale-95 shadow-xl transition-all ${
                 favoride ? 'text-rose-500 fill-rose-500' : 'text-white'
               }`}
-              title="Favorilere Ekle"
+              title={favoride ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
             >
               <Heart className={`w-5 h-5 ${favoride ? 'fill-rose-500 text-rose-500' : ''}`} />
             </button>
@@ -168,11 +170,11 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setFavoride(!favoride)}
+                onClick={() => subeFavoriDegistir(sube.id || sube.kimlik || '')}
                 className={`w-9 h-9 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 hover:bg-black/80 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-lg ${
                   favoride ? 'text-rose-500 fill-rose-500' : 'text-white'
                 }`}
-                title="Favorilere Ekle"
+                title={favoride ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
               >
                 <Heart className={`w-4 h-4 ${favoride ? 'fill-rose-500 text-rose-500' : ''}`} />
               </button>

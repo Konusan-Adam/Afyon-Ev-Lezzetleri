@@ -80,8 +80,28 @@ export const AnaSayfaVitrini: React.FC = () => {
         }
       }
     };
+
+    const mutfakHandler = async (event: Event) => {
+      const e = event as CustomEvent<{ mutfakId?: string }>;
+      const hedefId = e.detail?.mutfakId;
+      if (hedefId) {
+        if (goruntulenenPanel !== 'vitrin') {
+          panelDegistir('vitrin');
+        }
+        setSeciliSube(null);
+        await mutfakAcById(hedefId);
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    };
+
     window.addEventListener('afyon_sube_vitrini_ac', handler);
-    return () => window.removeEventListener('afyon_sube_vitrini_ac', handler);
+    window.addEventListener('afyon_mutfak_vitrini_ac', mutfakHandler);
+    return () => {
+      window.removeEventListener('afyon_sube_vitrini_ac', handler);
+      window.removeEventListener('afyon_mutfak_vitrini_ac', mutfakHandler);
+    };
   }, [gelAlSubeleri, goruntulenenPanel, panelDegistir]);
 
   // Mutfak kimliğine göre mutfak nesnesini bulup vitrinini açar

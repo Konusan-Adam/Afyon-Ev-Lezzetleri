@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Star, Clock, Bike, ShieldCheck, Heart, Share2, Check } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
+import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 
 export const MasaustuMutfakBasligi: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => {
-  const [favoride, setFavoride] = useState(false);
+  const { mutfakFavoriMi, mutfakFavoriDegistir } = favoriHafizasiKullan();
+  const favoride = mutfakFavoriMi(mutfak.id);
   const [kopyalandi, setKopyalandi] = useState(false);
   const { ayarlar } = useKuryeAyarlari();
 
@@ -73,11 +75,11 @@ export const MasaustuMutfakBasligi: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) 
 
           <button
             type="button"
-            onClick={() => setFavoride(!favoride)}
+            onClick={() => mutfakFavoriDegistir(mutfak.id)}
             className={`w-9 h-9 rounded-xl bg-black/60 backdrop-blur-md border border-white/20 hover:bg-black/80 flex items-center justify-center transition-all cursor-pointer active:scale-95 shadow-lg ${
               favoride ? 'text-rose-500 fill-rose-500' : 'text-white'
             }`}
-            title="Favorilere Ekle"
+            title={favoride ? 'Favorilerden Çıkar' : 'Favorilere Ekle'}
           >
             <Heart className={`w-4 h-4 ${favoride ? 'fill-rose-500 text-rose-500' : ''}`} />
           </button>

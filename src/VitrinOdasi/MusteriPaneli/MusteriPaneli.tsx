@@ -12,10 +12,12 @@ import {
   Ban,
   Bike,
   QrCode,
-  RefreshCw
+  RefreshCw,
+  Heart
 } from 'lucide-react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
+import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 import { mutfaklariGetir } from '@/src/MalzemeCekmeceleri/Mutfak/mutfaklariGetir';
 import { useMusteriSiparisleri } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { DegerlendirmePenceresi } from '../Bilesenler/Degerlendirme/DegerlendirmePenceresi';
@@ -26,12 +28,23 @@ import { CanliSiparisTakipModali } from '../Bilesenler/CanliTakip/CanliSiparisTa
 import { MusteriQrKoduModali } from '../Bilesenler/QrTeslimat/MusteriQrKoduModali';
 import { veritabanindanAdresleriGetir } from '@/src/MalzemeCekmeceleri/AdresVeKonum/adresIslemleri';
 import { MusteriAdresi } from '@/src/veritabani/VeriTipleri';
+import { FavorilerimSekmesi } from './FavorilerimSekmesi';
 
 export const MusteriPaneli: React.FC = () => {
   const { aktifKullanici, panelDegistir, cikisYap } = kullaniciHafizasiKullan();
   const { mutfaklar } = mutfaklariGetir();
   const { sepeteEkle, sepetPaneliAc } = sepetHafizasiKullan();
-  const [aktifSekme, setAktifSekme] = useState<'siparisler' | 'adresler'>('siparisler');
+  const { toplamFavoriSayisi } = favoriHafizasiKullan();
+  const [aktifSekme, setAktifSekme] = useState<'siparisler' | 'adresler' | 'favoriler'>(() => {
+    if (typeof window !== 'undefined') {
+      const kayitli = localStorage.getItem('afyon_musteri_paneli_sekme');
+      if (kayitli === 'favoriler' || kayitli === 'adresler') {
+        localStorage.removeItem('afyon_musteri_paneli_sekme');
+        return kayitli;
+      }
+    }
+    return 'siparisler';
+  });
   const [iptalEdilecekSiparis, setIptalEdilecekSiparis] = useState<{ id: string; kodu: string } | null>(null);
   const [takipEdilecekSiparisKodu, setTakipEdilecekSiparisKodu] = useState<string | null>(null);
   const [qrGosterilecekSiparisKodu, setQrGosterilecekSiparisKodu] = useState<string | null>(null);
@@ -150,6 +163,19 @@ export const MusteriPaneli: React.FC = () => {
           >
             <MapPin className="w-4 h-4 text-amber-400" />
             <span>Kayıtlı Adreslerim</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setAktifSekme('favoriler')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap ${
+              aktifSekme === 'favoriler'
+                ? 'bg-[#6D237A] text-white shadow-md'
+                : 'bg-[#180A1F] text-gray-400 hover:text-white border border-[#3E1646]'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${toplamFavoriSayisi > 0 ? 'text-rose-400 fill-rose-500' : 'text-amber-400'}`} />
+            <span>Favorilerim ({toplamFavoriSayisi})</span>
           </button>
         </div>
 
@@ -360,6 +386,9 @@ export const MusteriPaneli: React.FC = () => {
             )}
           </div>
         )}
+
+        {/* Sekme 3: Favorilerim */}
+        {aktifSekme === 'favoriler' && <FavorilerimSekmesi />}
 
       </main>
 
