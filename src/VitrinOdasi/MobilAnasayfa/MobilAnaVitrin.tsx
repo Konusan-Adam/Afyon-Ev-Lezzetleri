@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MobilAdresBari } from './MobilAdresBari';
 import { MobilAramaBari } from './MobilAramaBari';
 import { MobilKampanyaSlider } from './MobilKampanyaSlider';
@@ -6,7 +6,6 @@ import { MobilKategoriler } from './MobilKategoriler';
 import { MobilMutfaklarVitirini } from './MobilMutfaklarVitirini';
 import { MobilPopulerYemekler } from './MobilPopulerYemekler';
 import { MobilTumMutfaklarListesi } from './MobilTumMutfaklarListesi';
-import { MutfakDetayVitrini } from '../Bilesenler/Mutfak/MutfakDetayVitrini';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { temaHafizasiKullan } from '@/src/OrtakHavuz/TemaHafizasi';
 import { useKampanyalar } from '@/src/MalzemeCekmeceleri/KampanyaCekmecesi';
@@ -19,7 +18,6 @@ import { Mutfak, Yemek, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 
 interface MobilAnaVitrinProps {
   anasayfayaGitTiklandi?: () => void;
-  seciliMutfak?: Mutfak | null;
   mutfakSecildi?: (mutfak: Mutfak | null) => void;
   yemekSecildi?: (yemek: Yemek) => void;
   subeSecildi?: (sube: GelAlSubesi) => void;
@@ -27,28 +25,13 @@ interface MobilAnaVitrinProps {
 
 export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({ 
   anasayfayaGitTiklandi,
-  seciliMutfak: disSeciliMutfak,
   mutfakSecildi: disMutfakSecildi,
   yemekSecildi,
   subeSecildi,
 }) => {
-  const [icSeciliMutfak, setIcSeciliMutfak] = useState<Mutfak | null>(null);
-
-  // Dışarıdan veya içeriden kontrol edilen mutfak durumu
-  const aktifSeciliMutfak = disSeciliMutfak !== undefined ? disSeciliMutfak : icSeciliMutfak;
-
   const mutfakDegistir = (mutfak: Mutfak | null) => {
     if (disMutfakSecildi) {
       disMutfakSecildi(mutfak);
-    } else {
-      setIcSeciliMutfak(mutfak);
-    }
-  };
-
-  const mutfaktanGeriDon = () => {
-    mutfakDegistir(null);
-    if (anasayfayaGitTiklandi) {
-      anasayfayaGitTiklandi();
     }
   };
   const { 
@@ -83,15 +66,6 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
         ? `${seciliAdres.adres_basligi} (${seciliAdres.ilce || 'Afyon'}) • ${seciliAdres.mahalle}` 
         : undefined);
 
-  // Bir mutfak seçildiyse doğrudan onun özel dükkan vitrinini göster
-  if (aktifSeciliMutfak) {
-    return (
-      <MutfakDetayVitrini 
-        mutfak={aktifSeciliMutfak} 
-        geriDonTiklandi={mutfaktanGeriDon} 
-      />
-    );
-  }
 
   return (
     <div

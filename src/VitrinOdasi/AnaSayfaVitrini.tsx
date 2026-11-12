@@ -31,6 +31,7 @@ import { LezzetDanismaniVitrini } from './Bilesenler/YapayZekaDanismani/LezzetDa
 import { MutfaklarModali } from './Bilesenler/MutfaklarModali';
 import { SubelerModali } from './Bilesenler/SubelerModali';
 import { SubeDetayVitrini } from './SubeVitrini/SubeDetayVitrini';
+import { MutfakDetayVitrini } from './Bilesenler/Mutfak/MutfakDetayVitrini';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { useSubeUrunleri } from '@/src/MalzemeCekmeceleri/Sube/useSubeUrunleri';
@@ -172,6 +173,73 @@ export const AnaSayfaVitrini: React.FC = () => {
     );
   }
 
+  // Mutfak seçildiyse doğrudan MutfakDetayVitrini sayfasına git (Header'sız, ferah vitrin)
+  if (seciliMutfak) {
+    return (
+      <div className="w-full min-h-screen bg-[#1A0A1D]">
+        <MutfakDetayVitrini
+          mutfak={seciliMutfak}
+          geriDonTiklandi={() => setSeciliMutfak(null)}
+        />
+
+        {/* Mobil Alt Gezinti Menüsü */}
+        <MobilAltMenu
+          anasayfayaDon={anasayfayaDonusYap}
+          subelerTiklandi={() => {
+            setSeciliMutfak(null);
+            setSubelerModaliAcik(true);
+          }}
+          mutfaklarTiklandi={() => {
+            setSeciliMutfak(null);
+            setMutfaklarModaliAcik(true);
+          }}
+          aktifSekme="mutfaklar"
+        />
+
+        {/* Sepet ve Pencereler */}
+        <YuzenSepetBari />
+        <CokluSepetVitrini />
+        <OrtakSepetPenceresi />
+        <KullaniciGirisPenceresi />
+
+        {/* Mutfaklar ve Şubeler Modalı */}
+        <MutfaklarModali
+          acikMi={mutfaklarModaliAcik}
+          onKapat={() => setMutfaklarModaliAcik(false)}
+          onMutfakSec={(m) => mutfakSecildiIslemi(m)}
+        />
+        <SubelerModali
+          acikMi={subelerModaliAcik}
+          onKapat={() => setSubelerModaliAcik(false)}
+          onSubeSec={(s) => {
+            setSeciliMutfak(null);
+            setSeciliSube(s);
+            setSubelerModaliAcik(false);
+          }}
+        />
+
+        {/* Yemek Detay & Kişiselleştirme Modalı */}
+        {seciliYemekModal && (
+          <UrunOzellestirmePenceresi
+            yemek={seciliYemekModal}
+            onKapat={() => setSeciliYemekModal(null)}
+            mutfakVitriniAc={mutfakAcById}
+            onSepeteEkle={async (konfig) => {
+              await sepeteEkle(
+                seciliYemekModal.mutfak_id || '',
+                seciliYemekModal.id,
+                konfig.adet,
+                konfig.birim_fiyat
+              );
+              porsiyonDusur(seciliYemekModal.id, konfig.adet);
+              setSeciliYemekModal(null);
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <main className="w-full min-h-screen">
       {/* 🚀 En Üst İnce Reklam & Duyuru Şeridi */}
@@ -194,7 +262,6 @@ export const AnaSayfaVitrini: React.FC = () => {
       {/* Mobil ve Tablet İçin Ana Vitrin */}
       <MobilAnaVitrin 
         anasayfayaGitTiklandi={anasayfayaDonusYap} 
-        seciliMutfak={seciliMutfak}
         mutfakSecildi={mutfakSecildiIslemi}
         yemekSecildi={yemekSecildiIslemi}
         subeSecildi={(sube) => setSeciliSube(sube)}

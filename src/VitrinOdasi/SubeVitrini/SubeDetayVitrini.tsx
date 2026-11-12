@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GelAlSubesi, SubeUrunu } from '@/src/veritabani/SubeTipleri';
 import { useSubeUrunleri } from '@/src/MalzemeCekmeceleri/Sube/useSubeUrunleri';
 import { SubeMobilKapak } from './SubeMobilKapak';
+import { SubeYolHaritasi } from './SubeYolHaritasi';
 import { SubeUrunKarti } from './SubeUrunKarti';
 import { SubeSabitSepet } from './SubeSabitSepet';
 import { SubeUrunDetayModali } from './SubeUrunDetayModali';
@@ -11,6 +12,7 @@ import { SubeCanliYayinModali } from './SubeCanliYayinModali';
 import { MobilAltMenu } from '../MobilAnasayfa/MobilAltMenu';
 import { CokluSepetVitrini } from '../Bilesenler/Sepet/CokluSepetVitrini';
 import { YuzenSepetBari } from '../Bilesenler/Sepet/YuzenSepetBari';
+import { KullaniciGirisPenceresi } from '../KullaniciGiris/KullaniciGirisPenceresi';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 
 interface SubeDetayVitriniProps {
@@ -66,6 +68,11 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
         </div>
       )}
 
+      {/* 1. Masaüstü Yol Haritası (Mutfak Vitrini ile Birebir Aynı Tasarım Dili) */}
+      <div className="hidden lg:block">
+        <SubeYolHaritasi sube={sube} geriDonTiklandi={geriDonTiklandi} />
+      </div>
+
       {/* Şube Kapak Alanı */}
       <SubeMobilKapak
         sube={sube}
@@ -75,7 +82,7 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
       />
 
       {/* Şube Detay İçerik Alanı: Sol Kolon Ürünler (%70) + Sağ Kolon Kayan Sabit Sepet (%30) */}
-      <div className="anasayfa-genislik max-w-6xl mx-auto px-4 py-6">
+      <div className="anasayfa-genislik max-w-6xl mx-auto px-4 pt-3 sm:pt-4 pb-6">
         <div className="grid grid-cols-12 gap-6 items-start">
           
           {/* Sol Kolon: Canlı Arama + Kategoriler & Ürünler + En Altta Yorumlar */}
@@ -153,6 +160,9 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
           onKapat={() => setCanliYayinAcik(false)}
         />
       )}
+
+      {/* Kullanıcı Giriş Penceresi */}
+      <KullaniciGirisPenceresi />
     </div>
   );
 };

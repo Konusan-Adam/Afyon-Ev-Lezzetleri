@@ -41,17 +41,18 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
 
   return (
     <header className="relative w-full">
-      {/* Kapak Görseli */}
-      <div className="relative h-56 sm:h-64 lg:h-72 w-full bg-[#2A0F33] overflow-visible">
+      {/* Kapak Görseli ve Üzerine Oturtulmuş Bilgi Katmanı */}
+      <div className="relative min-h-[220px] sm:min-h-[250px] lg:min-h-[270px] w-full bg-[#2A0F33] overflow-hidden flex flex-col justify-between">
         <img 
           src={gorselUrl} 
           alt={sube.ad} 
-          className="w-full h-full object-cover" 
+          className="absolute inset-0 w-full h-full object-cover" 
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 to-[#120415]" />
+        {/* Karartma gradyanı: üstte butonlar için yumuşak gölge, altta yazılar için koyu zemin */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#14061A]" />
 
-        {/* Üst Butonlar Barı */}
-        <div className="absolute top-4 inset-x-4 sm:inset-x-6 flex items-center justify-between z-20">
+        {/* 1. Üst Butonlar Barı */}
+        <div className="relative z-20 pt-4 px-4 sm:px-6 flex items-center justify-between">
           <button
             type="button"
             onClick={geriDonTiklandi}
@@ -97,49 +98,40 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
           </div>
         </div>
 
-        {/* Ortalanmış Resmi Marka Logomuz (Şube logosu yok, hepsi resmi logomuz) */}
-        <div className="absolute -bottom-10 sm:-bottom-12 left-1/2 -translate-x-1/2 z-20">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white p-1 ring-4 ring-[#CFA353] shadow-2xl overflow-hidden flex items-center justify-center">
-            <img
-              src="/marka_logosu.jpg"
-              alt="Afyon Ev Lezzetleri"
-              className="w-full h-full object-cover rounded-xl"
-            />
+        {/* 2. Tepeye / Görsele Dayalı Şube Başlığı, Rozetler & Canlı İzle */}
+        <div className="relative z-20 pb-4 pt-2 px-4 sm:px-6 text-center space-y-2">
+          <h1 className="text-white text-xl sm:text-2xl font-black tracking-tight drop-shadow-md">
+            {sube.ad}
+          </h1>
+          
+          <div className="flex items-center justify-center gap-2 flex-wrap text-xs">
+            <span className="inline-flex items-center gap-1 bg-[#2C0E35]/90 backdrop-blur-sm text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full font-bold shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Resmi Şube & Tezgah</span>
+            </span>
+            <span className="inline-flex items-center gap-1 bg-emerald-950/90 backdrop-blur-sm text-emerald-300 border border-emerald-500/50 px-3 py-1 rounded-full font-bold shadow-sm">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{urunSayisi} Taze Ürün Hazır</span>
+            </span>
           </div>
-        </div>
-      </div>
 
-      {/* Şube Başlığı & Rozetler */}
-      <div className="pt-12 sm:pt-14 pb-4 px-4 text-center space-y-2">
-        <h1 className="text-white text-xl font-black tracking-tight">{sube.ad}</h1>
-        
-        <div className="flex items-center justify-center gap-2 flex-wrap text-xs">
-          <span className="inline-flex items-center gap-1 bg-[#2C0E35] text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full font-bold shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Resmi Şube & Tezgah</span>
-          </span>
-          <span className="inline-flex items-center gap-1 bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 px-3 py-1 rounded-full font-bold shadow-sm">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{urunSayisi} Taze Ürün Hazır</span>
-          </span>
-        </div>
+          <p className="text-xs text-purple-200/90 flex items-center justify-center gap-1 drop-shadow-sm">
+            <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate max-w-sm">{sube.adres}</span>
+          </p>
 
-        <p className="text-xs text-purple-200/80 flex items-center justify-center gap-1 pt-1">
-          <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="truncate max-w-xs">{sube.adres}</span>
-        </p>
-
-        {/* 🎥 Şubeyi Canlı İzle Butonu */}
-        <div className="pt-2 flex justify-center">
-          <button
-            type="button"
-            onClick={onCanliYayinAc}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-600 via-rose-700 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-900/50 border border-rose-400/50 transition-all cursor-pointer active:scale-95 group"
-          >
-            <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-            <Radio className="w-3.5 h-3.5 text-white" />
-            <span>Şubeyi Canlı İzle (Şeffaf Mutfak)</span>
-          </button>
+          {/* 🎥 Şubeyi Canlı İzle Butonu */}
+          <div className="pt-1 flex justify-center">
+            <button
+              type="button"
+              onClick={onCanliYayinAc}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 via-rose-700 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-900/60 border border-rose-400/50 transition-all cursor-pointer active:scale-95 group"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <Radio className="w-3.5 h-3.5 text-white" />
+              <span>Şubeyi Canlı İzle (Şeffaf Mutfak)</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>

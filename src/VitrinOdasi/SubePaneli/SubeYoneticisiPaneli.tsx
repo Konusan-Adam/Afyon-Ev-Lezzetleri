@@ -106,7 +106,15 @@ export const SubeYoneticisiPaneli: React.FC = () => {
 
       <main className="flex-1 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4 sm:space-y-6">
         {aktifSube && (
-          <SubeBilgiKarti sube={aktifSube} onCanliYayinToggle={canliYayinToggle} />
+          <SubeBilgiKarti 
+            sube={aktifSube} 
+            onCanliYayinToggle={canliYayinToggle} 
+            onKapakGuncelle={async (yeniUrl) => {
+              if (aktifSube.id) {
+                await subeGuncelle(aktifSube.id, { gorsel: yeniUrl });
+              }
+            }}
+          />
         )}
 
         {/* Sekme Seçici - Mobilde 3 eşit sütun, masaüstünde esnek */}
