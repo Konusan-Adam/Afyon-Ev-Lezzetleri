@@ -82,7 +82,7 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
       />
 
       {/* Şube Detay İçerik Alanı: Sol Kolon Ürünler (%70) + Sağ Kolon Kayan Sabit Sepet (%30) */}
-      <div className="anasayfa-genislik max-w-6xl mx-auto px-4 pt-3 sm:pt-4 pb-6">
+      <div className="anasayfa-genislik px-4 pb-6">
         <div className="grid grid-cols-12 gap-6 items-start">
           
           {/* Sol Kolon: Canlı Arama + Kategoriler & Ürünler + En Altta Yorumlar */}

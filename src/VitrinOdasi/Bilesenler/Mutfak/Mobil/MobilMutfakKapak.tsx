@@ -36,7 +36,7 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
   return (
     <header className="relative w-full">
       {/* Kapak Görseli ve Zeminine Dayalı Bilgi Katmanı */}
-      <div className="relative min-h-[195px] sm:min-h-[220px] w-full bg-[#2A0F33] overflow-hidden">
+      <div className="relative min-h-[240px] sm:min-h-[260px] w-full bg-[#2A0F33] overflow-hidden">
         {mutfak.gorsel_url ? (
           <img src={mutfak.gorsel_url} alt={mutfak.ad} className="w-full h-full object-cover" />
         ) : (
@@ -85,8 +85,8 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
           </div>
         </div>
 
-        {/* 2. Kapak Zeminine Oturtulan Mutfak Başlığı & Rozetler */}
-        <div className="absolute inset-x-0 bottom-2 z-20 px-4 text-center space-y-1">
+        {/* 2. Kapak Zeminine Oturtulan Mutfak Başlığı & Rozetler (Yukarıya Alınmış ve Ferah) */}
+        <div className="absolute inset-x-0 bottom-9 sm:bottom-10 z-20 px-4 text-center space-y-1.5">
           <h1 className="text-white text-xl sm:text-2xl font-black tracking-tight drop-shadow-md">
             {mutfak.ad}
           </h1>
