@@ -1,5 +1,5 @@
 import React from 'react';
-import { Store, MessageCircle, Bike, QrCode, Ban, CheckCircle2, Star } from 'lucide-react';
+import { Store, MessageCircle, Bike, QrCode, Ban, CheckCircle2, Star, ShieldCheck } from 'lucide-react';
 import { TestSiparis } from '@/src/veritabani/CanliVeriYardimcisi';
 import { MutfakTipi } from '@/src/veritabani/VeriTipleri';
 import { siparisDegerlendirildiMi } from '@/src/MalzemeCekmeceleri/Degerlendirme/degerlendirmeDeposu';
@@ -48,13 +48,24 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
 
   return (
     <div className="p-4 rounded-2xl bg-[#1C0922] border border-amber-500/40 shadow-lg space-y-3">
-      <div className="flex items-center justify-between pb-3 border-b border-purple-900/40">
+      <div className="flex items-center justify-between pb-3 border-b border-purple-900/40 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <span className={`w-2.5 h-2.5 rounded-full ${noktaRengi}`} />
           <span className="font-bold text-white text-xs">#{sip.siparis_kodu}</span>
           <span className="text-[10px] text-purple-300">({sip.olusturma_tarihi})</span>
         </div>
-        <span className="text-xs font-extrabold text-amber-400">{sip.toplam_tutar} ₺</span>
+        <div className="flex items-center gap-2">
+          {sip.odemeDurumu === 'odendi' && (
+            <span
+              title={sip.paytrOid ? `PayTR Referans: ${sip.paytrOid}` : 'PayTR Online Ödeme'}
+              className="text-[10px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-full flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+              <span>PayTR ile Ödendi</span>
+            </span>
+          )}
+          <span className="text-xs font-extrabold text-amber-400">{sip.toplam_tutar} ₺</span>
+        </div>
       </div>
 
       <div className="text-xs space-y-1">

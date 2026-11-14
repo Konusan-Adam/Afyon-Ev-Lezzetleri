@@ -312,6 +312,20 @@
         "kullanici_kimlik": { "type": "string", "maxLength": 128 },
         "guncellenme_zamani": { "type": "string", "maxLength": 64 }
       }
+    },
+    "PaytrOturum": {
+      "title": "PaytrOturum",
+      "description": "PayTR Sanal POS ödeme oturumlarının kalıcı durum kaydı",
+      "type": "object",
+      "properties": {
+        "merchantOid": { "type": "string", "maxLength": 80 },
+        "durum": { "type": "string", "maxLength": 20 },
+        "tutarKurus": { "type": "number" },
+        "demoMod": { "type": "boolean" },
+        "hataMesaji": { "type": "string", "maxLength": 500 },
+        "guncellemeZamani": { "type": "number" }
+      },
+      "required": ["merchantOid", "durum", "tutarKurus"]
     }
   },
   "firestore": {
@@ -382,6 +396,10 @@
     "/tedarikci_hakedisleri/{hakedisId}": {
       "schema": "TedarikciHakedis",
       "description": "Şube tedarikçi hakedişleri ve patron onay havuzu"
+    },
+    "/paytr_oturumlari/{oturumId}": {
+      "schema": "PaytrOturum",
+      "description": "PayTR ödeme oturumu ve callback durum kayıtları"
     }
   }
 }

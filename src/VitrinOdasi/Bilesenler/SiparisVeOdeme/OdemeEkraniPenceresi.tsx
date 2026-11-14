@@ -14,6 +14,7 @@ import { telefonGecerliMi, telefonuStandartlastir } from '@/src/MalzemeCekmecele
 import { hukukiLogKaydet } from '@/src/MalzemeCekmeceleri';
 import { misafirProfiliniGetir, misafirProfiliniKaydetVeGuncelle, type MisafirProfili } from '@/src/MalzemeCekmeceleri/misafirIslemleri';
 import { useKuponHesaplayici } from '@/src/MalzemeCekmeceleri/useKuponHesaplayici';
+import { useOdemeSecenekleri } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/useOdemeSecenekleri';
 import { PaytrOdemePenceresi } from './PaytrOdemePenceresi';
 
 interface OdemeEkraniPenceresiOzellikleri {
@@ -89,13 +90,22 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
     }
   }, [seciliAdres]);
 
+  const { gecerliVarsayilanYontem, secenekAktifMi } = useOdemeSecenekleri();
+  const kullaniciElleSectiRef = useRef(false);
   const [adresNotu, setAdresNotu] = useState('');
-  const [odemeYontemi, setOdemeYontemi] = useState<OdemeTipi>('kapida_nakit');
+  const [odemeYontemi, setOdemeYontemi] = useState<OdemeTipi>(() => gecerliVarsayilanYontem || 'kapida_nakit');
   const [yukleniyor, setYukleniyor] = useState(false);
   const [olusanSiparisler, setOlusanSiparisler] = useState<TestSiparis[]>([]);
   const [taninanMisafir, setTaninanMisafir] = useState<MisafirProfili | null>(null);
   const [paytrPenceresiAcik, setPaytrPenceresiAcik] = useState(false);
   const [hazirAdresMetni, setHazirAdresMetni] = useState('');
+
+  useEffect(() => {
+    if (!gecerliVarsayilanYontem) return;
+    if (!kullaniciElleSectiRef.current || !secenekAktifMi(odemeYontemi)) {
+      setOdemeYontemi(gecerliVarsayilanYontem);
+    }
+  }, [gecerliVarsayilanYontem, odemeYontemi, secenekAktifMi]);
 
   // 🎫 Akıllı Kupon Hesaplayıcı ve İndirim Denetçisi
   const toplamSepetTutari = aktifGruplar.reduce((acc, g) => acc + g.araToplam, 0);
@@ -214,6 +224,11 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
 
     if (!sozlesmeOnaylandi) {
       setHataMesaji('Lütfen Mesafeli Satış Sözleşmesi ve Ön Bilgilendirme Koşullarını onaylayınız.');
+      return;
+    }
+
+    if (!gecerliVarsayilanYontem || !secenekAktifMi(odemeYontemi)) {
+      setHataMesaji('Şu anda seçtiğiniz ödeme yöntemi aktif değildir. Lütfen aktif bir ödeme yöntemi seçiniz.');
       return;
     }
 
@@ -455,7 +470,10 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
               {/* Ödeme Yöntemi Seçimi */}
               <OdemeYontemiKarti
                 seciliYontem={odemeYontemi}
-                onYontemSec={setOdemeYontemi}
+                onYontemSec={(yontem) => {
+                  kullaniciElleSectiRef.current = true;
+                  setOdemeYontemi(yontem);
+                }}
               />
 
               {/* Sipariş Özeti ve Onay Kilidi */}

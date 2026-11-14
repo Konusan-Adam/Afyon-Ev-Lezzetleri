@@ -169,5 +169,13 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isValidId(komisyonId);
     }
+
+    match /paytr_oturumlari/{oturumId} {
+      allow read: if true;
+      allow write: if isValidId(oturumId) &&
+                    incoming().merchantOid is string &&
+                    incoming().merchantOid.size() <= 80 &&
+                    incoming().durum in ['bekliyor', 'odendi', 'hata'];
+    }
   }
 }

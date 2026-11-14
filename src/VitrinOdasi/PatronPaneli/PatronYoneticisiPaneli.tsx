@@ -5,6 +5,7 @@ import { gelAlSubeleriGetir } from '@/src/MalzemeCekmeceleri/gelAlSubeleriGetir'
 import { tumTedarikciHakedisleriniCanliDinle } from '@/src/MalzemeCekmeceleri/Sube/subeTedarikServisi';
 import { TedarikciHakedis } from '@/src/veritabani/SubeTipleri';
 import { PatronHakedisOnayMasasi } from './PatronHakedisOnayMasasi';
+import { PatronOdemeYonetimi } from './PatronOdemeYonetimi';
 
 export const PatronYoneticisiPaneli: React.FC = () => {
   const { aktifKullanici, cikisYap, panelDegistir } = kullaniciHafizasiKullan();
@@ -97,6 +98,9 @@ export const PatronYoneticisiPaneli: React.FC = () => {
             <p className="text-[10px] text-stone-400">Canlı Gel-Al ve teslim noktaları</p>
           </div>
         </div>
+
+        {/* Ödeme Seçenekleri ve PayTR Yönetimi */}
+        <PatronOdemeYonetimi />
 
         {/* Hak Ediş Onay Masası */}
         <PatronHakedisOnayMasasi hakedisler={hakedisler} />

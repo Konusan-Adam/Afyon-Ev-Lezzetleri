@@ -66,7 +66,7 @@ router.post('/paytr/token', async (req, res) => {
     if (!demoSimulasyonAktif) {
       return res.status(400).json({ basarili: false, hata: 'PayTR sunucu anahtarları tanımlı değil.' });
     }
-    paytrOturumuOlustur(merchantOid, tutarKurus, true);
+    await paytrOturumuOlustur(merchantOid, tutarKurus, true);
     return res.json({ basarili: true, demoMod: true, merchantOid, tutarKurus });
   }
 
@@ -88,7 +88,7 @@ router.post('/paytr/token', async (req, res) => {
       hataliUrl: `${appUrl}/?paytr=hata&oid=${merchantOid}`,
     });
     if (sonuc.status === 'success' && sonuc.token) {
-      paytrOturumuOlustur(merchantOid, tutarKurus, false);
+      await paytrOturumuOlustur(merchantOid, tutarKurus, false);
       return res.json({
         basarili: true,
         demoMod: false,
@@ -103,7 +103,7 @@ router.post('/paytr/token', async (req, res) => {
   }
 });
 
-router.post('/paytr/callback', (req, res) => {
+router.post('/paytr/callback', async (req, res) => {
   const { merchant_oid, status, total_amount, hash, failed_reason_msg } = req.body || {};
   if (!merchant_oid || !status || !total_amount || !hash) {
     return res.status(400).send('MISSING_FIELDS');
@@ -112,21 +112,21 @@ router.post('/paytr/callback', (req, res) => {
     return res.status(400).send('BAD_HASH');
   }
   const yeniDurum = status === 'success' ? 'odendi' : 'hata';
-  paytrOturumDurumGuncelle(String(merchant_oid), yeniDurum, failed_reason_msg ? String(failed_reason_msg) : undefined);
+  await paytrOturumDurumGuncelle(String(merchant_oid), yeniDurum, failed_reason_msg ? String(failed_reason_msg) : undefined);
   return res.type('text/plain').send('OK');
 });
 
-router.post('/paytr/demo-sonuc', (req, res) => {
+router.post('/paytr/demo-sonuc', async (req, res) => {
   const { merchantOid, sonuc, hataMesaji } = req.body || {};
   if (!merchantOid || (sonuc !== 'odendi' && sonuc !== 'hata')) {
     return res.status(400).json({ basarili: false, hata: 'Geçersiz demo ödeme sonucu.' });
   }
-  const kayit = paytrOturumDurumGuncelle(String(merchantOid), sonuc, hataMesaji ? String(hataMesaji) : undefined);
+  const kayit = await paytrOturumDurumGuncelle(String(merchantOid), sonuc, hataMesaji ? String(hataMesaji) : undefined);
   return res.json({ basarili: true, kayit });
 });
 
-router.get('/paytr/durum/:merchantOid', (req, res) => {
-  const kayit = paytrOturumDurumAl(req.params.merchantOid);
+router.get('/paytr/durum/:merchantOid', async (req, res) => {
+  const kayit = await paytrOturumDurumAl(req.params.merchantOid);
   if (!kayit) {
     return res.status(404).json({ basarili: false, durum: 'bekliyor', hata: 'Ödeme oturumu bulunamadı.' });
   }

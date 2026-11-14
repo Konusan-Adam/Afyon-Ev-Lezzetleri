@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
-import { CreditCard, Banknote, ShieldCheck } from 'lucide-react';
-import { usePaytrAyarlari } from '@/src/MalzemeCekmeceleri/Paytr/usePaytrAyarlari';
+import { CreditCard, Banknote, ShieldCheck, AlertCircle } from 'lucide-react';
+import { OdemeTipi } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/odemeSecenekTipleri';
+import { useOdemeSecenekleri } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/useOdemeSecenekleri';
+import { OdemeSecenekSatiri } from './OdemeSecenekSatiri';
 
-export type OdemeTipi = 'kapida_nakit' | 'kapida_kart' | 'online_cuzdan';
+export type { OdemeTipi };
 
 interface OdemeYontemiKartiOzellikleri {
   seciliYontem: OdemeTipi;
@@ -13,13 +15,23 @@ export const OdemeYontemiKarti: React.FC<OdemeYontemiKartiOzellikleri> = ({
   seciliYontem,
   onYontemSec,
 }) => {
-  const { ayarlar } = usePaytrAyarlari();
+  const {
+    secenekler,
+    paytrAyarlari,
+    gecerliVarsayilanYontem,
+    secenekAktifMi,
+  } = useOdemeSecenekleri();
 
   useEffect(() => {
-    if (!ayarlar.onlineOdemeAktif && seciliYontem === 'online_cuzdan') {
-      onYontemSec('kapida_nakit');
+    if (!secenekAktifMi(seciliYontem) && gecerliVarsayilanYontem) {
+      onYontemSec(gecerliVarsayilanYontem);
     }
-  }, [ayarlar.onlineOdemeAktif, seciliYontem, onYontemSec]);
+  }, [seciliYontem, gecerliVarsayilanYontem, secenekler, paytrAyarlari.onlineOdemeAktif, onYontemSec, secenekAktifMi]);
+
+  const hicAktifYok =
+    secenekler.kapidaNakitAktif === false &&
+    secenekler.kapidaKartAktif === false &&
+    paytrAyarlari.onlineOdemeAktif === false;
 
   return (
     <div className="bg-[#240C28] border border-[#521E5C] rounded-2xl p-4 space-y-3">
@@ -28,85 +40,48 @@ export const OdemeYontemiKarti: React.FC<OdemeYontemiKartiOzellikleri> = ({
         <span>Ödeme Yöntemi</span>
       </div>
 
-      <div className="space-y-2">
-        <label
-          onClick={() => onYontemSec('kapida_nakit')}
-          className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-            seciliYontem === 'kapida_nakit'
-              ? 'bg-[#3A1440] border-[#CFA353] text-white shadow-sm'
-              : 'bg-[#1A081D] border-[#3E1646] text-gray-300 hover:border-[#521E5C]'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <Banknote className="w-4 h-4 text-emerald-400" />
-            <div className="text-xs">
-              <p className="font-bold">Kapıda Nakit Ödeme</p>
-              <p className="text-[10px] text-gray-400">Sipariş tesliminde kapıda nakit ödeyin</p>
-            </div>
-          </div>
-          <input
-            type="radio"
-            name="odeme_yontemi"
-            checked={seciliYontem === 'kapida_nakit'}
-            onChange={() => onYontemSec('kapida_nakit')}
-            className="accent-[#CFA353]"
-          />
-        </label>
-
-        <label
-          onClick={() => onYontemSec('kapida_kart')}
-          className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-            seciliYontem === 'kapida_kart'
-              ? 'bg-[#3A1440] border-[#CFA353] text-white shadow-sm'
-              : 'bg-[#1A081D] border-[#3E1646] text-gray-300 hover:border-[#521E5C]'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <CreditCard className="w-4 h-4 text-blue-400" />
-            <div className="text-xs">
-              <p className="font-bold">Kapıda Kredi / Banka Kartı</p>
-              <p className="text-[10px] text-gray-400">Kuryemizin getireceği POS cihazıyla ödeyin</p>
-            </div>
-          </div>
-          <input
-            type="radio"
-            name="odeme_yontemi"
-            checked={seciliYontem === 'kapida_kart'}
-            onChange={() => onYontemSec('kapida_kart')}
-            className="accent-[#CFA353]"
-          />
-        </label>
-
-        {ayarlar.onlineOdemeAktif && (
-          <label
-            onClick={() => onYontemSec('online_cuzdan')}
-            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
-              seciliYontem === 'online_cuzdan'
-                ? 'bg-[#3A1440] border-[#CFA353] text-white shadow-sm'
-                : 'bg-[#1A081D] border-[#3E1646] text-gray-300 hover:border-[#521E5C]'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <div className="text-xs">
-                <p className="font-bold">Online Kredi Kartı (PayTR 3D Güvenli)</p>
-                <p className="text-[10px] text-gray-400">
-                  {ayarlar.taksitAktif
-                    ? `Visa / Mastercard / Troy • ${ayarlar.maksimumTaksit} Taksite Kadar`
-                    : 'PayTR güvencesiyle 256-Bit SSL anında ödeme'}
-                </p>
-              </div>
-            </div>
-            <input
-              type="radio"
-              name="odeme_yontemi"
-              checked={seciliYontem === 'online_cuzdan'}
-              onChange={() => onYontemSec('online_cuzdan')}
-              className="accent-[#CFA353]"
+      {hicAktifYok ? (
+        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-700/60 text-rose-200 text-xs flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <span>Şu anda aktif bir ödeme yöntemi bulunmuyor. Lütfen daha sonra tekrar deneyin.</span>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {secenekler.kapidaNakitAktif !== false && (
+            <OdemeSecenekSatiri
+              baslik="Kapıda Nakit Ödeme"
+              aciklama="Sipariş tesliminde kapıda nakit ödeyin"
+              seciliMi={seciliYontem === 'kapida_nakit'}
+              ikon={<Banknote className="w-4 h-4 text-emerald-400" />}
+              onSec={() => onYontemSec('kapida_nakit')}
             />
-          </label>
-        )}
-      </div>
+          )}
+
+          {secenekler.kapidaKartAktif !== false && (
+            <OdemeSecenekSatiri
+              baslik="Kapıda Kredi / Banka Kartı"
+              aciklama="Kuryemizin getireceği POS cihazıyla ödeyin"
+              seciliMi={seciliYontem === 'kapida_kart'}
+              ikon={<CreditCard className="w-4 h-4 text-blue-400" />}
+              onSec={() => onYontemSec('kapida_kart')}
+            />
+          )}
+
+          {paytrAyarlari.onlineOdemeAktif !== false && (
+            <OdemeSecenekSatiri
+              baslik="Online Kredi Kartı (PayTR 3D Güvenli)"
+              aciklama={
+                paytrAyarlari.taksitAktif
+                  ? `Visa / Mastercard / Troy • ${paytrAyarlari.maksimumTaksit} Taksite Kadar`
+                  : 'PayTR güvencesiyle 256-Bit SSL anında ödeme'
+              }
+              seciliMi={seciliYontem === 'online_cuzdan'}
+              ikon={<ShieldCheck className="w-4 h-4 text-amber-400" />}
+              onSec={() => onYontemSec('online_cuzdan')}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

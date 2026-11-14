@@ -1,3 +1,6 @@
+import { paytrFirestoreKaydet, paytrFirestoreGetir } from './PaytrFirestoreDeposu';
+import { paytrDosyadanOku, paytrDosyayaYaz } from './PaytrDosyaDeposu';
+
 export type PaytrIslemDurumu = 'bekliyor' | 'odendi' | 'hata';
 
 export interface PaytrOturumKaydi {
@@ -9,13 +12,15 @@ export interface PaytrOturumKaydi {
   guncellemeZamani: number;
 }
 
-const oturumHaritasi = new Map<string, PaytrOturumKaydi>();
+const oturumHaritasi = new Map<string, PaytrOturumKaydi>(
+  Object.entries(paytrDosyadanOku())
+);
 
-export function paytrOturumuOlustur(
+export async function paytrOturumuOlustur(
   merchantOid: string,
   tutarKurus: number,
   demoMod: boolean
-): PaytrOturumKaydi {
+): Promise<PaytrOturumKaydi> {
   const kayit: PaytrOturumKaydi = {
     merchantOid,
     durum: 'bekliyor',
@@ -24,15 +29,18 @@ export function paytrOturumuOlustur(
     guncellemeZamani: Date.now(),
   };
   oturumHaritasi.set(merchantOid, kayit);
+  paytrDosyayaYaz(oturumHaritasi);
+  await paytrFirestoreKaydet(kayit);
   return kayit;
 }
 
-export function paytrOturumDurumGuncelle(
+export async function paytrOturumDurumGuncelle(
   merchantOid: string,
   durum: PaytrIslemDurumu,
   hataMesaji?: string
-): PaytrOturumKaydi | null {
-  const mevcut = oturumHaritasi.get(merchantOid);
+): Promise<PaytrOturumKaydi> {
+  const mevcut =
+    oturumHaritasi.get(merchantOid) || (await paytrFirestoreGetir(merchantOid));
   const guncel: PaytrOturumKaydi = mevcut
     ? { ...mevcut, durum, hataMesaji, guncellemeZamani: Date.now() }
     : {
@@ -44,9 +52,19 @@ export function paytrOturumDurumGuncelle(
         guncellemeZamani: Date.now(),
       };
   oturumHaritasi.set(merchantOid, guncel);
+  paytrDosyayaYaz(oturumHaritasi);
+  await paytrFirestoreKaydet(guncel);
   return guncel;
 }
 
-export function paytrOturumDurumAl(merchantOid: string): PaytrOturumKaydi | null {
+export async function paytrOturumDurumAl(
+  merchantOid: string
+): Promise<PaytrOturumKaydi | null> {
+  const fbKayit = await paytrFirestoreGetir(merchantOid);
+  if (fbKayit) {
+    oturumHaritasi.set(merchantOid, fbKayit);
+    paytrDosyayaYaz(oturumHaritasi);
+    return fbKayit;
+  }
   return oturumHaritasi.get(merchantOid) || null;
 }
