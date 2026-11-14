@@ -21,11 +21,15 @@ interface SubeDetayVitriniProps {
   geriDonTiklandi: () => void;
   onSubeDegistir: (yeniSube: GelAlSubesi) => void;
   seciliMahalle?: string;
+  mutfaklarTiklandi?: () => void;
+  subelerTiklandi?: () => void;
 }
 
 export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
   sube,
   geriDonTiklandi,
+  mutfaklarTiklandi,
+  subelerTiklandi,
 }) => {
   const subeId = sube.id || sube.kimlik || 'sube-1';
   const { urunler, yukleniyor } = useSubeUrunleri(subeId);
@@ -133,7 +137,8 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
       <div className="lg:hidden">
         <MobilAltMenu 
           anasayfayaDon={geriDonTiklandi}
-          subelerTiklandi={() => {}}
+          subelerTiklandi={subelerTiklandi || (() => {})}
+          mutfaklarTiklandi={mutfaklarTiklandi}
           aktifSekme="subeler"
         />
       </div>

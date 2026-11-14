@@ -435,7 +435,7 @@ export const MusteriPaneli: React.FC = () => {
           siparisKimligi={degerlendirilecekSiparis.siparisKimligi}
           mutfakId={degerlendirilecekSiparis.mutfakId}
           mutfakAdi={degerlendirilecekSiparis.mutfakAdi}
-          musteriAdi={aktifKullanici?.ad_soyad || 'Ahmet Karahan'}
+          musteriAdi={aktifKullanici?.ad_soyad || sonMisafirAd || 'Misafir Müşteri'}
           yemekler={degerlendirilecekSiparis.yemekler}
           onKapat={() => setDegerlendirilecekSiparis(null)}
           onBasarili={() => {

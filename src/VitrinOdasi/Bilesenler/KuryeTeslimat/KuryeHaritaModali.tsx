@@ -79,11 +79,8 @@ export const KuryeHaritaModali: React.FC<KuryeHaritaModaliProps> = ({
     };
   }, [kuryeEnlem, kuryeBoylam, musteriEnlem, musteriBoylam, musteriAdi, teslimatAdresi]);
 
-  const navigasyonBaslat = () => {
-    const hedefMetin = encodeURIComponent(`${teslimatAdresi}, Afyonkarahisar`);
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${hedefMetin}`;
-    window.open(mapsUrl, '_blank');
-  };
+  const hedefMetin = encodeURIComponent(`${teslimatAdresi}, Afyonkarahisar`);
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${hedefMetin}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -140,14 +137,15 @@ export const KuryeHaritaModali: React.FC<KuryeHaritaModaliProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={navigasyonBaslat}
+            <a
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
             >
               <ExternalLink className="w-4 h-4" />
               <span>Google Haritalar ile Navigasyon Aç</span>
-            </button>
+            </a>
             <button
               type="button"
               onClick={onKapat}

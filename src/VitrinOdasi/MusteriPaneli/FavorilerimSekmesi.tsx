@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, Store, Sparkles, ChefHat } from 'lucide-react';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
-import { mutfaklariGetir } from '@/src/MalzemeCekmeceleri/Mutfak/mutfaklariGetir';
+import { useMutfaklar } from '@/src/MalzemeCekmeceleri/MutfakCekmecesi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { FavoriMutfakKarti } from './FavoriMutfakKarti';
@@ -9,7 +9,7 @@ import { FavoriSubeKarti } from './FavoriSubeKarti';
 
 export const FavorilerimSekmesi: React.FC = () => {
   const { favoriMutfakIdleri, favoriSubeIdleri, mutfakFavoriDegistir, subeFavoriDegistir, toplamFavoriSayisi } = favoriHafizasiKullan();
-  const { mutfaklar } = mutfaklariGetir();
+  const { mutfaklar } = useMutfaklar();
   const { gelAlSubeleri } = teslimatHafizasiKullan();
   const { panelDegistir } = kullaniciHafizasiKullan();
 

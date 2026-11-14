@@ -27,48 +27,72 @@ export function kuryeAyarlariniGetir(): KuryeAyarlari {
   return VARSAYILAN_KURYE_AYARLARI;
 }
 
+let aktifOnbellekAyarlar: KuryeAyarlari = kuryeAyarlariniGetir();
+const aboneBilesenler = new Set<(ayar: KuryeAyarlari) => void>();
+let ortakDinlemeDurdur: (() => void) | null = null;
+let ilkYuklemeBasladi = false;
+let windowDinleyiciEklendi = false;
+
+function tumAboneleriGuncelle(yeniAyar: KuryeAyarlari) {
+  aktifOnbellekAyarlar = yeniAyar;
+  try {
+    localStorage.setItem(YEREL_KURYE_AYARLARI_KEY, JSON.stringify(yeniAyar));
+  } catch {}
+  aboneBilesenler.forEach((cb) => cb(yeniAyar));
+}
+
+function ortakAbonelikBaslat() {
+  if (typeof window !== 'undefined' && !ilkYuklemeBasladi) {
+    ilkYuklemeBasladi = true;
+
+    if (!windowDinleyiciEklendi) {
+      windowDinleyiciEklendi = true;
+      window.addEventListener('afyon_kurye_ayarlari_guncellendi', () => {
+        tumAboneleriGuncelle(kuryeAyarlariniGetir());
+      });
+    }
+
+    if (canliFirebaseAktifMi()) {
+      belgeGetir<KuryeAyarlari>('genel_ayarlar', GENEL_AYARLAR_ID)
+        .then((fbAyar) => {
+          if (fbAyar) {
+            tumAboneleriGuncelle({ ...VARSAYILAN_KURYE_AYARLARI, ...fbAyar });
+          }
+        })
+        .catch(() => {});
+
+      ortakDinlemeDurdur = koleksiyonuCanliDinle<KuryeAyarlari>('genel_ayarlar', (guncel) => {
+        const bul = guncel.find((a) => a.id === GENEL_AYARLAR_ID);
+        if (bul) {
+          tumAboneleriGuncelle({ ...VARSAYILAN_KURYE_AYARLARI, ...bul });
+        }
+      });
+    }
+  }
+}
+
 export function useKuryeAyarlari() {
-  const [ayarlar, setAyarlar] = useState<KuryeAyarlari>(kuryeAyarlariniGetir());
+  const [ayarlar, setAyarlar] = useState<KuryeAyarlari>(aktifOnbellekAyarlar);
 
   useEffect(() => {
-    let dinlemeDurdur = () => {};
+    ortakAbonelikBaslat();
+    aboneBilesenler.add(setAyarlar);
+    setAyarlar(aktifOnbellekAyarlar);
 
-    const yerelGuncellemeDinle = () => {
-      setAyarlar(kuryeAyarlariniGetir());
-    };
-    window.addEventListener('afyon_kurye_ayarlari_guncellendi', yerelGuncellemeDinle);
-
-    const yukle = async () => {
-      if (canliFirebaseAktifMi()) {
-        const fbAyar = await belgeGetir<KuryeAyarlari>('genel_ayarlar', GENEL_AYARLAR_ID);
-        if (fbAyar) {
-          const birlestirilmis = { ...VARSAYILAN_KURYE_AYARLARI, ...fbAyar };
-          setAyarlar(birlestirilmis);
-          localStorage.setItem(YEREL_KURYE_AYARLARI_KEY, JSON.stringify(birlestirilmis));
-        }
-
-        dinlemeDurdur = koleksiyonuCanliDinle<KuryeAyarlari>('genel_ayarlar', (guncel) => {
-          const bul = guncel.find((a) => a.id === GENEL_AYARLAR_ID);
-          if (bul) {
-            const birlestirilmis = { ...VARSAYILAN_KURYE_AYARLARI, ...bul };
-            setAyarlar(birlestirilmis);
-            localStorage.setItem(YEREL_KURYE_AYARLARI_KEY, JSON.stringify(birlestirilmis));
-          }
-        });
-      }
-    };
-    yukle();
     return () => {
-      window.removeEventListener('afyon_kurye_ayarlari_guncellendi', yerelGuncellemeDinle);
-      dinlemeDurdur();
+      aboneBilesenler.delete(setAyarlar);
+      if (aboneBilesenler.size === 0 && ortakDinlemeDurdur) {
+        ortakDinlemeDurdur();
+        ortakDinlemeDurdur = null;
+        ilkYuklemeBasladi = false;
+      }
     };
   }, []);
 
   const ayarKaydet = async (yeniAyarlar: KuryeAyarlari) => {
     const tamAyar = { ...VARSAYILAN_KURYE_AYARLARI, ...yeniAyarlar, id: GENEL_AYARLAR_ID };
-    setAyarlar(tamAyar);
+    tumAboneleriGuncelle(tamAyar);
     try {
-      localStorage.setItem(YEREL_KURYE_AYARLARI_KEY, JSON.stringify(tamAyar));
       window.dispatchEvent(new Event('afyon_kurye_ayarlari_guncellendi'));
     } catch {}
 

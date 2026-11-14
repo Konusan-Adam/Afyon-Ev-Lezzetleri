@@ -38,11 +38,11 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
   return (
     <header className="relative w-full">
       {/* Kapak Görseli ve Zeminine Dayalı Bilgi Katmanı */}
-      <div className="relative min-h-[240px] sm:min-h-[260px] w-full bg-[#2A0F33] overflow-hidden">
+      <div className="relative h-[240px] sm:h-[260px] w-full bg-[#2A0F33] overflow-hidden">
         {mutfak.gorsel_url ? (
-          <img src={mutfak.gorsel_url} alt={mutfak.ad} className="w-full h-full object-cover" />
+          <img src={mutfak.gorsel_url} alt={mutfak.ad} className="absolute inset-0 w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-b from-[#3B1448] to-[#1D0823]" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-[#3B1448] to-[#1D0823]" />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/35 to-[#120415]" />
 

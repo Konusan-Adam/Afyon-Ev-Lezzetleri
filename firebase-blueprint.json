@@ -299,6 +299,17 @@
         "tarih": { "type": "string", "maxLength": 50 }
       },
       "required": ["id", "sube_id", "tedarikci_id", "toplam_hakedis", "durum"]
+    },
+    "MusteriFavori": {
+      "title": "MusteriFavori",
+      "description": "Müşterinin favorilediği mutfak ve şube kimlikleri",
+      "type": "object",
+      "properties": {
+        "mutfakIdleri": { "type": "array", "description": "Favori mutfak ID listesi" },
+        "subeIdleri": { "type": "array", "description": "Favori şube ID listesi" },
+        "kullanici_kimlik": { "type": "string", "maxLength": 128 },
+        "guncellenme_zamani": { "type": "string", "maxLength": 64 }
+      }
     }
   },
   "firestore": {
@@ -353,6 +364,10 @@
     "/musteri_adresleri/{adresId}": {
       "schema": "MusteriAdresi",
       "description": "Müşteri teslimat adresleri"
+    },
+    "/musteri_favorileri/{favoriId}": {
+      "schema": "MusteriFavori",
+      "description": "Müşteri favori mutfak ve şubeleri"
     },
     "/sube_stoklari/{stokId}": {
       "schema": "SubeUrunu",

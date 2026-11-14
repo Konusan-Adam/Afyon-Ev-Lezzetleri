@@ -123,6 +123,7 @@ export const AnaSayfaVitrini: React.FC = () => {
   const mutfakSecildiIslemi = (mutfak: Mutfak | null) => {
     sifirla();
     setSeciliYemekModal(null);
+    setSeciliSube(null);
     setMutfaklarModaliAcik(false);
     setSeciliMutfak(mutfak);
   };
@@ -180,83 +181,89 @@ export const AnaSayfaVitrini: React.FC = () => {
     return <MusteriPaneli />;
   }
 
+  // Vitrin görünümleri (Şube Detay, Mutfak Detay veya Ana Sayfa) — Ortak modallar tek merkezden yönetilir
+  const ortakModallar = (
+    <>
+      <MutfaklarModali
+        acikMi={mutfaklarModaliAcik}
+        onKapat={() => setMutfaklarModaliAcik(false)}
+        onMutfakSec={(mutfak) => mutfakSecildiIslemi(mutfak)}
+      />
+      <SubelerModali
+        acikMi={subelerModaliAcik}
+        onKapat={() => setSubelerModaliAcik(false)}
+        onSubeSec={(sube) => {
+          setSeciliMutfak(null);
+          setSeciliSube(sube);
+          setSubelerModaliAcik(false);
+        }}
+      />
+    </>
+  );
+
   // Şube seçildiyse doğrudan SubeDetayVitrini sayfasına git
   if (seciliSube) {
     return (
-      <SubeDetayVitrini
-        sube={seciliSube}
-        tumSubeler={gelAlSubeleri}
-        geriDonTiklandi={() => setSeciliSube(null)}
-        onSubeDegistir={(yeni) => setSeciliSube(yeni)}
-        seciliMahalle={seciliAdres?.mahalle}
-      />
+      <>
+        <SubeDetayVitrini
+          sube={seciliSube}
+          tumSubeler={gelAlSubeleri}
+          geriDonTiklandi={() => setSeciliSube(null)}
+          onSubeDegistir={(yeni) => setSeciliSube(yeni)}
+          seciliMahalle={seciliAdres?.mahalle}
+          mutfaklarTiklandi={() => setMutfaklarModaliAcik(true)}
+          subelerTiklandi={() => setSubelerModaliAcik(true)}
+        />
+        {ortakModallar}
+      </>
     );
   }
 
   // Mutfak seçildiyse doğrudan MutfakDetayVitrini sayfasına git (Header'sız, ferah vitrin)
   if (seciliMutfak) {
     return (
-      <div className="w-full min-h-screen bg-[#1A0A1D]">
-        <MutfakDetayVitrini
-          mutfak={seciliMutfak}
-          geriDonTiklandi={() => setSeciliMutfak(null)}
-        />
-
-        {/* Mobil Alt Gezinti Menüsü */}
-        <MobilAltMenu
-          anasayfayaDon={anasayfayaDonusYap}
-          subelerTiklandi={() => {
-            setSeciliMutfak(null);
-            setSubelerModaliAcik(true);
-          }}
-          mutfaklarTiklandi={() => {
-            setSeciliMutfak(null);
-            setMutfaklarModaliAcik(true);
-          }}
-          aktifSekme="mutfaklar"
-        />
-
-        {/* Sepet ve Pencereler */}
-        <YuzenSepetBari />
-        <CokluSepetVitrini />
-        <OrtakSepetPenceresi />
-        <KullaniciGirisPenceresi />
-
-        {/* Mutfaklar ve Şubeler Modalı */}
-        <MutfaklarModali
-          acikMi={mutfaklarModaliAcik}
-          onKapat={() => setMutfaklarModaliAcik(false)}
-          onMutfakSec={(m) => mutfakSecildiIslemi(m)}
-        />
-        <SubelerModali
-          acikMi={subelerModaliAcik}
-          onKapat={() => setSubelerModaliAcik(false)}
-          onSubeSec={(s) => {
-            setSeciliMutfak(null);
-            setSeciliSube(s);
-            setSubelerModaliAcik(false);
-          }}
-        />
-
-        {/* Yemek Detay & Kişiselleştirme Modalı */}
-        {seciliYemekModal && (
-          <UrunOzellestirmePenceresi
-            yemek={seciliYemekModal}
-            onKapat={() => setSeciliYemekModal(null)}
-            mutfakVitriniAc={mutfakAcById}
-            onSepeteEkle={async (konfig) => {
-              await sepeteEkle(
-                seciliYemekModal.mutfak_id || '',
-                seciliYemekModal.id,
-                konfig.adet,
-                konfig.birim_fiyat
-              );
-              porsiyonDusur(seciliYemekModal.id, konfig.adet);
-              setSeciliYemekModal(null);
-            }}
+      <>
+        <div className="w-full min-h-screen bg-[#1A0A1D]">
+          <MutfakDetayVitrini
+            mutfak={seciliMutfak}
+            geriDonTiklandi={() => setSeciliMutfak(null)}
           />
-        )}
-      </div>
+
+          {/* Mobil Alt Gezinti Menüsü */}
+          <MobilAltMenu
+            anasayfayaDon={anasayfayaDonusYap}
+            subelerTiklandi={() => setSubelerModaliAcik(true)}
+            mutfaklarTiklandi={() => setMutfaklarModaliAcik(true)}
+            aktifSekme="mutfaklar"
+          />
+
+          {/* Sepet ve Pencereler */}
+          <YuzenSepetBari />
+          <CokluSepetVitrini />
+          <OrtakSepetPenceresi />
+          <KullaniciGirisPenceresi />
+
+          {/* Yemek Detay & Kişiselleştirme Modalı */}
+          {seciliYemekModal && (
+            <UrunOzellestirmePenceresi
+              yemek={seciliYemekModal}
+              onKapat={() => setSeciliYemekModal(null)}
+              mutfakVitriniAc={mutfakAcById}
+              onSepeteEkle={async (konfig) => {
+                await sepeteEkle(
+                  seciliYemekModal.mutfak_id || '',
+                  seciliYemekModal.id,
+                  konfig.adet,
+                  konfig.birim_fiyat
+                );
+                porsiyonDusur(seciliYemekModal.id, konfig.adet);
+                setSeciliYemekModal(null);
+              }}
+            />
+          )}
+        </div>
+        {ortakModallar}
+      </>
     );
   }
 
@@ -300,19 +307,7 @@ export const AnaSayfaVitrini: React.FC = () => {
       <YuzenSepetBari />
 
       {/* Ortak Modallar & Pencereler (Hem Mobil, Hem Tablet, Hem Masaüstünde Aktiftir) */}
-      <MutfaklarModali
-        acikMi={mutfaklarModaliAcik}
-        onKapat={() => setMutfaklarModaliAcik(false)}
-        onMutfakSec={(mutfak) => mutfakSecildiIslemi(mutfak)}
-      />
-      <SubelerModali
-        acikMi={subelerModaliAcik}
-        onKapat={() => setSubelerModaliAcik(false)}
-        onSubeSec={(sube) => {
-          setSeciliSube(sube);
-          setSubelerModaliAcik(false);
-        }}
-      />
+      {ortakModallar}
       <FiltrePaneli
         acik={filtrePaneliAcik}
         mevcutFiltreler={aktifFiltreler}
