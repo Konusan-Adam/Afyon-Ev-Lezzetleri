@@ -171,10 +171,12 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     setAktifKullanici(null);
     localStorage.removeItem('afyon_oturum_kullanici');
     localStorage.removeItem('afyon_misafir_secili_adres');
+    localStorage.removeItem('afyon_aktif_secili_mahalle');
     localStorage.removeItem('afyon_secili_mahalle');
     localStorage.removeItem('afyon_son_misafir_telefon');
     localStorage.removeItem('afyon_son_misafir_ad');
     setGoruntulenenPanel('vitrin');
+    urlVeBasligiGuncelle('vitrin');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: null } }));
     }

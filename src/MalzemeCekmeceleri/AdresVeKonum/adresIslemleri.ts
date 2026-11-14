@@ -35,17 +35,12 @@ export async function veritabanindanAdresleriGetir(musteriKimligi: string): Prom
           return a.musteri_kimligi === musteriKimligi;
         });
 
-        // Firebase'den adresler geldiyse yerel önbelleğe de güncelle
+        // Firebase'den kullanıcıya özel adresler geldiyse yerel önbelleği güncelle
         if (filtrelenmis.length > 0) {
           geciciAdresDeposu = filtrelenmis;
           yerelAdresleriKaydet(filtrelenmis);
-          return filtrelenmis;
         }
-
-        // Eğer kullanıcıya özel yoksa ama Firebase'de adresler varsa onları dön
-        if (fbAdresler.length > 0 && (!musteriKimligi || musteriKimligi === 'misafir')) {
-          return fbAdresler;
-        }
+        return filtrelenmis;
       }
     } catch (hata) {
       console.warn('Firebase adres çekme hatası:', hata);

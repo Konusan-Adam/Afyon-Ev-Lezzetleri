@@ -30,7 +30,8 @@ export const SubeTedarikGirisModali: React.FC<Props> = ({
 
   if (!acikMi) return null;
 
-  const seciliUrun = urunler.find((u) => u.id === seciliUrunId) || urunler[0];
+  const subeUrunleri = urunler.filter((u) => !subeId || u.sube_id === subeId);
+  const seciliUrun = subeUrunleri.find((u) => u.id === seciliUrunId) || subeUrunleri[0] || urunler[0];
 
   const kaydet = async (e: React.FormEvent) => {
     e.preventDefault();

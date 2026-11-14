@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Heart, Store, Sparkles, ChefHat } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 import { useMutfaklar } from '@/src/MalzemeCekmeceleri/MutfakCekmecesi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { FavoriMutfakKarti } from './FavoriMutfakKarti';
 import { FavoriSubeKarti } from './FavoriSubeKarti';
+import { FavorilerimFiltreCubugu } from './FavorilerimFiltreCubugu';
 
 export const FavorilerimSekmesi: React.FC = () => {
   const { favoriMutfakIdleri, favoriSubeIdleri, mutfakFavoriDegistir, subeFavoriDegistir, toplamFavoriSayisi } = favoriHafizasiKullan();
   const { mutfaklar } = useMutfaklar();
   const { gelAlSubeleri } = teslimatHafizasiKullan();
   const { panelDegistir } = kullaniciHafizasiKullan();
-
   const [filtre, setFiltre] = useState<'tumu' | 'mutfaklar' | 'subeler'>('tumu');
 
   const favoriMutfaklar = mutfaklar.filter((m) => favoriMutfakIdleri.includes(m.id));
@@ -43,63 +43,23 @@ export const FavorilerimSekmesi: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Alt Filtre Butonları */}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setFiltre('tumu')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            filtre === 'tumu'
-              ? 'bg-purple-800 text-white shadow-md'
-              : 'bg-[#180A1F] text-purple-300 hover:text-white border border-[#3E1646]'
-          }`}
-        >
-          Tümü ({toplamFavoriSayisi})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFiltre('mutfaklar')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            filtre === 'mutfaklar'
-              ? 'bg-purple-800 text-white shadow-md'
-              : 'bg-[#180A1F] text-purple-300 hover:text-white border border-[#3E1646]'
-          }`}
-        >
-          <ChefHat className="w-3.5 h-3.5 text-amber-400" />
-          <span>Mutfaklar ({favoriMutfaklar.length})</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setFiltre('subeler')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            filtre === 'subeler'
-              ? 'bg-purple-800 text-white shadow-md'
-              : 'bg-[#180A1F] text-purple-300 hover:text-white border border-[#3E1646]'
-          }`}
-        >
-          <Store className="w-3.5 h-3.5 text-amber-400" />
-          <span>Şubeler ({favoriSubeler.length})</span>
-        </button>
-      </div>
+      <FavorilerimFiltreCubugu
+        filtre={filtre}
+        onFiltreDegis={setFiltre}
+        toplamSayi={toplamFavoriSayisi}
+        mutfakSayisi={favoriMutfaklar.length}
+        subeSayisi={favoriSubeler.length}
+      />
 
-      {/* Kart Listesi */}
       <div className="space-y-3">
         {(filtre === 'tumu' || filtre === 'mutfaklar') &&
           favoriMutfaklar.map((mutfak) => (
-            <FavoriMutfakKarti
-              key={mutfak.id}
-              mutfak={mutfak}
-              onFavoridenCikar={mutfakFavoriDegistir}
-            />
+            <FavoriMutfakKarti key={mutfak.id} mutfak={mutfak} onFavoridenCikar={mutfakFavoriDegistir} />
           ))}
 
         {(filtre === 'tumu' || filtre === 'subeler') &&
           favoriSubeler.map((sube) => (
-            <FavoriSubeKarti
-              key={sube.id || sube.kimlik}
-              sube={sube}
-              onFavoridenCikar={subeFavoriDegistir}
-            />
+            <FavoriSubeKarti key={sube.id || sube.kimlik} sube={sube} onFavoridenCikar={subeFavoriDegistir} />
           ))}
       </div>
     </div>

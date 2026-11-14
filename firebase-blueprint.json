@@ -89,6 +89,8 @@
         "toplam_tutar": { "type": "number" },
         "teslimat_ucreti": { "type": "number" },
         "odeme_yontemi": { "type": "string", "maxLength": 50 },
+        "odemeDurumu": { "type": "string", "maxLength": 30 },
+        "paytrOid": { "type": "string", "maxLength": 80 },
         "olusturma_tarihi": { "type": "string", "maxLength": 50 },
         "tahmini_teslimat": { "type": "string", "maxLength": 50 },
         "pinKodu": { "type": "string", "maxLength": 10 }

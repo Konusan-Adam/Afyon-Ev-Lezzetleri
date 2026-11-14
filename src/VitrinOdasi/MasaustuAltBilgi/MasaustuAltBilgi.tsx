@@ -22,6 +22,7 @@ import { ozelOzelliklerHafizasiKullan } from '@/src/OrtakHavuz/OzelOzelliklerHaf
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { temaHafizasiKullan } from '@/src/OrtakHavuz/TemaHafizasi';
 import { footerAyariniGetir, FooterAyar } from './footerVeritabani';
+import { PaytrGuvenlikRozeti } from './PaytrGuvenlikRozeti';
 
 export const MasaustuAltBilgi: React.FC = () => {
   const { pencereAc } = ozelOzelliklerHafizasiKullan();
@@ -300,6 +301,9 @@ export const MasaustuAltBilgi: React.FC = () => {
           </div>
 
         </div>
+
+        {/* PayTR Güvenli Ödeme Rozet Şeridi */}
+        <PaytrGuvenlikRozeti />
 
         {/* En Alt İmza & Telif Satırı */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-6 text-xs text-gray-400">

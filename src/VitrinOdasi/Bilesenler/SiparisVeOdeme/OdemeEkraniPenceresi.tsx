@@ -14,6 +14,7 @@ import { telefonGecerliMi, telefonuStandartlastir } from '@/src/MalzemeCekmecele
 import { hukukiLogKaydet } from '@/src/MalzemeCekmeceleri';
 import { misafirProfiliniGetir, misafirProfiliniKaydetVeGuncelle, type MisafirProfili } from '@/src/MalzemeCekmeceleri/misafirIslemleri';
 import { useKuponHesaplayici } from '@/src/MalzemeCekmeceleri/useKuponHesaplayici';
+import { PaytrOdemePenceresi } from './PaytrOdemePenceresi';
 
 interface OdemeEkraniPenceresiOzellikleri {
   grup?: MutfakSepetGrubu;
@@ -93,6 +94,8 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
   const [yukleniyor, setYukleniyor] = useState(false);
   const [olusanSiparisler, setOlusanSiparisler] = useState<TestSiparis[]>([]);
   const [taninanMisafir, setTaninanMisafir] = useState<MisafirProfili | null>(null);
+  const [paytrPenceresiAcik, setPaytrPenceresiAcik] = useState(false);
+  const [hazirAdresMetni, setHazirAdresMetni] = useState('');
 
   // 🎫 Akıllı Kupon Hesaplayıcı ve İndirim Denetçisi
   const toplamSepetTutari = aktifGruplar.reduce((acc, g) => acc + g.araToplam, 0);
@@ -214,15 +217,12 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
       return;
     }
 
-    setYukleniyor(true);
-
     let adresMetni = '';
     if (gelAlMi) {
       adresMetni = `[GEL AL ŞUBESİ: ${seciliGelAlSubesi?.ad || 'Merkez Şube'}]`;
     } else if (aktifKullanici) {
       if (!seciliAdres) {
         setHataMesaji('Lütfen teslimat için adres seçiniz.');
-        setYukleniyor(false);
         return;
       }
       adresMetni = `${seciliAdres.mahalle} Mah. ${seciliAdres.cadde_sokak} No:${seciliAdres.bina_no} ${seciliAdres.ilce}/${seciliAdres.il}`;
@@ -230,13 +230,30 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
       adresMetni = `${seciliMahalle}, ${acikAdres.trim()} ${binaDaireNo.trim() ? `(${binaDaireNo.trim()})` : ''} - Afyonkarahisar`;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 350));
+    if (odemeYontemi === 'online_cuzdan') {
+      setHazirAdresMetni(adresMetni);
+      setPaytrPenceresiAcik(true);
+      return;
+    }
+
+    await siparisleriVeritabaninaKaydet(adresMetni, 'kapida');
+  };
+
+  const siparisleriVeritabaninaKaydet = async (
+    adresMetni: string,
+    odemeDurumu: 'odendi' | 'bekliyor' | 'kapida',
+    paytrOid?: string
+  ) => {
+    const musteriIsmi = aktifKullanici ? aktifKullanici.ad_soyad : adSoyad.trim();
+    const musteriTel = aktifKullanici ? (aktifKullanici.telefon || '0542 333 44 55') : telefon.trim();
+    setYukleniyor(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 250));
 
     const yeniOlusanlar: TestSiparis[] = [];
     const toplamKuponIndirimi = kuponBilgisi?.gecerli ? kuponBilgisi.indirimTutari : 0;
     let kalanIndirim = toplamKuponIndirimi;
 
-    // TÜM MUTFAK GRUPLARINI TEK TEK SİPARİŞE DÖNÜŞTÜR
     for (const tekGrup of aktifGruplar) {
       const siparisElemanlari = tekGrup.elemanlar.map((e: any) => ({
         id: e.id || e.yemek_id || 'el-' + Math.random(),
@@ -267,6 +284,8 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
         kuponKodu: buGrupIndirimi > 0 ? (kuponBilgisi?.kod || '') : undefined,
         kuponIndirimTutari: buGrupIndirimi,
         odemeYontemi,
+        odemeDurumu,
+        paytrOid,
         tahminiTeslimat:
           tercih.tip === 'hemen'
             ? gelAlMi
@@ -459,6 +478,39 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
           )}
         </div>
       </div>
+
+      {paytrPenceresiAcik && (
+        <PaytrOdemePenceresi
+          tutar={Math.max(
+            1,
+            Math.round(
+              (aktifGruplar.reduce(
+                (t, g) => t + g.araToplam + (gelAlMi ? 0 : g.teslimatUcreti),
+                0
+              ) -
+                (kuponBilgisi?.gecerli ? kuponBilgisi.indirimTutari : 0)) *
+                100
+            ) / 100
+          )}
+          sepet={aktifGruplar.flatMap((g) =>
+            g.elemanlar.map((e: any) => ({
+              ad: e.yemek?.baslik || e.baslik || 'Ev Yemeği',
+              fiyat: Number(e.birim_fiyat || e.fiyat || 0),
+              adet: Number(e.adet || 1),
+            }))
+          )}
+          musteri={{
+            adSoyad: aktifKullanici ? aktifKullanici.ad_soyad : adSoyad.trim(),
+            telefon: aktifKullanici ? aktifKullanici.telefon || '05000000000' : telefon.trim(),
+            adres: hazirAdresMetni || 'Afyonkarahisar',
+          }}
+          onOdemeBasarili={async (paytrOid) => {
+            setPaytrPenceresiAcik(false);
+            await siparisleriVeritabaninaKaydet(hazirAdresMetni, 'odendi', paytrOid);
+          }}
+          onKapat={() => setPaytrPenceresiAcik(false)}
+        />
+      )}
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { AnaAfisBannerVitrini } from '../ReklamVeDuyuru/AnaAfisBannerVitrini';
 import { TeslimatZamaniBari } from '../Bilesenler/OnSiparisVePorsiyon/TeslimatZamaniBari';
 import { mahalleyeEnYakinSubeyiBul } from '@/src/MalzemeCekmeceleri/Sube/SubeMesafeVeMahalleEsleyici';
 import { Mutfak, Yemek, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
+import { PaytrGuvenlikRozeti } from '../MasaustuAltBilgi/PaytrGuvenlikRozeti';
 
 interface MobilAnaVitrinProps {
   anasayfayaGitTiklandi?: () => void;
@@ -134,6 +135,10 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
             <SagFiltreSutunu />
           </div>
 
+        </div>
+
+        <div className="lg:hidden px-4 pb-6">
+          <PaytrGuvenlikRozeti />
         </div>
       </div>
     </div>

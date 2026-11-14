@@ -36,6 +36,7 @@ import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { useSubeUrunleri } from '@/src/MalzemeCekmeceleri/Sube/useSubeUrunleri';
 import { subeOnceliginiKontrolEt } from '@/src/MalzemeCekmeceleri/Sube/SubeOncelikAlgoritmasi';
+import { PaytrDonusBildirimi } from './Bilesenler/SiparisVeOdeme/PaytrDonusBildirimi';
 
 export const AnaSayfaVitrini: React.FC = () => {
   const [aktifSozlesmeTuru, setAktifSozlesmeTuru] = React.useState<SozlesmeTuru | null>(null);
@@ -269,6 +270,7 @@ export const AnaSayfaVitrini: React.FC = () => {
 
   return (
     <main className="w-full min-h-screen">
+      <PaytrDonusBildirimi />
       {/* 🚀 En Üst İnce Reklam & Duyuru Şeridi */}
       <TepeReklamBari />
 
