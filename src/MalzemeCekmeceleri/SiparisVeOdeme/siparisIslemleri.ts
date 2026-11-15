@@ -8,10 +8,11 @@ import { komisyonHesapla } from '@/src/MalzemeCekmeceleri/komisyonServisi';
 import { KomisyonAyarTipi } from '@/src/veritabani/VeriTipleri';
 import { SubeSiparisi } from '@/src/veritabani/SubeTipleri';
 import {
+  subeAdiniCoz,
   subeSiparisiMiBelirle,
   subeSiparisiVeStokIsle,
 } from '@/src/MalzemeCekmeceleri/Sube/subeSiparisKayitServisi';
-import { siparisPatronBildirimiGonder } from './siparisBildirimYardimcisi';
+import { mutfakAdiniCoz, siparisPatronBildirimiGonder } from './siparisBildirimYardimcisi';
 
 export interface YeniSiparisGirdisi {
   musteriId: string;
@@ -58,6 +59,16 @@ export async function veritabaninaSiparisOlustur(
   const pinKodu = String(Math.floor(1000 + Math.random() * 9000));
   const odemeDurumu = girdi.odemeDurumu || (girdi.odemeYontemi === 'online_cuzdan' ? 'bekliyor' : 'kapida');
 
+  const subeSiparisiMi = canliFirebaseAktifMi()
+    ? await subeSiparisiMiBelirle(girdi.mutfakId, girdi.elemanlar)
+    : girdi.mutfakId.startsWith('sube');
+
+  const cozulenBirimAdi = subeSiparisiMi
+    ? canliFirebaseAktifMi()
+      ? await subeAdiniCoz(girdi.mutfakId, girdi.subeAdi)
+      : girdi.subeAdi || 'Afyon Ev Lezzetleri Şubesi'
+    : await mutfakAdiniCoz(girdi.mutfakId);
+
   const yeniSiparisKaydi: TestSiparis = {
     id: siparisId,
     siparisKodu,
@@ -69,10 +80,16 @@ export async function veritabaninaSiparisOlustur(
     musteri_adi: girdi.musteriAdi || 'Müşteri',
     musteri_telefon: girdi.musteriTelefon || '',
     misafir_mi: girdi.misafirMi || false,
+    teslimat_tipi: girdi.teslimatTipi || 'teslimat',
     teslimat_adresi_metni: girdi.teslimatAdresiMetni || '',
     mutfak_id: girdi.mutfakId,
+    mutfak_adi: cozulenBirimAdi,
+    siparis_kaynagi: subeSiparisiMi ? 'sube' : 'mutfak',
+    ...(subeSiparisiMi ? { sube_id: girdi.mutfakId, sube_adi: cozulenBirimAdi } : {}),
     durum: 'beklemede',
-    durum_aciklamasi: 'Sipariş alındı, mutfağın onaylaması bekleniyor.',
+    durum_aciklamasi: subeSiparisiMi
+      ? 'Sipariş şubeye iletildi, hazırlanıyor.'
+      : 'Sipariş alındı, mutfağın onaylaması bekleniyor.',
     elemanlar: girdi.elemanlar,
     toplam_tutar: dogrulama.hesaplananToplam,
     tutar: dogrulama.hesaplananToplam,
@@ -91,22 +108,18 @@ export async function veritabaninaSiparisOlustur(
   };
 
   // 1. Önce Canlı Firebase Veritabanına Yaz (Başarısız olursa sahte başarı dönme)
-  let subeSiparisiMi = false;
-  let cozulenSubeAdi = girdi.subeAdi;
-
   if (canliFirebaseAktifMi()) {
     const genelKayitBasarili = await belgeKaydet('siparisler', yeniSiparisKaydi.id, yeniSiparisKaydi);
     if (!genelKayitBasarili) {
       throw new Error('Sipariş veritabanına kaydedilemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.');
     }
 
-    subeSiparisiMi = await subeSiparisiMiBelirle(girdi.mutfakId, girdi.elemanlar);
     if (subeSiparisiMi) {
-      cozulenSubeAdi = await subeSiparisiVeStokIsle({
+      await subeSiparisiVeStokIsle({
         siparisId: yeniSiparisKaydi.id,
         siparisKodu,
         subeId: girdi.mutfakId,
-        subeAdi: girdi.subeAdi,
+        subeAdi: cozulenBirimAdi,
         musteriId: girdi.musteriId,
         musteriAdi: girdi.musteriAdi || 'Müşteri',
         musteriTelefon: girdi.musteriTelefon || '',
@@ -122,8 +135,6 @@ export async function veritabaninaSiparisOlustur(
         elemanlar: girdi.elemanlar,
       });
     }
-  } else {
-    subeSiparisiMi = girdi.mutfakId.startsWith('sube');
   }
 
   // 2. Veritabanı kaydı onaylandıktan sonra yerel depo, kupon ve canlı bildirimleri işle
@@ -140,13 +151,18 @@ export async function veritabaninaSiparisOlustur(
     musteriAdi: yeniSiparisKaydi.musteri_adi,
     mutfakId: girdi.mutfakId,
     subeSiparisiMi,
-    subeAdi: cozulenSubeAdi,
+    subeAdi: subeSiparisiMi ? cozulenBirimAdi : undefined,
+    mutfakAdi: !subeSiparisiMi ? cozulenBirimAdi : undefined,
     teslimatTipi: girdi.teslimatTipi || 'teslimat',
   });
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('afyon_siparis_eklendi', { detail: yeniSiparisKaydi }));
-    window.dispatchEvent(new CustomEvent('afyon_yeni_mutfak_siparisi', { detail: yeniSiparisKaydi }));
+    window.dispatchEvent(
+      new CustomEvent(subeSiparisiMi ? 'afyon_yeni_sube_siparisi' : 'afyon_yeni_mutfak_siparisi', {
+        detail: yeniSiparisKaydi,
+      })
+    );
     window.dispatchEvent(new CustomEvent('afyon_siparis_durum_degisti', { detail: { siparisKimligi: yeniSiparisKaydi.id, durum: 'beklemede' } }));
   }
 

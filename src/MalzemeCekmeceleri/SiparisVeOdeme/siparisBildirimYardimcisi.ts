@@ -1,5 +1,5 @@
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
-import { belgeGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { belgeGetir, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
 
 export interface SiparisBildirimVerisi {
@@ -10,19 +10,27 @@ export interface SiparisBildirimVerisi {
   mutfakId: string;
   subeSiparisiMi: boolean;
   subeAdi?: string;
+  mutfakAdi?: string;
   teslimatTipi?: 'gel_al' | 'teslimat';
 }
 
 interface MutfakOzetBelgesi {
+  id?: string;
+  kimlik?: string;
   isletme_adi?: string;
   ad?: string;
 }
 
-async function mutfakAdiniCoz(mutfakId: string): Promise<string> {
+export async function mutfakAdiniCoz(mutfakId: string): Promise<string> {
   if (!canliFirebaseAktifMi() || !mutfakId) return 'Ev Mutfağı';
   try {
     const mutfak = await belgeGetir<MutfakOzetBelgesi>('mutfaklar', mutfakId);
-    return mutfak?.isletme_adi || mutfak?.ad || 'Ev Mutfağı';
+    if (mutfak) {
+      return mutfak.isletme_adi || mutfak.ad || 'Ev Mutfağı';
+    }
+    const tumMutfaklar = await koleksiyonGetir<MutfakOzetBelgesi>('mutfaklar');
+    const eslesen = (tumMutfaklar || []).find((m) => m.id === mutfakId || m.kimlik === mutfakId);
+    return eslesen?.isletme_adi || eslesen?.ad || 'Ev Mutfağı';
   } catch {
     return 'Ev Mutfağı';
   }
@@ -43,7 +51,7 @@ export async function siparisPatronBildirimiGonder(
     return;
   }
 
-  const mutfakAdi = await mutfakAdiniCoz(veri.mutfakId);
+  const mutfakAdi = veri.mutfakAdi || (await mutfakAdiniCoz(veri.mutfakId));
   patronBildirimiEkle(
     'yeni_siparis',
     'Yeni Mutfak Siparişi! 🍲',

@@ -1,6 +1,6 @@
 import { doc, runTransaction } from 'firebase/firestore';
 import { firebaseVeritabani } from '@/src/veritabani/FirebaseIstemcisi';
-import { belgeGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { belgeGetir, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { firestoreHatasiniYonet, IslemTipi } from '@/src/veritabani/FirebaseHataYoneticisi';
 import { GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 import { SubeSiparisi, SubeUrunu } from '@/src/veritabani/SubeTipleri';
@@ -45,10 +45,17 @@ export async function subeSiparisiMiBelirle(
   return false;
 }
 
-async function subeAdiniCoz(subeId: string, verilenAd?: string): Promise<string> {
-  if (verilenAd && verilenAd.trim()) return verilenAd;
-  const sube = await belgeGetir<GelAlSubesi>('gel_al_subeleri', subeId);
-  return sube?.ad || 'Afyon Ev Lezzetleri Şubesi';
+export async function subeAdiniCoz(subeId: string, verilenAd?: string): Promise<string> {
+  if (verilenAd && verilenAd.trim()) return verilenAd.trim();
+  const dogrudan = await belgeGetir<GelAlSubesi>('gel_al_subeleri', subeId);
+  if (dogrudan) {
+    const ad = dogrudan.ad || (dogrudan as any).sube_adi || (dogrudan as any).isim;
+    if (ad && String(ad).trim()) return String(ad).trim();
+  }
+  const tumSubeler = await koleksiyonGetir<GelAlSubesi>('gel_al_subeleri');
+  const eslesen = (tumSubeler || []).find((s) => s.id === subeId || s.kimlik === subeId);
+  const cozulmus = eslesen?.ad || (eslesen as any)?.sube_adi || (eslesen as any)?.isim;
+  return cozulmus && String(cozulmus).trim() ? String(cozulmus).trim() : 'Afyon Ev Lezzetleri Şubesi';
 }
 
 async function subeStoklariniAtomikDus(elemanlar: TestSiparisElemani[]): Promise<void> {
