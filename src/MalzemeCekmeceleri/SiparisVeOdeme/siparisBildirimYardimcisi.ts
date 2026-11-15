@@ -31,15 +31,14 @@ async function mutfakAdiniCoz(mutfakId: string): Promise<string> {
 export async function siparisPatronBildirimiGonder(
   veri: SiparisBildirimVerisi
 ): Promise<void> {
-  if (veri.subeSiparisiMi) {
-    const teslimatEtiketi = veri.teslimatTipi === 'gel_al' ? 'Gel-Al' : 'Adrese Kurye';
+  if (veri.subeSiparisiMi || veri.mutfakId.startsWith('sube-')) {
     const birimAdi = veri.subeAdi || 'Afyon Ev Lezzetleri Şubesi';
     patronBildirimiEkle(
       'yeni_siparis',
-      'Yeni Şube Siparişi! 🏪',
-      `#${veri.siparisKodu} nolu ${veri.toplamTutar} ₺ tutarındaki sipariş ${birimAdi} (${teslimatEtiketi}) birimine iletildi. Müşteri: ${veri.musteriAdi}`,
+      '🛍️ Yeni Şube Siparişi: #' + veri.siparisKodu,
+      `${birimAdi} için #${veri.siparisKodu} nolu ${veri.toplamTutar} ₺ şube siparişi alındı. Müşteri: ${veri.musteriAdi}`,
       veri.siparisId,
-      { sessizMi: true, hedefSekme: 'sube_siparisleri' }
+      { sessizMi: true, hedefSekme: 'sube_siparisleri', subeId: veri.mutfakId }
     );
     return;
   }

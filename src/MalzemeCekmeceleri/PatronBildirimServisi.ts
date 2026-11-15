@@ -28,6 +28,7 @@ export interface PatronBildirimi {
   okundu_mu: boolean;
   ilgiliKimlik?: string;
   hedefSekme?: 'sube_siparisleri' | 'siparisler';
+  subeId?: string;
 }
 
 const YEREL_PATRON_BILDIRIMLERI_KEY = 'afyon_patron_canli_bildirimler_v1';
@@ -161,6 +162,7 @@ export const patronBildirimleriniGetir = (): PatronBildirimi[] => {
 export interface BildirimEklemeSecenekleri {
   sessizMi?: boolean;
   hedefSekme?: 'sube_siparisleri' | 'siparisler';
+  subeId?: string;
 }
 
 export const patronBildirimiEkle = (
@@ -180,6 +182,7 @@ export const patronBildirimiEkle = (
     okundu_mu: false,
     ilgiliKimlik,
     ...(secenekler?.hedefSekme ? { hedefSekme: secenekler.hedefSekme } : {}),
+    ...(secenekler?.subeId ? { subeId: secenekler.subeId } : {}),
   };
 
   try {

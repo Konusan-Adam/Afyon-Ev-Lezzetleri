@@ -295,7 +295,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
           teslimatTipi: gelAlMi ? 'gel_al' : 'teslimat',
           teslimatAdresiMetni: adresMetni,
           mutfakId: tekGrup.mutfakId,
-          subeAdi: gelAlMi ? seciliGelAlSubesi?.ad : tekGrup.mutfak?.ad,
+          subeAdi: tekGrup.mutfak?.ad || (gelAlMi ? seciliGelAlSubesi?.ad : undefined),
           elemanlar: siparisElemanlari,
           toplamTutar: gercekToplamTutar,
           teslimatUcreti,
