@@ -12,7 +12,7 @@ export const MobilUstBaslikBari: React.FC<MobilUstBaslikBariProps> = ({ anasayfa
         onClick={anasayfayaGitTiklandi}
         className="flex items-center gap-2.5 text-left border-0 bg-transparent p-0 cursor-pointer focus:outline-none group active:scale-95 transition-transform"
       >
-        <div className="w-9 h-9 rounded-full ring-2 ring-[#CFA353] p-0.5 bg-white overflow-hidden flex items-center justify-center shadow-md">
+        <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shadow-md">
           <img
             src="/marka_logosu.jpg"
             alt="Afyon Ev Lezzetleri Logo"

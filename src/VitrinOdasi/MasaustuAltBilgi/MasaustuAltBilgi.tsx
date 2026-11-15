@@ -140,7 +140,7 @@ export const MasaustuAltBilgi: React.FC = () => {
           {/* 1. Kolon: Logo & Şirket Bilgisi */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl ring-2 ring-[#CFA353]/50 p-0.5 bg-white overflow-hidden flex items-center justify-center shadow-md shadow-purple-950/50 shrink-0">
+              <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center shadow-md shadow-purple-950/50 shrink-0">
                 <img
                   src={ayar.logoUrl || '/marka_logosu.jpg'}
                   alt={ayar.sirketUnvani}

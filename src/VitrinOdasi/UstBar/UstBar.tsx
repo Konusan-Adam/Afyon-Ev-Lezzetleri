@@ -78,7 +78,7 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
           className="shrink-0 cursor-pointer group border-0 bg-transparent p-0 focus:outline-none transition-transform hover:scale-105"
           title="Ana Sayfaya Dön"
         >
-          <div className="w-11 h-11 rounded-full ring-2 ring-[#CFA353] p-0.5 bg-white overflow-hidden flex items-center justify-center shadow-md">
+          <div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center shadow-md">
             <img
               src="/marka_logosu.jpg"
               alt="Afyon Ev Lezzetleri"

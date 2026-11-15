@@ -1,5 +1,5 @@
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
-import { belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { belgeKaydet, koleksiyonGetir, belgeGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { TestSiparis, TestSiparisElemani } from '@/src/veritabani/CanliVeriYardimcisi';
 import { yerelSiparisKaydet } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
@@ -7,6 +7,8 @@ import { siparisFiyatiniZirhlaDogrula } from '@/src/MalzemeCekmeceleri/GuvenlikZ
 import { kuponuKullanildiOlarakIsaretle } from '@/src/MalzemeCekmeceleri/useKuponHesaplayici';
 import { komisyonHesapla } from '@/src/MalzemeCekmeceleri/komisyonServisi';
 import { KomisyonAyarTipi } from '@/src/veritabani/VeriTipleri';
+import { SubeSiparisi, SubeUrunu } from '@/src/veritabani/SubeTipleri';
+import { subeSiparisZiliCal } from '@/src/MalzemeCekmeceleri/Sube/subeZilServisi';
 
 export interface YeniSiparisGirdisi {
   musteriId: string;
@@ -104,10 +106,53 @@ export async function veritabaninaSiparisOlustur(
     window.dispatchEvent(new CustomEvent('afyon_siparis_durum_degisti', { detail: { siparisKimligi: yeniSiparisKaydi.id, durum: 'beklemede' } }));
   }
 
-  // 2. Canlı Firebase aktifse siparişler koleksiyonuna kaydet
+  // 2. Canlı Firebase aktifse siparişler koleksiyonuna ve şube siparişleri koleksiyonuna kaydet
   if (canliFirebaseAktifMi()) {
     try {
       await belgeKaydet('siparisler', yeniSiparisKaydi.id, yeniSiparisKaydi);
+
+      // Şube siparişi ise sube_siparisleri tablosuna ekle ve stokları düş
+      if (girdi.mutfakId.startsWith('sube')) {
+        const subeSiparisKaydi: SubeSiparisi = {
+          id: yeniSiparisKaydi.id,
+          siparis_kodu: siparisKodu,
+          sube_id: girdi.mutfakId,
+          sube_adi: girdi.mutfakId === 'sube-2' ? 'Park Afyon AVM Gel-Al Teslimat Masası' : 'Zafer Meydanı Gel-Al & Dağıtım Noktası',
+          musteri_id: girdi.musteriId,
+          musteri_adi: girdi.musteriAdi || 'Müşteri',
+          musteri_telefon: girdi.musteriTelefon || '',
+          durum: 'hazirlaniyor',
+          toplam_tutar: dogrulama.hesaplananToplam,
+          odeme_yontemi: girdi.odemeYontemi,
+          pin_kodu: pinKodu,
+          olusturma_tarihi: yeniSiparisKaydi.olusturma_tarihi,
+          urunler: girdi.elemanlar.map(e => ({
+            urun_id: e.yemek_id || e.id || 'urun',
+            ad: e.yemek_baslik || e.baslik || 'Ürün',
+            adet: e.adet,
+            fiyat: e.birim_fiyat || e.fiyat || 0
+          }))
+        };
+
+        await belgeKaydet('sube_siparisleri', subeSiparisKaydi.id, subeSiparisKaydi);
+        subeSiparisZiliCal();
+
+        // Stok güncelleme
+        for (const eleman of girdi.elemanlar) {
+          const urunId = eleman.yemek_id || eleman.id;
+          if (urunId) {
+            const mevcutUrun = await belgeGetir<SubeUrunu>('sube_stoklari', urunId);
+            if (mevcutUrun) {
+              const yeniStok = Math.max(0, (mevcutUrun.stok_adedi || 0) - eleman.adet);
+              const yeniSatilan = (mevcutUrun.satilan_adet || 0) + eleman.adet;
+              await belgeKaydet('sube_stoklari', urunId, {
+                stok_adedi: yeniStok,
+                satilan_adet: yeniSatilan
+              });
+            }
+          }
+        }
+      }
     } catch (fbHata) {
       console.warn('Firebase sipariş kaydetme uyarısı:', fbHata);
     }
