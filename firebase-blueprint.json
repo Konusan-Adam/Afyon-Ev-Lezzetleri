@@ -262,7 +262,7 @@
     },
     "SubeSiparisi": {
       "title": "SubeSiparisi",
-      "description": "Gel-Al teslimat noktasına ve şubeye verilen tezgah sipariş kaydı",
+      "description": "Gel-Al teslimat noktasına ve şubeye verilen sipariş kaydı",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 64 },
@@ -272,9 +272,14 @@
         "musteri_id": { "type": "string", "maxLength": 64 },
         "musteri_adi": { "type": "string", "maxLength": 100 },
         "musteri_telefon": { "type": "string", "maxLength": 30 },
+        "teslimat_tipi": { "type": "string", "maxLength": 20 },
+        "teslimat_adresi_metni": { "type": "string", "maxLength": 500 },
+        "adres_notu": { "type": "string", "maxLength": 300 },
         "durum": { "type": "string", "maxLength": 50 },
         "toplam_tutar": { "type": "number" },
         "odeme_yontemi": { "type": "string", "maxLength": 50 },
+        "odeme_durumu": { "type": "string", "maxLength": 30 },
+        "paytr_oid": { "type": "string", "maxLength": 80 },
         "pin_kodu": { "type": "string", "maxLength": 10 },
         "tahmini_hazirlanma_dakika": { "type": "number" },
         "olusturma_tarihi": { "type": "string", "maxLength": 50 }

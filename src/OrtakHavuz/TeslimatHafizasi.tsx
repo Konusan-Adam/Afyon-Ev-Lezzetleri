@@ -18,6 +18,7 @@ interface TeslimatHafizaTipi {
   seciliGelAlSubesi: GelAlSubesi | null;
   gelAlSubeleri: GelAlSubesi[];
   gelAlSubesiSec: (sube: GelAlSubesi) => void;
+  gelAlSubesiniIdIleSec: (subeId: string) => void;
   yukleniyor: boolean;
   adresSecimPenceresiAcik: boolean;
   haritaPenceresiAcik: boolean;
@@ -48,6 +49,17 @@ export const TeslimatSaglayici: React.FC<{ children: React.ReactNode }> = ({ chi
   const [seciliGelAlSubesi, setSeciliGelAlSubesi] = useState<GelAlSubesi | null>(() => {
     return gelAlSubeleri.length > 0 ? gelAlSubeleri[0] : null;
   });
+
+  useEffect(() => {
+    if (gelAlSubeleri.length === 0) return;
+    setSeciliGelAlSubesi((onceki) => {
+      if (!onceki) return gelAlSubeleri[0];
+      const eslesen = gelAlSubeleri.find(
+        (s) => (s.id || s.kimlik) === (onceki.id || onceki.kimlik)
+      );
+      return eslesen || gelAlSubeleri[0];
+    });
+  }, [gelAlSubeleri]);
 
   const aktifMusteriKimligiAl = (): string => {
     try {
@@ -147,6 +159,13 @@ export const TeslimatSaglayici: React.FC<{ children: React.ReactNode }> = ({ chi
     setGelAlPenceresiAcik(false);
   };
 
+  const gelAlSubesiniIdIleSec = (subeId: string) => {
+    const bulunan = gelAlSubeleri.find((s) => (s.id || s.kimlik) === subeId);
+    if (bulunan) {
+      setSeciliGelAlSubesi(bulunan);
+    }
+  };
+
   const yeniAdresEkle = async (
     yeni: Omit<MusteriAdresi, 'kimlik' | 'musteri_kimligi' | 'olusturma_tarihi'>
   ): Promise<boolean> => {
@@ -197,6 +216,7 @@ export const TeslimatSaglayici: React.FC<{ children: React.ReactNode }> = ({ chi
         seciliGelAlSubesi,
         gelAlSubeleri,
         gelAlSubesiSec,
+        gelAlSubesiniIdIleSec,
         yukleniyor,
         adresSecimPenceresiAcik,
         haritaPenceresiAcik,

@@ -35,7 +35,7 @@ export const SubeSiparisYonetimi: React.FC<Props> = ({ subeId }) => {
         <div className="p-3 bg-amber-500/15 border border-amber-500/40 rounded-xl flex items-center justify-between text-amber-200 text-xs animate-pulse">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-            <span className="font-bold">Dikkat: {bekleyenSayisi} Gel-Al siparişi paketlenmeyi bekliyor!</span>
+            <span className="font-bold">Dikkat: {bekleyenSayisi} şube siparişi paketlenmeyi bekliyor!</span>
           </div>
           <span className="text-[10px] text-amber-300 font-semibold hidden sm:inline">Tezgahı Kontrol Edin</span>
         </div>
@@ -44,7 +44,7 @@ export const SubeSiparisYonetimi: React.FC<Props> = ({ subeId }) => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-[#3E1646] pb-3">
         <div className="flex items-center gap-2">
           <ShoppingBag className="w-5 h-5 text-[#DDAF53]" />
-          <h3 className="font-bold text-sm sm:text-base text-white">Şube Gel-Al Canlı Sipariş Havuzu</h3>
+          <h3 className="font-bold text-sm sm:text-base text-white">Şube Canlı Sipariş Havuzu</h3>
         </div>
 
         <div className="flex items-center gap-1 bg-[#180A1F] p-1 rounded-xl border border-[#3E1646] text-xs overflow-x-auto max-w-full">
@@ -70,7 +70,7 @@ export const SubeSiparisYonetimi: React.FC<Props> = ({ subeId }) => {
       {filtrelenmisSiparisler.length === 0 ? (
         <div className="py-10 text-center text-stone-400 bg-[#180A1F] rounded-xl border border-[#3E1646]">
           <ShoppingBag className="w-8 h-8 sm:w-10 sm:h-10 mx-auto text-[#521E5C] mb-2" />
-          <p className="text-xs sm:text-sm font-medium">Bu şubeye ait aktif Gel-Al siparişi bulunmuyor.</p>
+          <p className="text-xs sm:text-sm font-medium">Bu şubeye ait aktif sipariş bulunmuyor.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -93,12 +93,25 @@ export const SubeSiparisYonetimi: React.FC<Props> = ({ subeId }) => {
                      siparis.durum === 'teslime_hazir' ? '📦 Teslime Hazır' : '✅ Teslim Edildi'}
                   </span>
                   <span className="text-xs text-stone-400">PIN: <strong className="text-white">{siparis.pin_kodu}</strong></span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                    siparis.teslimat_tipi === 'teslimat'
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                  }`}>
+                    {siparis.teslimat_tipi === 'teslimat' ? '🛵 Adrese Teslim' : '🏬 Gel-Al'}
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-3 text-xs text-stone-300 pt-1">
                   <span className="flex items-center gap-1"><User className="w-3.5 h-3.5 text-[#DDAF53]" /> {siparis.musteri_adi}</span>
                   <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-emerald-400" /> {siparis.musteri_telefon}</span>
                 </div>
+
+                {siparis.teslimat_tipi === 'teslimat' && siparis.teslimat_adresi_metni && (
+                  <p className="text-[11px] text-sky-200/90 bg-sky-950/30 border border-sky-800/40 rounded-lg px-2.5 py-1 mt-1">
+                    📍 {siparis.teslimat_adresi_metni}
+                  </p>
+                )}
 
                 {siparis.urunler && siparis.urunler.length > 0 && (
                   <div className="text-xs text-stone-300 pt-1 flex flex-wrap gap-1">

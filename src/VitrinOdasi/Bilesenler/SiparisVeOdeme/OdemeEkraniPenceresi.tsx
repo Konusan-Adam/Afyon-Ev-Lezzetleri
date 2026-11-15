@@ -269,75 +269,83 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
     const toplamKuponIndirimi = kuponBilgisi?.gecerli ? kuponBilgisi.indirimTutari : 0;
     let kalanIndirim = toplamKuponIndirimi;
 
-    for (const tekGrup of aktifGruplar) {
-      const siparisElemanlari = tekGrup.elemanlar.map((e: any) => ({
-        id: e.id || e.yemek_id || 'el-' + Math.random(),
-        yemek_id: e.yemek_id || e.yemek?.id || e.id || 'yemek',
-        baslik: e.yemek?.baslik || e.baslik || 'Ev Yemeği',
-        yemek_baslik: e.yemek?.baslik || 'Ev Yemeği',
-        fiyat: e.birim_fiyat || e.fiyat || 0,
-        birim_fiyat: e.birim_fiyat,
-        adet: e.adet,
-      }));
+    try {
+      for (const tekGrup of aktifGruplar) {
+        const siparisElemanlari = tekGrup.elemanlar.map((e: any) => ({
+          id: e.id || e.yemek_id || 'el-' + Math.random(),
+          yemek_id: e.yemek_id || e.yemek?.id || e.id || 'yemek',
+          baslik: e.yemek?.baslik || e.baslik || e.yemek_baslik || 'Ürün',
+          yemek_baslik: e.yemek?.baslik || e.baslik || e.yemek_baslik || 'Ürün',
+          fiyat: e.birim_fiyat || e.fiyat || 0,
+          birim_fiyat: e.birim_fiyat,
+          adet: e.adet,
+        }));
 
-      const teslimatUcreti = gelAlMi ? 0 : tekGrup.teslimatUcreti;
-      const tabanTutar = tekGrup.araToplam + teslimatUcreti;
-      const buGrupIndirimi = Math.min(kalanIndirim, tabanTutar);
-      kalanIndirim -= buGrupIndirimi;
-      const gercekToplamTutar = Math.round((tabanTutar - buGrupIndirimi) * 100) / 100;
+        const teslimatUcreti = gelAlMi ? 0 : tekGrup.teslimatUcreti;
+        const tabanTutar = tekGrup.araToplam + teslimatUcreti;
+        const buGrupIndirimi = Math.min(kalanIndirim, tabanTutar);
+        kalanIndirim -= buGrupIndirimi;
+        const gercekToplamTutar = Math.round((tabanTutar - buGrupIndirimi) * 100) / 100;
 
-      const sonuc = await veritabaninaSiparisOlustur({
-        musteriId: aktifKullanici?.kimlik || `misafir-${Date.now()}`,
-        musteriAdi: musteriIsmi,
-        musteriTelefon: telefonuStandartlastir(musteriTel),
-        misafirMi: !aktifKullanici,
-        teslimatAdresiMetni: adresMetni,
-        mutfakId: tekGrup.mutfakId,
-        elemanlar: siparisElemanlari,
-        toplamTutar: gercekToplamTutar,
-        teslimatUcreti,
-        kuponKodu: buGrupIndirimi > 0 ? (kuponBilgisi?.kod || '') : undefined,
-        kuponIndirimTutari: buGrupIndirimi,
-        odemeYontemi,
-        odemeDurumu,
-        paytrOid,
-        tahminiTeslimat:
-          tercih.tip === 'hemen'
-            ? gelAlMi
-              ? seciliGelAlSubesi?.hazirlanma_suresi || '15-20 dk'
-              : '35-45 dk'
-            : `${tercih.tarihEtiketi} ${tercih.saatAraligi}`,
-        adresNotu: gelAlMi ? `[GEL AL: ${seciliGelAlSubesi?.ad}] ${adresNotu}` : adresNotu,
-      });
-
-      if (sonuc) {
-        yeniOlusanlar.push(sonuc);
-        // Misafir kullanıcı ise hem misafir_kullanicilar hem de musteri_adresleri tablosuna mühürle
-        if (!aktifKullanici) {
-          try {
-            await misafirProfiliniKaydetVeGuncelle({
-              telefon: musteriTel,
-              adSoyad: musteriIsmi,
-              mahalle: seciliMahalle,
-              acikAdres: acikAdres.trim(),
-              binaDaire: binaDaireNo.trim(),
-              siparisKodu: sonuc.siparis_kodu
-            });
-            localStorage.setItem('afyon_son_misafir_telefon', telefonuStandartlastir(musteriTel));
-            localStorage.setItem('afyon_son_misafir_ad', musteriIsmi);
-          } catch {}
-        }
-        // Hukuki Mesafeli Satış ve Ön Bilgilendirme Onay Logu Kaydet
-        hukukiLogKaydet({
-          sozlesmeTuru: 'mesafeli_satis',
-          sozlesmeVersiyonu: '1.0.0',
-          kullaniciKimlik: aktifKullanici?.kimlik,
-          kullaniciAdSoyad: musteriIsmi,
-          kullaniciTelefon: musteriTel,
-          islemTuru: 'siparis',
-          onaylandiMi: true,
+        const sonuc = await veritabaninaSiparisOlustur({
+          musteriId: aktifKullanici?.kimlik || `misafir-${Date.now()}`,
+          musteriAdi: musteriIsmi,
+          musteriTelefon: telefonuStandartlastir(musteriTel),
+          misafirMi: !aktifKullanici,
+          teslimatTipi: gelAlMi ? 'gel_al' : 'teslimat',
+          teslimatAdresiMetni: adresMetni,
+          mutfakId: tekGrup.mutfakId,
+          subeAdi: gelAlMi ? seciliGelAlSubesi?.ad : tekGrup.mutfak?.ad,
+          elemanlar: siparisElemanlari,
+          toplamTutar: gercekToplamTutar,
+          teslimatUcreti,
+          kuponKodu: buGrupIndirimi > 0 ? (kuponBilgisi?.kod || '') : undefined,
+          kuponIndirimTutari: buGrupIndirimi,
+          odemeYontemi,
+          odemeDurumu,
+          paytrOid,
+          tahminiTeslimat:
+            tercih.tip === 'hemen'
+              ? gelAlMi
+                ? seciliGelAlSubesi?.hazirlanma_suresi || '15-20 dk'
+                : '35-45 dk'
+              : `${tercih.tarihEtiketi} ${tercih.saatAraligi}`,
+          adresNotu: gelAlMi ? `[GEL AL: ${seciliGelAlSubesi?.ad}] ${adresNotu}` : adresNotu,
         });
+
+        if (sonuc) {
+          yeniOlusanlar.push(sonuc);
+          // Misafir kullanıcı ise hem misafir_kullanicilar hem de musteri_adresleri tablosuna mühürle
+          if (!aktifKullanici) {
+            try {
+              await misafirProfiliniKaydetVeGuncelle({
+                telefon: musteriTel,
+                adSoyad: musteriIsmi,
+                mahalle: seciliMahalle,
+                acikAdres: acikAdres.trim(),
+                binaDaire: binaDaireNo.trim(),
+                siparisKodu: sonuc.siparis_kodu,
+              });
+              localStorage.setItem('afyon_son_misafir_telefon', telefonuStandartlastir(musteriTel));
+              localStorage.setItem('afyon_son_misafir_ad', musteriIsmi);
+            } catch {}
+          }
+          // Hukuki Mesafeli Satış ve Ön Bilgilendirme Onay Logu Kaydet
+          hukukiLogKaydet({
+            sozlesmeTuru: 'mesafeli_satis',
+            sozlesmeVersiyonu: '1.0.0',
+            kullaniciKimlik: aktifKullanici?.kimlik,
+            kullaniciAdSoyad: musteriIsmi,
+            kullaniciTelefon: musteriTel,
+            islemTuru: 'siparis',
+            onaylandiMi: true,
+          });
+        }
       }
+    } catch (hata: any) {
+      setYukleniyor(false);
+      setHataMesaji(hata?.message || 'Siparişiniz veritabanına kaydedilemedi. Lütfen tekrar deneyiniz.');
+      return;
     }
 
     setYukleniyor(false);

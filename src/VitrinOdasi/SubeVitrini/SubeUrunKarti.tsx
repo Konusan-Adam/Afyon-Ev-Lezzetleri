@@ -12,11 +12,12 @@ interface SubeUrunKartiProps {
 
 export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, onGelAlSecildi, detayAc }) => {
   const { sepeteEkle, yukleniyor } = sepetHafizasiKullan();
-  const { teslimatTipiDegistir } = teslimatHafizasiKullan();
+  const { teslimatTipiDegistir, gelAlSubesiniIdIleSec } = teslimatHafizasiKullan();
   const [eklendi, setEklendi] = React.useState(false);
 
   const adreseSepeteAt = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    teslimatTipiDegistir('teslimat');
     await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
     setEklendi(true);
     setTimeout(() => setEklendi(false), 1500);
@@ -24,6 +25,7 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, onGelAlSecil
 
   const gelAlSepeteAt = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    gelAlSubesiniIdIleSec(urun.sube_id);
     teslimatTipiDegistir('gel_al');
     await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
     if (onGelAlSecildi) onGelAlSecildi();

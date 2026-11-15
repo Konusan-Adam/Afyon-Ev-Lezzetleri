@@ -16,7 +16,7 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
   onGelAlSecildi,
 }) => {
   const { sepeteEkle, yukleniyor } = sepetHafizasiKullan();
-  const { teslimatTipiDegistir } = teslimatHafizasiKullan();
+  const { teslimatTipiDegistir, gelAlSubesiniIdIleSec } = teslimatHafizasiKullan();
   const [adet, setAdet] = React.useState<number>(1);
   const [eklendi, setEklendi] = React.useState<boolean>(false);
 
@@ -25,6 +25,7 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
   const stokTukendi = urun.stok_adedi <= 0;
 
   const adreseSepeteAt = async () => {
+    teslimatTipiDegistir('teslimat');
     await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
     setEklendi(true);
     setTimeout(() => {
@@ -34,6 +35,7 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
   };
 
   const gelAlSepeteAt = async () => {
+    gelAlSubesiniIdIleSec(urun.sube_id);
     teslimatTipiDegistir('gel_al');
     await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
     if (onGelAlSecildi) onGelAlSecildi();

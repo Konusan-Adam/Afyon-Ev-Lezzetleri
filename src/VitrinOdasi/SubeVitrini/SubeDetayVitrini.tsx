@@ -14,6 +14,7 @@ import { CokluSepetVitrini } from '../Bilesenler/Sepet/CokluSepetVitrini';
 import { YuzenSepetBari } from '../Bilesenler/Sepet/YuzenSepetBari';
 import { KullaniciGirisPenceresi } from '../KullaniciGiris/KullaniciGirisPenceresi';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
+import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 
 interface SubeDetayVitriniProps {
   sube: GelAlSubesi;
@@ -39,6 +40,7 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
   const [canliYayinAcik, setCanliYayinAcik] = useState<boolean>(false);
 
   const { aktifKullanici, panelDegistir } = kullaniciHafizasiKullan();
+  const { sepetPaneliAc } = sepetHafizasiKullan();
 
   const kategoriler = ['hepsi', ...Array.from(new Set(urunler.map((u) => u.kategori)))];
   
@@ -114,7 +116,7 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
                   <SubeUrunKarti 
                     key={urun.id} 
                     urun={urun} 
-                    onGelAlSecildi={geriDonTiklandi} 
+                    onGelAlSecildi={sepetPaneliAc} 
                     detayAc={(u) => setSeciliDetayUrun(u)}
                   />
                 ))}
@@ -154,7 +156,7 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
         <SubeUrunDetayModali
           urun={seciliDetayUrun}
           onKapat={() => setSeciliDetayUrun(null)}
-          onGelAlSecildi={geriDonTiklandi}
+          onGelAlSecildi={sepetPaneliAc}
         />
       )}
 

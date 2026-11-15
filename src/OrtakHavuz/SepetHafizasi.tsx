@@ -9,6 +9,9 @@ import {
 } from '@/src/MalzemeCekmeceleri/Sepet/sepetElemaniGuncelle';
 import { sepetiMutfaklaraGöreGrupla, MutfakSepetGrubu } from '@/src/MalzemeCekmeceleri/Sepet/sepetGruplayici';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
+import { sepetElemanlariniZenginlestir } from '@/src/MalzemeCekmeceleri/Sepet/sepetUrunEslestirici';
+import { GelAlSubesi } from '@/src/veritabani/VeriTipleri';
+import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
 
 interface SepetHafizasiTip {
   sepetPaneliAcik: boolean;
@@ -55,31 +58,29 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
   // Dinamik Müşteri ID: Aktif kullanıcı varsa onun kimliği, yoksa misafir ID
   const musteriId = aktifKullanici?.kimlik || 'misafir_yerel_sepet';
 
-  // 🔥 Firebase Firestore Canlı Dinleyici ile Sepet Verilerini, Yemek ve Mutfak Detaylarıyla Senkronize Etme
+  // 🔥 Firebase Firestore Canlı Dinleyici ile Sepet Verilerini, Yemek, Mutfak ve Şube Detaylarıyla Senkronize Etme
   useEffect(() => {
     setYukleniyor(true);
     let abonelikCikarSepet = () => {};
     let abonelikCikarYemek = () => {};
     let abonelikCikarMutfak = () => {};
+    let abonelikCikarSubeUrun = () => {};
+    let abonelikCikarSube = () => {};
 
     let mevcutSepet: SepetElemani[] = [];
     let mevcutYemekler: YemekTipi[] = [];
     let mevcutMutfaklar: MutfakTipi[] = [];
+    let mevcutSubeUrunleri: SubeUrunu[] = [];
+    let mevcutSubeler: GelAlSubesi[] = [];
 
     const sepetiHaritalaVeGuncelle = () => {
-      const haritalanmis = mevcutSepet.map((item) => {
-        const bulunanYemek = mevcutYemekler.find((y) => y.id === item.yemek_id);
-        const bulunanMutfak = mevcutMutfaklar.find((m) => m.id === (item.mutfak_id || bulunanYemek?.mutfak_id));
-
-        const birimFiyat = item.birim_fiyat || bulunanYemek?.fiyat || 0;
-
-        return {
-          ...item,
-          birim_fiyat: birimFiyat,
-          yemek: item.yemek || bulunanYemek,
-          mutfak: item.mutfak || bulunanMutfak,
-        };
-      });
+      const haritalanmis = sepetElemanlariniZenginlestir(
+        mevcutSepet,
+        mevcutYemekler,
+        mevcutMutfaklar,
+        mevcutSubeUrunleri,
+        mevcutSubeler
+      );
 
       setSepetElemanlari(haritalanmis);
       setYukleniyor(false);
@@ -102,6 +103,16 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
       sepetiHaritalaVeGuncelle();
     });
 
+    abonelikCikarSubeUrun = koleksiyonuCanliDinle<SubeUrunu>('sube_stoklari', (uListesi) => {
+      mevcutSubeUrunleri = uListesi || [];
+      sepetiHaritalaVeGuncelle();
+    });
+
+    abonelikCikarSube = koleksiyonuCanliDinle<GelAlSubesi>('gel_al_subeleri', (sListesi) => {
+      mevcutSubeler = sListesi || [];
+      sepetiHaritalaVeGuncelle();
+    });
+
     abonelikCikarSepet = koleksiyonuCanliDinle<SepetElemani>('sepet_elemanlari', (tumElemanlar) => {
       mevcutSepet = (tumElemanlar || []).filter((e) => e.musteri_id === musteriId);
       sepetiHaritalaVeGuncelle();
@@ -111,6 +122,8 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
       abonelikCikarSepet();
       abonelikCikarYemek();
       abonelikCikarMutfak();
+      abonelikCikarSubeUrun();
+      abonelikCikarSube();
     };
   }, [musteriId]);
 
@@ -134,7 +147,9 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const mutfakSepetiniTemizle = async (mutfakId: string) => {
-    setSepetElemanlari((oncekiler) => oncekiler.filter((e) => e.yemek && e.yemek.mutfak_id !== mutfakId));
+    setSepetElemanlari((oncekiler) =>
+      oncekiler.filter((e) => (e.mutfak_id || e.yemek?.mutfak_id) !== mutfakId)
+    );
     await veritabanindanMutfakSepetiniTemizle(musteriId, mutfakId);
   };
 

@@ -50,9 +50,14 @@ export interface SubeSiparisi {
   musteri_id?: string;
   musteri_adi: string;
   musteri_telefon: string;
+  teslimat_tipi?: 'gel_al' | 'teslimat';
+  teslimat_adresi_metni?: string;
+  adres_notu?: string;
   durum: 'hazirlaniyor' | 'teslime_hazir' | 'teslim_edildi' | 'iptal';
   toplam_tutar: number;
   odeme_yontemi: string;
+  odeme_durumu?: 'odendi' | 'bekliyor' | 'kapida';
+  paytr_oid?: string;
   pin_kodu: string;
   tahmini_hazirlanma_dakika?: number;
   olusturma_tarihi: string;

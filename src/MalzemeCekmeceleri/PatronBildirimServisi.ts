@@ -27,6 +27,7 @@ export interface PatronBildirimi {
   tarihSaat: string;
   okundu_mu: boolean;
   ilgiliKimlik?: string;
+  hedefSekme?: 'sube_siparisleri' | 'siparisler';
 }
 
 const YEREL_PATRON_BILDIRIMLERI_KEY = 'afyon_patron_canli_bildirimler_v1';
@@ -157,11 +158,17 @@ export const patronBildirimleriniGetir = (): PatronBildirimi[] => {
   return [];
 };
 
+export interface BildirimEklemeSecenekleri {
+  sessizMi?: boolean;
+  hedefSekme?: 'sube_siparisleri' | 'siparisler';
+}
+
 export const patronBildirimiEkle = (
   tur: PatronBildirimTuru,
   baslik: string,
   detay: string,
-  ilgiliKimlik?: string
+  ilgiliKimlik?: string,
+  secenekler?: BildirimEklemeSecenekleri
 ): PatronBildirimi => {
   console.log('[Bildirim]: Ekleme yapılıyor', tur, baslik);
   const yeniBildirim: PatronBildirimi = {
@@ -171,7 +178,8 @@ export const patronBildirimiEkle = (
     detay,
     tarihSaat: new Date().toLocaleString('tr-TR'),
     okundu_mu: false,
-    ilgiliKimlik
+    ilgiliKimlik,
+    ...(secenekler?.hedefSekme ? { hedefSekme: secenekler.hedefSekme } : {}),
   };
 
   try {
@@ -187,11 +195,10 @@ export const patronBildirimiEkle = (
       });
     }
 
-    // Sesli zil çal
-    patronZilSesiCal();
-
-    // Masaüstü / Arka plana sesli işletim sistemi bildirimi fırlat
-    masaustuBildirimGonder(baslik, detay);
+    if (!secenekler?.sessizMi) {
+      patronZilSesiCal();
+      masaustuBildirimGonder(baslik, detay);
+    }
 
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('afyon_patron_yeni_bildirim', { detail: yeniBildirim }));

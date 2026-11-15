@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
-import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
+import { sepetHafizasiKullan, teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { MasaustuSepetSatiri } from '../Bilesenler/Mutfak/Masaustu/MasaustuSepetSatiri';
 import { MasaustuSepetOzeti } from '../Bilesenler/Mutfak/Masaustu/MasaustuSepetOzeti';
 import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
@@ -12,12 +12,18 @@ interface SubeSabitSepetProps {
 
 export const SubeSabitSepet: React.FC<SubeSabitSepetProps> = ({ sube }) => {
   const { mutfakGruplari } = sepetHafizasiKullan();
+  const { gelAlSubesiniIdIleSec } = teslimatHafizasiKullan();
   const [odemeAcik, setOdemeAcik] = useState(false);
 
   const subeId = sube.id || sube.kimlik || 'sube-1';
   // Bu şubenin sepet grubunu bul
   const grup = mutfakGruplari.find((g) => g.mutfakId === subeId);
   const urunSayisi = grup ? grup.elemanlar.reduce((t, e) => t + e.adet, 0) : 0;
+
+  const odemePenceresiAc = () => {
+    gelAlSubesiniIdIleSec(subeId);
+    setOdemeAcik(true);
+  };
 
   return (
     <div className="w-full bg-[#240E2A]/95 backdrop-blur-md rounded-2xl border border-purple-800/60 p-4 shadow-2xl transition-all duration-300 space-y-3.5 sticky top-4">
@@ -48,7 +54,7 @@ export const SubeSabitSepet: React.FC<SubeSabitSepetProps> = ({ sube }) => {
           <MasaustuSepetOzeti 
             grup={grup} 
             minUlasildi={true} 
-            odemeTiklandi={() => setOdemeAcik(true)} 
+            odemeTiklandi={odemePenceresiAc} 
           />
         </>
       )}
