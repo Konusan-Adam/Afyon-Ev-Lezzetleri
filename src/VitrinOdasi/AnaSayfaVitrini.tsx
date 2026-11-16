@@ -111,7 +111,7 @@ export const AnaSayfaVitrini: React.FC = () => {
     setSeciliYemekModal(null);
     try {
       const mutfaklar = await koleksiyonGetir<Mutfak>('mutfaklar');
-      const bulunan = (mutfaklar || []).find((m) => m.id === mutfakId);
+      const bulunan = (mutfaklar || []).find((m) => m.id === mutfakId || m.kimlik === mutfakId);
       if (bulunan) {
         setSeciliMutfak(bulunan);
       }

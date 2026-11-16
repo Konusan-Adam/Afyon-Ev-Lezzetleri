@@ -63,9 +63,9 @@ export const AramaSonuclariKutusu: React.FC<AramaSonuclariKutusuOzellikleri> = (
                     >
                       <div className="flex items-center gap-3">
                         <img
-                          src={mutfak.gorsel_url || 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=200&q=80'}
+                          src="/marka_logosu.jpg"
                           alt={mutfak.ad || mutfak.mutfak_adi}
-                          className="w-10 h-10 object-cover rounded-lg ring-1 ring-amber-500/40 group-hover:ring-amber-400 transition-all"
+                          className="w-10 h-10 object-cover rounded-lg bg-[#290F30]"
                         />
                         <div>
                           <h4 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">

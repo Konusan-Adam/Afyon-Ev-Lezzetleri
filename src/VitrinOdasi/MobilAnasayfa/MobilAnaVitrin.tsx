@@ -12,6 +12,7 @@ import { useKampanyalar } from '@/src/MalzemeCekmeceleri/KampanyaCekmecesi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { SagFiltreSutunu } from '../AramaFiltre/SagFiltreSutunu';
 import { AnaAfisBannerVitrini } from '../ReklamVeDuyuru/AnaAfisBannerVitrini';
+import { MutfakAfisleriBileseni } from '../ReklamVeDuyuru/MutfakAfisleriBileseni';
 import { TeslimatZamaniBari } from '../Bilesenler/OnSiparisVePorsiyon/TeslimatZamaniBari';
 import { mahalleyeEnYakinSubeyiBul } from '@/src/MalzemeCekmeceleri/Sube/SubeMesafeVeMahalleEsleyici';
 import { Mutfak, Yemek, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
@@ -120,13 +121,18 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
               <AnaAfisBannerVitrini />
             </div>
 
-            {/* 1. Sıra: Afyon Ev Mutfakları & Aşçıları */}
+            {/* 1. Sıra: Mutfak Özel Afişleri Vitrini */}
+            <div className="px-4 lg:px-0">
+              <MutfakAfisleriBileseni />
+            </div>
+
+            {/* 2. Sıra: Afyon Ev Mutfakları & Aşçıları */}
             <MobilTumMutfaklarListesi mutfakSecildi={mutfakDegistir} />
 
-            {/* 2. Sıra: Öne Çıkan Yıldız Ev Mutfakları (Podyum) */}
+            {/* 3. Sıra: Öne Çıkan Yıldız Ev Mutfakları (Podyum) */}
             <MobilMutfaklarVitirini mutfakSecildi={mutfakDegistir} />
 
-            {/* 3. Sıra: Popüler Ev Yemekleri */}
+            {/* 4. Sıra: Popüler Ev Yemekleri */}
             <MobilPopulerYemekler yemekSecildi={yemekSecildi} />
           </div>
 

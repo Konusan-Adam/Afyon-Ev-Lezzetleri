@@ -1,17 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { AnaAfisOgesi } from '@/src/veritabani/GercekVeriYardimcisi';
 import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
+import { useMutfakAfisleri } from '@/src/MalzemeCekmeceleri/Mutfak/useMutfakAfisleri';
 
 interface MobilKampanyaSliderOzellikleri {
   kampanyalar: AnaAfisOgesi[];
 }
 
 export const MobilKampanyaSlider: React.FC<MobilKampanyaSliderOzellikleri> = ({ kampanyalar }) => {
+  const { afisler: mutfakAfisleri } = useMutfakAfisleri();
   const [aktifSira, setAktifSira] = useState<number>(0);
   const [dokunmaBaslangicX, setDokunmaBaslangicX] = useState<number | null>(null);
 
-  const aktifListesi = kampanyalar.filter(k => k.aktif !== false && k.aktif_mi !== false);
+  const aktifListesi = useMemo<AnaAfisOgesi[]>(() => {
+    const mutfakSlaytlari: AnaAfisOgesi[] = mutfakAfisleri.map((afis) => ({
+      id: `mutfak-afis-${afis.id}`,
+      baslik: afis.baslik,
+      aciklama: afis.aciklama,
+      gorsel_url: afis.gorsel_url,
+      rozet: afis.rozet || 'MUTFAK AFİŞİ',
+      mutfak_id: afis.mutfak_id,
+      mutfak_adi: afis.mutfak_adi,
+      konum_y: afis.konum_y,
+      butonMetni: 'Mutfağa Git',
+      aktif: true,
+      aktif_mi: true,
+    }));
+    const aktifKampanyalar = kampanyalar.filter((k) => k.aktif !== false && k.aktif_mi !== false);
+    return [...mutfakSlaytlari, ...aktifKampanyalar];
+  }, [mutfakAfisleri, kampanyalar]);
+
   const toplamKampanya = aktifListesi.length;
 
   useEffect(() => {
@@ -45,23 +64,40 @@ export const MobilKampanyaSlider: React.FC<MobilKampanyaSliderOzellikleri> = ({ 
     setDokunmaBaslangicX(null);
   };
 
+  const mutfakVitriniAc = () => {
+    if (!aktifKampanya.mutfak_id || typeof window === 'undefined') return;
+    window.dispatchEvent(
+      new CustomEvent('afyon_mutfak_vitrini_ac', {
+        detail: { mutfakId: aktifKampanya.mutfak_id },
+      })
+    );
+  };
+
   const hamUrl = aktifKampanya.gorselVerisi || aktifKampanya.gorsel_url || aktifKampanya.gorselUrl || 'https://pngimg.com/uploads/pie/pie_PNG51.png';
-  const gorselKaynagi = gorselUrlGuvenliYap(hamUrl);
+  const gorselKaynagi = gorselUrlGuvenliYap(hamUrl) || '/marka_logosu.jpg';
 
   return (
     <div className="w-full px-4 select-none">
-      <div 
+      <div
+        onClick={aktifKampanya.mutfak_id ? mutfakVitriniAc : undefined}
         onTouchStart={dokunmaBasladi}
         onTouchEnd={dokunmaBitti}
         className="relative w-full max-w-2xl mx-auto flex items-center justify-between min-h-[145px] py-2 cursor-pointer transition-opacity duration-300 bg-transparent"
       >
         {/* Sol Taraf: Rozet, Başlık, Açıklama ve Buton */}
         <div className="flex-1 pr-3 z-10 flex flex-col justify-center">
-          {aktifKampanya.rozet && (
-            <div className="bg-[#431B47] text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-md w-fit mb-1.5 uppercase tracking-wider">
-              {aktifKampanya.rozet}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+            {aktifKampanya.rozet && (
+              <div className="bg-[#431B47] text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-md w-fit uppercase tracking-wider">
+                {aktifKampanya.rozet}
+              </div>
+            )}
+            {aktifKampanya.mutfak_adi && (
+              <div className="bg-amber-500/20 text-amber-200 border border-amber-400/30 text-[10px] font-bold px-2 py-0.5 rounded-md w-fit">
+                {aktifKampanya.mutfak_adi}
+              </div>
+            )}
+          </div>
 
           <h2 className="text-white text-base sm:text-lg font-bold leading-tight mb-1 max-w-[280px] sm:max-w-md">
             {aktifKampanya.baslik}
@@ -73,23 +109,44 @@ export const MobilKampanyaSlider: React.FC<MobilKampanyaSliderOzellikleri> = ({ 
             </p>
           )}
 
-          <a 
-            href={aktifKampanya.butonHedefi === 'kayit' ? '#' : aktifKampanya.link || '#'}
-            className="inline-flex items-center gap-1.5 text-white font-bold text-xs hover:opacity-90 transition-opacity"
-          >
-            <span>{aktifKampanya.butonMetni || 'Hemen Keşfet!'}</span>
-            <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0">
-              <ChevronRight size={11} className="text-[#1A0A1D] stroke-[3]" />
-            </div>
-          </a>
+          {aktifKampanya.mutfak_id ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                mutfakVitriniAc();
+              }}
+              className="inline-flex items-center gap-1.5 text-white font-bold text-xs hover:opacity-90 transition-opacity w-fit cursor-pointer"
+            >
+              <span>{aktifKampanya.butonMetni || 'Mutfağa Git'}</span>
+              <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0">
+                <ChevronRight size={11} className="text-[#1A0A1D] stroke-[3]" />
+              </div>
+            </button>
+          ) : (
+            <a
+              href={aktifKampanya.butonHedefi === 'kayit' ? '#' : aktifKampanya.link || '#'}
+              className="inline-flex items-center gap-1.5 text-white font-bold text-xs hover:opacity-90 transition-opacity"
+            >
+              <span>{aktifKampanya.butonMetni || 'Hemen Keşfet!'}</span>
+              <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center shrink-0">
+                <ChevronRight size={11} className="text-[#1A0A1D] stroke-[3]" />
+              </div>
+            </a>
+          )}
         </div>
 
-        {/* Sağ Taraf: Şeffaf Transparan Görsel (Arka plansız) */}
+        {/* Sağ Taraf: Afiş Görseli */}
         <div className="relative z-10 shrink-0 flex items-center justify-center">
-          <img 
-            src={gorselKaynagi} 
+          <img
+            src={gorselKaynagi}
             alt={aktifKampanya.baslik}
-            className="w-28 h-28 sm:w-36 sm:h-36 object-contain select-none pointer-events-none drop-shadow-none bg-transparent"
+            className={`w-28 h-28 sm:w-36 sm:h-36 select-none pointer-events-none ${
+              aktifKampanya.mutfak_id
+                ? 'object-cover rounded-2xl border border-amber-400/30 shadow-lg'
+                : 'object-contain drop-shadow-none bg-transparent'
+            }`}
+            style={aktifKampanya.mutfak_id ? { objectPosition: `center ${aktifKampanya.konum_y ?? 50}%` } : undefined}
             referrerPolicy="no-referrer"
           />
         </div>

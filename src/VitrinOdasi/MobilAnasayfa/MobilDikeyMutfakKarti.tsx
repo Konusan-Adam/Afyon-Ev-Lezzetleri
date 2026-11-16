@@ -2,7 +2,6 @@ import React from 'react';
 import { Star, Clock, Bike, MapPin } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
-import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
 
 interface DikeyMutfakKartiOzellikleri {
   mutfak: Mutfak;
@@ -31,15 +30,15 @@ export const MobilDikeyMutfakKarti: React.FC<DikeyMutfakKartiOzellikleri> = ({
       onClick={() => onSec?.(mutfak)}
       className="w-full bg-[#240E2A] rounded-2xl overflow-hidden border border-purple-900/40 hover:border-amber-500/50 transition-all duration-300 shadow-md cursor-pointer group active:scale-[0.99] flex flex-col justify-between h-full"
     >
-      {/* Kapak Görseli & Rozetler */}
-      <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-purple-950/60 shrink-0">
+      {/* Kapak Alanı: Sabit Resmi Marka Logosu */}
+      <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-[#290F30] shrink-0 flex items-center justify-center">
         <img
-          src={gorselUrlGuvenliYap(mutfak.gorsel_url)}
+          src="/marka_logosu.jpg"
           alt={mutfak.ad}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#240E2A] via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#240E2A] via-transparent to-black/20 pointer-events-none" />
 
         {/* Puan Rozeti */}
         <div className="absolute top-3 right-3 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1 border border-amber-400/50 text-amber-300 text-xs font-bold shadow-md">

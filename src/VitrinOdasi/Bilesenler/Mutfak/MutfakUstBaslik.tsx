@@ -3,6 +3,7 @@ import { ArrowLeft, Star, Clock, Bike, ShieldCheck, Heart, Share2, ShoppingBag, 
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan, favoriHafizasiKullan } from '@/src/OrtakHavuz';
 import { useMutfakTeslimatAyari } from '@/src/MalzemeCekmeceleri/useMutfakTeslimatAyari';
+import { useMutfakAfisleri } from '@/src/MalzemeCekmeceleri/Mutfak/useMutfakAfisleri';
 
 interface MutfakUstBaslikOzellikleri {
   mutfak: Mutfak;
@@ -16,8 +17,14 @@ export const MutfakUstBaslik: React.FC<MutfakUstBaslikOzellikleri> = ({
   const { toplamUrunSayisi, sepetPaneliAc } = sepetHafizasiKullan();
   const { mutfakFavoriMi, mutfakFavoriDegistir } = favoriHafizasiKullan();
   const { ayar } = useMutfakTeslimatAyari(mutfak.id);
+  const { afisler } = useMutfakAfisleri();
   const favoride = mutfakFavoriMi(mutfak.id);
   const [kopyalandi, setKopyalandi] = useState<boolean>(false);
+
+  const mutfakAfisi = afisler.find(
+    (a) => a.mutfak_id === mutfak.id || (mutfak.kimlik && a.mutfak_id === mutfak.kimlik)
+  );
+  const afisGorseli = mutfakAfisi?.gorsel_url || mutfak.gorsel_url;
 
   const paylasTiklandi = async () => {
     try {
@@ -39,14 +46,19 @@ export const MutfakUstBaslik: React.FC<MutfakUstBaslikOzellikleri> = ({
 
   return (
     <header className="relative w-full bg-[#200A25] pb-4 border-b border-purple-900/40">
-      {/* Kapak Görseli */}
-      <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-purple-950/60">
-        <img
-          src={mutfak.gorsel_url}
-          alt={mutfak.ad}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#200A25] via-black/40 to-black/60" />
+      {/* Kapak Afiş Alanı */}
+      <div className="relative h-44 sm:h-56 w-full overflow-hidden bg-[#200A25] flex items-center justify-center">
+        {afisGorseli ? (
+          <img
+            src={afisGorseli}
+            alt={mutfak.ad}
+            className="w-full h-full object-cover"
+            style={{ objectPosition: `center ${mutfakAfisi?.konum_y ?? 50}%` }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#3B1448] via-[#260B2F] to-[#120415]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#200A25] via-transparent to-black/40 pointer-events-none" />
 
         {/* Üst Butonlar (Geri Dön & Paylaş, Favori, Sepet Üçlüsü) */}
         <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">

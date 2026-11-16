@@ -37,8 +37,10 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
     yemek.secenek_gruplari.length > 0
   );
 
+  const tukendiMi = porsiyon.tukendiMi || yemek.stokta_var_mi === false || yemek.tukendi_mi === true;
+
   const dogrudanSepeteEkle = async () => {
-    if (porsiyon.tukendiMi) return;
+    if (tukendiMi) return;
     await sepeteEkle(
       yemek.mutfak_id || '',
       yemek.id,
@@ -51,7 +53,7 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
   };
 
   const ozellestirerekSepeteEkle = async (konfig: SecilenUrunKonfigurasyonu) => {
-    if (porsiyon.tukendiMi) return;
+    if (tukendiMi) return;
     await sepeteEkle(
       yemek.mutfak_id || '',
       yemek.id,
@@ -64,7 +66,7 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
   };
 
   const aksiyonBaslat = () => {
-    if (porsiyon.tukendiMi) return;
+    if (tukendiMi) return;
     if (onSec) {
       onSec(yemek);
       return;
@@ -83,7 +85,7 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
       <article
         onClick={aksiyonBaslat}
         className={`bg-[#240E2A] rounded-2xl border transition-all duration-300 shadow-lg flex flex-col justify-between overflow-hidden h-full ${
-          porsiyon.tukendiMi
+          tukendiMi
             ? 'opacity-70 border-rose-950/40 cursor-not-allowed'
             : 'border-purple-900/40 hover:border-amber-500/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-950/60 cursor-pointer group active:scale-[0.98]'
         }`}
@@ -94,7 +96,7 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
             src={gorsel}
             alt={yemek.baslik}
             className={`w-full h-full object-cover transition-transform duration-700 ease-out ${
-              porsiyon.tukendiMi ? 'grayscale-40' : 'group-hover:scale-108'
+              tukendiMi ? 'grayscale-40' : 'group-hover:scale-108'
             }`}
             loading="lazy"
             onError={(e) => {
@@ -150,16 +152,16 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
                 e.stopPropagation();
                 aksiyonBaslat();
               }}
-              disabled={eklendiAnimasyonu || porsiyon.tukendiMi}
+              disabled={eklendiAnimasyonu || tukendiMi}
               className={`flex items-center gap-1.5 font-black px-4 py-2 rounded-xl text-xs shadow-md transition-all ${
-                porsiyon.tukendiMi
+                tukendiMi
                   ? 'bg-rose-950/60 border border-rose-800 text-rose-300 cursor-not-allowed'
                   : eklendiAnimasyonu
                   ? 'bg-emerald-600 text-white cursor-default'
                   : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 text-gray-950 shadow-amber-500/20 active:scale-95 cursor-pointer'
               }`}
             >
-              {porsiyon.tukendiMi ? (
+              {tukendiMi ? (
                 <span>Tükendi</span>
               ) : eklendiAnimasyonu ? (
                 <>

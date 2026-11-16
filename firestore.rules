@@ -135,6 +135,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /mutfak_afisleri/{afisId} {
+      allow read, write: if true;
+    }
+
+    match /tamamlanan_siparisler/{siparisId} {
+      allow read, write: if true;
+    }
+
     match /tedarikci_hakedisleri/{hakedisId} {
       allow read, write: if true;
     }

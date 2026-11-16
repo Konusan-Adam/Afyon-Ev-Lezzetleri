@@ -331,6 +331,37 @@
         "guncellemeZamani": { "type": "number" }
       },
       "required": ["merchantOid", "durum", "tutarKurus"]
+    },
+    "MutfakAfisi": {
+      "title": "MutfakAfisi",
+      "description": "Ev mutfaklarının vitrin afiş ve duyuru kayıtları",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "mutfak_id": { "type": "string", "maxLength": 64 },
+        "mutfak_adi": { "type": "string", "maxLength": 150 },
+        "rozet": { "type": "string", "maxLength": 80 },
+        "baslik": { "type": "string", "maxLength": 150 },
+        "aciklama": { "type": "string", "maxLength": 500 },
+        "gorsel_url": { "type": "string", "maxLength": 1000 },
+        "aktif_mi": { "type": "boolean" },
+        "onayli_mi": { "type": "boolean" },
+        "onay_durumu": { "type": "string", "maxLength": 30 }
+      },
+      "required": ["id", "mutfak_id", "baslik", "aktif_mi", "onayli_mi"]
+    },
+    "TamamlananSiparis": {
+      "title": "TamamlananSiparis",
+      "description": "Teslim edilmiş ve tamamlanmış sipariş arşiv kayıtları",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "siparis_kodu": { "type": "string", "maxLength": 50 },
+        "mutfak_id": { "type": "string", "maxLength": 64 },
+        "toplam_tutar": { "type": "number" },
+        "durum": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "toplam_tutar", "durum"]
     }
   },
   "firestore": {
@@ -405,6 +436,14 @@
     "/paytr_oturumlari/{oturumId}": {
       "schema": "PaytrOturum",
       "description": "PayTR ödeme oturumu ve callback durum kayıtları"
+    },
+    "/mutfak_afisleri/{afisId}": {
+      "schema": "MutfakAfisi",
+      "description": "Mutfaklara özel onaylı vitrin afişleri"
+    },
+    "/tamamlanan_siparisler/{siparisId}": {
+      "schema": "TamamlananSiparis",
+      "description": "Tamamlanmış sipariş kayıtları"
     }
   }
 }

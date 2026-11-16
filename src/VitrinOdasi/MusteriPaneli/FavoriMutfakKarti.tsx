@@ -18,9 +18,9 @@ export const FavoriMutfakKarti: React.FC<FavoriMutfakKartiProps> = ({
         onClick={() => mutfakVitriniAc(mutfak.id)}
         className="flex items-center gap-3 cursor-pointer min-w-0 flex-1 group"
       >
-        <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#2C0E35] shrink-0 border border-purple-800/40">
+        <div className="w-14 h-14 rounded-xl overflow-hidden bg-[#290F30] shrink-0 border border-purple-800/40">
           <img
-            src={mutfak.gorsel_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200&q=80'}
+            src="/marka_logosu.jpg"
             alt={mutfak.ad}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
           />

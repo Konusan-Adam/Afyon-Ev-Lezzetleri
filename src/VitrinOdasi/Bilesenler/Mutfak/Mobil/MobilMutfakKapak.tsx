@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { ArrowLeft, Info, Share2, Heart, Check, Sparkles, Star } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
+import { useMutfakAfisleri } from '@/src/MalzemeCekmeceleri/Mutfak/useMutfakAfisleri';
+import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
 
 interface MobilMutfakKapakOzellikleri {
   mutfak: Mutfak;
@@ -15,8 +17,15 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
   bilgiTiklandi,
 }) => {
   const { mutfakFavoriMi, mutfakFavoriDegistir } = favoriHafizasiKullan();
+  const { afisler } = useMutfakAfisleri();
   const favoride = mutfakFavoriMi(mutfak.id);
   const [kopyalandi, setKopyalandi] = useState(false);
+
+  // Mutfak kimliğine göre onaylı özel afişi bul
+  const mutfakAfisi = afisler.find(
+    (a) => a.mutfak_id === mutfak.id || (mutfak.kimlik && a.mutfak_id === mutfak.kimlik)
+  );
+  const afisGorseli = mutfakAfisi?.gorsel_url || mutfak.gorsel_url;
 
   const paylasTiklandi = async () => {
     try {
@@ -37,14 +46,24 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
 
   return (
     <header className="relative w-full">
-      {/* Kapak Görseli ve Zeminine Dayalı Bilgi Katmanı */}
-      <div className="relative h-[240px] sm:h-[260px] w-full bg-[#2A0F33] overflow-hidden">
-        {mutfak.gorsel_url ? (
-          <img src={mutfak.gorsel_url} alt={mutfak.ad} className="absolute inset-0 w-full h-full object-cover" />
+      {/* Kapak Alanı: Mutfak Özel Afişi */}
+      <div className="relative h-[230px] sm:h-[260px] w-full bg-gradient-to-b from-[#3B1448] via-[#260B2F] to-[#120415] overflow-hidden">
+        {afisGorseli ? (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={gorselUrlGuvenliYap(afisGorseli)}
+              alt={mutfakAfisi?.baslik || mutfak.ad}
+              className="w-full h-full object-cover"
+              style={{ objectPosition: `center ${mutfakAfisi?.konum_y ?? 50}%` }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#120415] via-[#120415]/75 to-black/55" />
+          </div>
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-[#3B1448] to-[#1D0823]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[#120415]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/35 to-[#120415]" />
 
         {/* Üst Butonlar Barı */}
         <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20">
@@ -87,11 +106,21 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
           </div>
         </div>
 
-        {/* 2. Kapak Zeminine Oturtulan Mutfak Başlığı & Rozetler (Yukarıya Alınmış ve Ferah) */}
-        <div className="absolute inset-x-0 bottom-9 sm:bottom-10 z-20 px-4 text-center space-y-1.5">
-          <h1 className="text-white text-xl sm:text-2xl font-black tracking-tight drop-shadow-md">
+        {/* 2. Mutfak Başlığı, Afiş Rozeti & Durum Rozetleri */}
+        <div className="absolute inset-x-0 bottom-6 sm:bottom-7 z-20 px-4 text-center space-y-2">
+          {mutfakAfisi?.rozet && (
+            <div className="inline-flex items-center gap-1 bg-amber-500 text-stone-950 font-black text-[10px] px-2.5 py-0.5 rounded-md shadow-md uppercase tracking-wider">
+              {mutfakAfisi.rozet}
+            </div>
+          )}
+          <h1 className="text-white text-2xl sm:text-3xl font-black tracking-tight drop-shadow-lg">
             {mutfak.ad}
           </h1>
+          {mutfakAfisi?.baslik && mutfakAfisi.baslik !== mutfak.ad && (
+            <p className="text-xs text-amber-200/90 font-medium line-clamp-1 drop-shadow">
+              {mutfakAfisi.baslik}
+            </p>
+          )}
           <div className="flex items-center justify-center gap-2 flex-wrap text-xs">
             <span className="inline-flex items-center gap-1 bg-[#2C0E35]/90 backdrop-blur-sm text-purple-200 border border-purple-600/50 px-2.5 py-0.5 rounded-full font-bold shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />

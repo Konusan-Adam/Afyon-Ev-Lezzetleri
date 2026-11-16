@@ -1,5 +1,6 @@
 export interface MutfakTipi {
   id: string;
+  kimlik?: string;
   ad: string;
   mutfak_adi?: string;
   aciklama?: string;
@@ -232,5 +233,19 @@ export interface KomisyonAyarTipi {
   aktif_mi: boolean;
   olusturma_tarihi?: string;
   guncellenme_tarihi?: string;
+}
+
+export interface MutfakAfisi {
+  id?: string;
+  mutfak_id: string;
+  mutfak_adi: string;
+  rozet?: string;
+  baslik: string;
+  aciklama?: string;
+  gorsel_url?: string;
+  aktif_mi: boolean;
+  onay_durumu?: 'beklemede' | 'onaylandi' | 'reddedildi';
+  onayli_mi?: boolean;
+  konum_y?: number;
 }
 
