@@ -7,6 +7,7 @@ import { MasaustuMenuFiltresi } from './MasaustuMenuFiltresi';
 import { MasaustuYemekIzgarasi } from './MasaustuYemekIzgarasi';
 import { MasaustuSabitSepet } from './MasaustuSabitSepet';
 import { MutfakHakkindaVeYorumlar } from '../MutfakHakkindaVeYorumlar';
+import { CokluMenulerVitrini } from '../../CokluMenu/CokluMenulerVitrini';
 
 interface MasaustuMutfakVitriniOzellikleri {
   mutfak: Mutfak;
@@ -53,7 +54,7 @@ export const MasaustuMutfakVitrini: React.FC<MasaustuMutfakVitriniOzellikleri> =
         <MasaustuKampanyaSeridi mutfak={mutfak} />
 
         {/* 3. İki Sütunlu İskelet: Sol Menü (%70), Sağ Yüzen Sepet (%30) */}
-        <div className="grid grid-cols-12 gap-6 relative">
+        <div className="grid grid-cols-12 gap-6 items-start relative">
           <section className="col-span-8 space-y-4">
             <MasaustuMenuFiltresi
               aramaMetni={aramaMetni}
@@ -62,14 +63,19 @@ export const MasaustuMutfakVitrini: React.FC<MasaustuMutfakVitriniOzellikleri> =
               seciliKategori={seciliKategori}
               kategoriSecildi={setSeciliKategori}
             />
+            <CokluMenulerVitrini
+              mutfakId={mutfak.id}
+              baslik="Bu Mutfağın Çoklu Menü Paketleri"
+              kompaktMi
+            />
             <MasaustuYemekIzgarasi yemekler={filtrelenmisYemekler} yukleniyor={yukleniyor} />
             <div className="mt-8 pt-6 border-t border-purple-900/40">
               <MutfakHakkindaVeYorumlar mutfak={mutfak} />
             </div>
           </section>
 
-          <aside className="col-span-4 h-full relative">
-            <div className="sticky top-6">
+          <aside className="col-span-4 relative">
+            <div className="sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto no-scrollbar">
               <MasaustuSabitSepet mutfak={mutfak} />
             </div>
           </aside>

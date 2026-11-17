@@ -1,13 +1,16 @@
 import React from 'react';
 import { Star, Clock, ShieldCheck, MapPin, Truck } from 'lucide-react';
 import { MutfakTipi } from '@/src/veritabani/VeriTipleri';
+import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 
 interface Props {
   mutfak: MutfakTipi;
 }
 
 export const MutfakKarti: React.FC<Props> = ({ mutfak }) => {
+  const { ayarlar } = useKuryeAyarlari();
   const kapaliMi = mutfak.acik_mi === false;
+  const teslimatUcreti = Number(ayarlar.taban_ucret) || 0;
 
   return (
     <div className={`bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full ${kapaliMi ? 'opacity-75' : ''}`}>
@@ -59,7 +62,7 @@ export const MutfakKarti: React.FC<Props> = ({ mutfak }) => {
             </div>
             <div className="flex items-center gap-1 font-medium text-stone-800">
               <Truck className="w-3.5 h-3.5 text-stone-400" />
-              <span>{Number(mutfak.teslimat_ucreti || 0) === 0 ? 'Ücretsiz Teslimat' : `${mutfak.teslimat_ucreti} ₺`}</span>
+              <span>{teslimatUcreti === 0 ? 'Ücretsiz Teslimat' : `${teslimatUcreti} ₺`}</span>
             </div>
           </div>
           <div className="flex items-center justify-between text-[11px] text-stone-500">

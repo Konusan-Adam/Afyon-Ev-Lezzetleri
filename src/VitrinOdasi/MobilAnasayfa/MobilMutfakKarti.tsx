@@ -1,7 +1,7 @@
 import React from 'react';
 import { Star, Clock, Bike } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
-import { useMutfakTeslimatAyari } from '@/src/MalzemeCekmeceleri/useMutfakTeslimatAyari';
+import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 
 interface MutfakKartiOzellikleri {
   mutfak: Mutfak;
@@ -12,14 +12,15 @@ export const MobilMutfakKarti: React.FC<MutfakKartiOzellikleri> = ({
   mutfak,
   onSec
 }) => {
-  const { ayar } = useMutfakTeslimatAyari(mutfak.id);
+  const { ayarlar } = useKuryeAyarlari();
 
   const teslimatMetniGetir = () => {
-    if (ayar.teslimatUcreti === 0) {
-      return 'Ücretsiz';
-    }
-    return `${ayar.teslimatUcreti} ₺`;
+    const ucret = Number(ayarlar.taban_ucret) || 0;
+    return ucret === 0 ? 'Ücretsiz' : `${ucret} ₺`;
   };
+
+  const hazirlanmaSuresi = mutfak.hazirlanma_suresi?.trim() || '25-35 dk';
+  const altBilgi = mutfak.mahalle?.trim() || mutfak.aciklama || mutfak.adres || 'Afyon Merkez';
 
   return (
     <article
@@ -49,14 +50,14 @@ export const MobilMutfakKarti: React.FC<MutfakKartiOzellikleri> = ({
           {mutfak.ad}
         </h4>
         <p className="text-[10px] text-purple-300/70 truncate mt-0.5">
-          {mutfak.aciklama || mutfak.adres || 'Afyon Merkez'}
+          {altBilgi}
         </p>
 
         {/* Alt Detaylar (Teslimat & Süre) */}
         <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-purple-900/30 text-[10px]">
           <div className="flex items-center gap-1 text-purple-300/80">
             <Clock className="w-3 h-3 text-amber-400 shrink-0" />
-            <span>25-40 dk</span>
+            <span>{hazirlanmaSuresi}</span>
           </div>
 
           <div className="flex items-center gap-1 font-semibold text-emerald-400 truncate ml-2">

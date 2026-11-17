@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { usePaytrAyarlari } from '@/src/MalzemeCekmeceleri/Paytr/usePaytrAyarlari';
 import {
@@ -81,7 +82,7 @@ export const PaytrOdemePenceresi: React.FC<PaytrOdemePenceresiOzellikleri> = ({
     return () => clearInterval(zamanlayici);
   }, [merchantOid, onOdemeBasarili]);
 
-  return (
+  const modalIcerigi = (
     <div className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-xl bg-[#180A1F] border border-[#521E5C] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         <div className="p-4 bg-[#220B2B] border-b border-[#3E1646] flex items-center justify-between">
@@ -145,4 +146,7 @@ export const PaytrOdemePenceresi: React.FC<PaytrOdemePenceresiOzellikleri> = ({
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return modalIcerigi;
+  return createPortal(modalIcerigi, document.body);
 };

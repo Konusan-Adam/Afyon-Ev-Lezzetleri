@@ -23,7 +23,7 @@ export const SiparisIptalPenceresi: React.FC<SiparisIptalPenceresiOzellikleri> =
   const iptaliOnayla = () => {
     setYukleniyor(true);
     setTimeout(() => {
-      siparisIptalEt(siparisKimligi, seciliGerekce.baslik, aciklamaNotu);
+      siparisIptalEt(siparisKimligi, seciliGerekce.baslik, aciklamaNotu, 'mutfak');
       setYukleniyor(false);
       onBasarili();
       onKapat();

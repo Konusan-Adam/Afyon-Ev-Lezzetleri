@@ -362,6 +362,28 @@
         "durum": { "type": "string", "maxLength": 50 }
       },
       "required": ["id", "toplam_tutar", "durum"]
+    },
+    "CokluMenu": {
+      "title": "CokluMenu",
+      "description": "Ev mutfaklarının çoklu çeşit yemek paketleri",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "mutfak_id": { "type": "string", "maxLength": 64 },
+        "mutfak_adi": { "type": "string", "maxLength": 150 },
+        "baslik": { "type": "string", "maxLength": 150 },
+        "aciklama": { "type": "string", "maxLength": 500 },
+        "fiyat_tipi": { "type": "string", "maxLength": 30 },
+        "fiyat": { "type": "number" },
+        "hazirlanma_suresi": { "type": "string", "maxLength": 50 },
+        "kapak_gorselleri": { "type": "array" },
+        "kalemler": { "type": "array" },
+        "stokta_var_mi": { "type": "boolean" },
+        "tukendi_mi": { "type": "boolean" },
+        "onay_durumu": { "type": "string", "maxLength": 30 },
+        "onayli_mi": { "type": "boolean" }
+      },
+      "required": ["id", "mutfak_id", "baslik", "fiyat", "kalemler"]
     }
   },
   "firestore": {
@@ -444,6 +466,10 @@
     "/tamamlanan_siparisler/{siparisId}": {
       "schema": "TamamlananSiparis",
       "description": "Tamamlanmış sipariş kayıtları"
+    },
+    "/coklu_menuler/{menuId}": {
+      "schema": "CokluMenu",
+      "description": "Çoklu çeşit yemek paketleri"
     }
   }
 }

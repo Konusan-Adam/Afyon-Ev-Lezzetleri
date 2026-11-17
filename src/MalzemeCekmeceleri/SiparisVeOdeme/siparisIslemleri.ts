@@ -91,6 +91,7 @@ export async function veritabaninaSiparisOlustur(
       ? 'Sipariş şubeye iletildi, hazırlanıyor.'
       : 'Sipariş alındı, mutfağın onaylaması bekleniyor.',
     elemanlar: girdi.elemanlar,
+    urunler: girdi.elemanlar,
     toplam_tutar: dogrulama.hesaplananToplam,
     tutar: dogrulama.hesaplananToplam,
     toplamTutar: dogrulama.hesaplananToplam,

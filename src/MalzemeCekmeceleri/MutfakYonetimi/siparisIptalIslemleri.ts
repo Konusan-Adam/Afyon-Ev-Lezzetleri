@@ -3,7 +3,7 @@ import { belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyo
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
 import { yerelSiparisDurumGuncelle } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 
-export async function siparisIptalEt(siparisKimligi: string, gerekceBaslik: string, detayNot?: string): Promise<boolean> {
+export async function siparisIptalEt(siparisKimligi: string, gerekceBaslik: string, detayNot?: string, iptalKaynagi: 'musteri' | 'mutfak' = 'musteri'): Promise<boolean> {
   const aciklamaMetni = detayNot && detayNot.trim()
     ? `Sipariş İptal Edildi: ${gerekceBaslik} (${detayNot.trim()})`
     : `Sipariş İptal Edildi: ${gerekceBaslik}`;
@@ -18,6 +18,7 @@ export async function siparisIptalEt(siparisKimligi: string, gerekceBaslik: stri
         durum: 'iptal',
         asama: 'iptal',
         durumAciklamasi: aciklamaMetni,
+        iptal_kaynagi: iptalKaynagi,
         sonGuncelleme: new Date().toLocaleTimeString('tr-TR')
       });
     } catch (hata) {
@@ -25,8 +26,9 @@ export async function siparisIptalEt(siparisKimligi: string, gerekceBaslik: stri
     }
   }
 
-  // 3. Patron Bildirimi Ekle & Ses Çal
-  patronBildirimiEkle('iade_talebi', 'Sipariş İptal Edildi ⚠️', `#${siparisKimligi.substring(0, 8)} nolu sipariş iptal edildi. Gerekçe: ${gerekceBaslik}`);
+  // 3. Patron Bildirimi Ekle & Ses Çal (Eğer mutfak iptal ettiyse mutfak kaynaklı, müşteri ise musteri)
+  const baslikMesaji = iptalKaynagi === 'mutfak' ? 'Sipariş Mutfak Tarafından İptal Edildi ⚠️' : 'Müşteri Siparişi İptal Etti ⚠️';
+  patronBildirimiEkle('iade_talebi', baslikMesaji, `#${siparisKimligi.substring(0, 8)} nolu sipariş ${iptalKaynagi === 'mutfak' ? 'mutfak' : 'müşteri'} tarafından iptal edildi. Gerekçe: ${gerekceBaslik}`);
 
   // 4. Global olay tetikle
   if (typeof window !== 'undefined') {

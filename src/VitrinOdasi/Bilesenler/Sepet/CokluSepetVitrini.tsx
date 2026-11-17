@@ -39,16 +39,11 @@ export const CokluSepetVitrini: React.FC = () => {
         onClick={sepetPaneliKapat}
       />
 
-      {/* Kayar Panel */}
-      <div className="fixed inset-x-0 bottom-0 sm:inset-x-auto sm:inset-y-0 sm:right-0 flex justify-end z-50 pointer-events-none">
-        <div className="pointer-events-auto w-full sm:max-w-md bg-[#130713] border-t sm:border-t-0 sm:border-l border-[#3E1646] rounded-t-3xl sm:rounded-none text-white flex flex-col shadow-2xl max-h-[92vh] sm:max-h-full animate-in slide-in-from-bottom sm:slide-in-from-right duration-300">
-          {/* Mobilde çekmece tutamağı */}
-          <div className="sm:hidden flex justify-center pt-2.5 pb-1">
-            <div className="w-12 h-1.5 bg-purple-800/60 rounded-full" />
-          </div>
-
+      {/* Kayar Panel / Tam Sayfa Sepet */}
+      <div className="fixed inset-0 sm:inset-x-auto sm:inset-y-0 sm:right-0 flex justify-end z-50 pointer-events-none">
+        <div className="pointer-events-auto w-full sm:max-w-md bg-[#130713] border-t sm:border-t-0 sm:border-l border-[#3E1646] rounded-none text-white flex flex-col shadow-2xl h-full sm:h-full animate-in slide-in-from-bottom sm:slide-in-from-right duration-300">
           {/* Üst Bar */}
-          <div className="p-4 border-b border-[#3E1646] bg-[#1A0A1D] flex items-center justify-between">
+          <div className="p-4 border-b border-[#3E1646] bg-[#1A0A1D] flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2 text-[#DDAF53]">
               <ShoppingBag className="w-5 h-5 text-[#E0B25B]" />
               <h2 className="font-bold text-base">

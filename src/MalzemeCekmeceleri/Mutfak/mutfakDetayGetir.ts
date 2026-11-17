@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
-import { koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { mutfakAboneligiEkle } from './mutfakAbonelikServisi';
 
 export function mutfakDetayGetir(mutfakId?: string) {
   const [mutfak, setMutfak] = useState<Mutfak | null>(null);
@@ -14,29 +14,22 @@ export function mutfakDetayGetir(mutfakId?: string) {
       return;
     }
 
-    let iptal = false;
-
-    async function getir() {
-      setYukleniyor(true);
-      try {
-        const tumMutfaklar = await koleksiyonGetir<Mutfak>('mutfaklar');
-        const bulunan = tumMutfaklar.find((m) => m.id === mutfakId);
-        if (!iptal) {
-          setMutfak(bulunan || null);
-          setYukleniyor(false);
-        }
-      } catch (err) {
-        if (!iptal) {
-          console.error('Firebase mutfak detay hatası:', err);
-          setHata('Mutfak detayları getirilirken hata oluştu');
-          setYukleniyor(false);
-        }
+    setYukleniyor(true);
+    const aboneliktenCik = mutfakAboneligiEkle((mutfaklar, _yuk, abonelikHatasi) => {
+      if (abonelikHatasi) {
+        setHata(abonelikHatasi);
+      } else {
+        setHata(null);
       }
-    }
+      const bulunan = mutfaklar.find((m) => m.id === mutfakId || m.kimlik === mutfakId);
+      setMutfak(bulunan || null);
+      if (mutfaklar.length > 0 || !_yuk) {
+        setYukleniyor(false);
+      }
+    });
 
-    getir();
     return () => {
-      iptal = true;
+      aboneliktenCik();
     };
   }, [mutfakId]);
 

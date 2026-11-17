@@ -181,6 +181,15 @@ export interface SepetElemani {
   mutfak_id?: string;
   mutfak?: MutfakTipi;
   eklenme_tarihi?: string;
+  coklu_menu_mu?: boolean;
+  coklu_menu_baslik?: string;
+  coklu_menu_gorsel?: string;
+  secilen_ogeler?: Array<{
+    id: string;
+    baslik: string;
+    not?: string;
+  }>;
+  varyasyon?: string;
 }
 
 export interface FiltreKriterleri {
@@ -247,5 +256,36 @@ export interface MutfakAfisi {
   onay_durumu?: 'beklemede' | 'onaylandi' | 'reddedildi';
   onayli_mi?: boolean;
   konum_y?: number;
+}
+
+export interface CokluMenuKalemiTipi {
+  id: string;
+  sira: number;
+  ad: string;
+  aciklama: string;
+  fiyat: number;
+  gorsel_url: string;
+  not_izinli_mi?: boolean;
+  varsayilan_secili?: boolean;
+  zorunlu_mu?: boolean;
+}
+
+export interface CokluMenuTipi {
+  id: string;
+  mutfak_id: string;
+  mutfak_adi?: string;
+  baslik: string;
+  aciklama?: string;
+  fiyat_tipi: 'paket' | 'kalem_toplam';
+  fiyat: number;
+  hazirlanma_suresi?: string;
+  kapak_gorselleri: string[];
+  kalemler: CokluMenuKalemiTipi[];
+  stokta_var_mi?: boolean;
+  tukendi_mi?: boolean;
+  onay_durumu?: string;
+  onayli_mi?: boolean;
+  olusturma_tarihi?: string;
+  guncellenme_tarihi?: string;
 }
 

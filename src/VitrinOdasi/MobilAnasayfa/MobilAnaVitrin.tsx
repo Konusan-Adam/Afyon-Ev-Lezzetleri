@@ -17,6 +17,7 @@ import { TeslimatZamaniBari } from '../Bilesenler/OnSiparisVePorsiyon/TeslimatZa
 import { mahalleyeEnYakinSubeyiBul } from '@/src/MalzemeCekmeceleri/Sube/SubeMesafeVeMahalleEsleyici';
 import { Mutfak, Yemek, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 import { PaytrGuvenlikRozeti } from '../MasaustuAltBilgi/PaytrGuvenlikRozeti';
+import { CokluMenulerVitrini } from '../Bilesenler/CokluMenu/CokluMenulerVitrini';
 
 interface MobilAnaVitrinProps {
   anasayfayaGitTiklandi?: () => void;
@@ -132,7 +133,10 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
             {/* 3. Sıra: Öne Çıkan Yıldız Ev Mutfakları (Podyum) */}
             <MobilMutfaklarVitirini mutfakSecildi={mutfakDegistir} />
 
-            {/* 4. Sıra: Popüler Ev Yemekleri */}
+            {/* 4. Sıra: Çoklu Menü Paketleri Vitrini */}
+            <CokluMenulerVitrini />
+
+            {/* 5. Sıra: Popüler Ev Yemekleri */}
             <MobilPopulerYemekler yemekSecildi={yemekSecildi} />
           </div>
 

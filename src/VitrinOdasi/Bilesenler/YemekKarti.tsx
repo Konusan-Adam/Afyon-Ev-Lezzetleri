@@ -12,14 +12,20 @@ export const YemekKarti: React.FC<Props> = ({ yemek }) => {
   const { sepeteEkle } = useSepet();
   const tukendiMi = yemek.stokta_var_mi === false || yemek.tukendi_mi === true;
 
+  const [gorselHatali, setGorselHatali] = React.useState(!yemek.gorsel_url?.trim());
+  const gorselSrc = gorselUrlGuvenliYap(yemek.gorsel_url?.trim()) || '/marka_logosu.jpg';
+
   return (
     <div className={`bg-white rounded-2xl border border-stone-200 overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow ${tukendiMi ? 'opacity-75 grayscale-[20%]' : ''}`}>
       <div className="h-44 w-full relative overflow-hidden bg-stone-100">
         <img
-          src={gorselUrlGuvenliYap(yemek.gorsel_url)}
+          src={gorselHatali ? '/marka_logosu.jpg' : gorselSrc}
           alt={yemek.baslik}
-          className="w-full h-full object-cover"
+          className={`w-full h-full ${gorselHatali ? 'object-contain p-2 bg-[#290F30]' : 'object-cover'}`}
           loading="lazy"
+          onError={() => {
+            if (!gorselHatali) setGorselHatali(true);
+          }}
         />
         {tukendiMi && (
           <div className="absolute inset-0 bg-stone-950/60 backdrop-blur-[2px] flex items-center justify-center">

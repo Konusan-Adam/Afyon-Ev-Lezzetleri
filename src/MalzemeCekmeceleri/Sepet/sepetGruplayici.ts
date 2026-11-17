@@ -54,7 +54,7 @@ export function sepetiMutfaklaraGöreGrupla(
   const mutfakSayisi = grupListesi.length;
   const toplamSepetTutari = grupListesi.reduce((toplam, g) => toplam + g.araToplam, 0);
 
-  // Akıllı Kurye Rota Motoru ile nihai toplam teslimat ücretini hesapla:
+  // Akıllı Kurye Rota Motoru ile nihai toplam teslimat ücretini Patron Masası ayarlarından hesapla:
   const kuryeSonuc = akilliKuryeUcretiHesapla(mutfakSayisi, bazUcret, toplamSepetTutari);
 
   // Mutfak sayısına göre teslimat ücretini mutfaklara adil paylaştır
@@ -63,16 +63,16 @@ export function sepetiMutfaklaraGöreGrupla(
 
   return grupListesi.map((g, index) => {
     const subeGrup = g.mutfakId.startsWith('sube');
-    const minTutar = subeGrup ? 0 : (g.mutfak.min_siparis_tutari || 100);
+    const minTutar = subeGrup ? 0 : (typeof g.mutfak.min_siparis_tutari === 'number' ? g.mutfak.min_siparis_tutari : 100);
     const kalan = Math.max(0, minTutar - g.araToplam);
-    const kuryePayi = g.araToplam > 0 ? (tabanPay + (index < kalanArtik ? 1 : 0)) : 0;
+    const kuryePayi = subeGrup ? 0 : (g.araToplam > 0 ? (tabanPay + (index < kalanArtik ? 1 : 0)) : 0);
 
     return {
       ...g,
       kalanMinTutar: kalan,
       minTutarUlasildi: subeGrup ? true : (g.araToplam >= minTutar),
       teslimatUcreti: kuryePayi,
-      genelToplam: g.araToplam + (g.araToplam > 0 ? kuryePayi : 0),
+      genelToplam: g.araToplam + kuryePayi,
     };
   });
 }

@@ -15,6 +15,7 @@ import { MusteriPanelUstBaslik } from './MusteriPanelUstBaslik';
 import { MusteriSiparisKarti } from './MusteriSiparisKarti';
 import { AdreslerimSekmesi } from './AdreslerimSekmesi';
 import { FavorilerimSekmesi } from './FavorilerimSekmesi';
+import { MutfakIptalBildirimModal } from './MutfakIptalBildirimModal';
 
 export const MusteriPaneli: React.FC = () => {
   const { aktifKullanici, panelDegistir, cikisYap } = kullaniciHafizasiKullan();
@@ -56,6 +57,25 @@ export const MusteriPaneli: React.FC = () => {
     aktifKullanici?.kimlik,
     aktifKullanici?.telefon || sonMisafirTelefon
   );
+
+  const [mutfakIptalBildirimi, setMutfakIptalBildirimi] = useState<{ siparisKodu: string; aciklama?: string } | null>(null);
+
+  useEffect(() => {
+    // Mutfak tarafından yeni iptal edilen siparişleri kontrol et ve sesli/görsel modal göster
+    const mutfaktanIptalEdilen = siparisler.find(
+      (s) => s.durum === 'iptal' && s.iptal_kaynagi === 'mutfak'
+    );
+    if (mutfaktanIptalEdilen) {
+      const gorulduKey = `afyon_mutfak_iptal_goruldu_${mutfaktanIptalEdilen.id || mutfaktanIptalEdilen.siparis_kodu}`;
+      if (typeof window !== 'undefined' && !sessionStorage.getItem(gorulduKey)) {
+        sessionStorage.setItem(gorulduKey, '1');
+        setMutfakIptalBildirimi({
+          siparisKodu: mutfaktanIptalEdilen.siparis_kodu || mutfaktanIptalEdilen.id,
+          aciklama: mutfaktanIptalEdilen.durum_aciklamasi,
+        });
+      }
+    }
+  }, [siparisler]);
 
   const qrSeciliSiparis = qrGosterilecekSiparisKodu
     ? siparisler.find((s) => (s.siparis_kodu || s.id || s.siparisKodu) === qrGosterilecekSiparisKodu)
@@ -150,6 +170,13 @@ export const MusteriPaneli: React.FC = () => {
           yemekler={degerlendirilecekSiparis.yemekler}
           onKapat={() => setDegerlendirilecekSiparis(null)}
           onBasarili={yenile}
+        />
+      )}
+      {mutfakIptalBildirimi && (
+        <MutfakIptalBildirimModal
+          siparisKodu={mutfakIptalBildirimi.siparisKodu}
+          durumAciklamasi={mutfakIptalBildirimi.aciklama}
+          onKapat={() => setMutfakIptalBildirimi(null)}
         />
       )}
     </div>

@@ -14,16 +14,14 @@ export const MobilDikeyMutfakKarti: React.FC<DikeyMutfakKartiOzellikleri> = ({
 }) => {
   const { ayarlar } = useKuryeAyarlari();
 
-  // Teslimat Ücreti Gösterim Mantığı (Firebase'den Canlı Beslenir)
+  // Teslimat Ücreti Gösterim Mantığı (Sadece Patron Masası Ayarı)
   const teslimatMetniGetir = () => {
-    if (mutfak.teslimat_ucreti === 0) {
-      return 'Ücretsiz';
-    }
-    if (ayarlar.ucretsiz_teslimat_aktif && Number(ayarlar.ucretsiz_teslimat_esigi) > 0) {
-      return `${ayarlar.ucretsiz_teslimat_esigi} ₺ Üzeri Ücretsiz`;
-    }
-    return mutfak.teslimat_ucreti ? `${mutfak.teslimat_ucreti} ₺` : 'Hızlı Kurye';
+    const ucret = Number(ayarlar.taban_ucret) || 0;
+    return ucret === 0 ? 'Ücretsiz' : `${ucret} ₺`;
   };
+
+  const mahalleMetni = mutfak.mahalle?.trim() || mutfak.adres?.trim() || 'Afyon Merkez';
+  const hazirlanmaSuresi = mutfak.hazirlanma_suresi?.trim() || '25-35 dk';
 
   return (
     <article
@@ -48,7 +46,7 @@ export const MobilDikeyMutfakKarti: React.FC<DikeyMutfakKartiOzellikleri> = ({
 
         {/* Min Sepet Rozeti */}
         <div className="absolute bottom-2.5 left-3 bg-purple-950/90 backdrop-blur-sm px-2.5 py-0.5 rounded-lg border border-purple-700/50 text-[10px] text-amber-200 font-medium">
-          Min. {mutfak.min_siparis_tutari || 100} ₺
+          Min. {typeof mutfak.min_siparis_tutari === 'number' ? mutfak.min_siparis_tutari : 100} ₺
         </div>
       </div>
 
@@ -77,15 +75,15 @@ export const MobilDikeyMutfakKarti: React.FC<DikeyMutfakKartiOzellikleri> = ({
 
         {/* Bölge ve Teslimat Bilgisi */}
         <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-purple-900/30 text-xs">
-          <div className="flex items-center gap-1 text-purple-300/80 max-w-[40%] truncate" title={mutfak.adres || 'Afyon Merkez'}>
+          <div className="flex items-center gap-1 text-purple-300/80 max-w-[40%] truncate" title={mahalleMetni}>
             <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="truncate">{mutfak.adres || 'Afyon Merkez'}</span>
+            <span className="truncate">{mahalleMetni}</span>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
             <div className="flex items-center gap-1 text-purple-300">
               <Clock className="w-3 h-3 text-amber-400" />
-              <span>25-40 dk</span>
+              <span>{hazirlanmaSuresi}</span>
             </div>
             <div className="flex items-center gap-1 font-semibold text-emerald-400 text-[11px]">
               <Bike className="w-3.5 h-3.5 shrink-0" />

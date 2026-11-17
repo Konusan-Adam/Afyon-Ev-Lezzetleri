@@ -10,6 +10,8 @@ export const MasaustuYemekKarti: React.FC<{ yemek: Yemek }> = ({ yemek }) => {
 
   const sepetElemani = sepetElemanlari.find((e) => e.yemek_id === yemek.id);
   const tukendiMi = yemek.stokta_var_mi === false || yemek.tukendi_mi === true;
+  const gorselSrc = gorselUrlGuvenliYap(yemek.gorsel_url?.trim()) || '/marka_logosu.jpg';
+  const [gorselHatali, setGorselHatali] = useState(!yemek.gorsel_url?.trim());
 
   const ekle = async () => {
     if (tukendiMi) return;
@@ -29,12 +31,12 @@ export const MasaustuYemekKarti: React.FC<{ yemek: Yemek }> = ({ yemek }) => {
       {/* Sol: Yemek Bilgisi ve Fiyat */}
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <h3 className="text-white text-sm font-bold group-hover:text-amber-300 transition-colors">
+          <div className="flex items-start justify-between gap-2 mb-1.5 min-w-0">
+            <h3 className="text-white text-sm font-bold leading-snug line-clamp-2 min-w-0 group-hover:text-amber-300 transition-colors">
               {yemek.baslik}
             </h3>
             {yemek.populer && (
-              <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-md">
+              <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap">
                 Yıldız Lezzet
               </span>
             )}
@@ -68,12 +70,17 @@ export const MasaustuYemekKarti: React.FC<{ yemek: Yemek }> = ({ yemek }) => {
       </div>
 
       {/* Sağ: Görsel */}
-      <div className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-purple-950">
+      <div className="relative w-28 h-28 shrink-0 rounded-xl overflow-hidden bg-[#290F30] border border-purple-900/40">
         <img
-          src={gorselUrlGuvenliYap(yemek.gorsel_url)}
+          src={gorselHatali ? '/marka_logosu.jpg' : gorselSrc}
           alt={yemek.baslik}
-          className={`w-full h-full object-cover transition-transform duration-500 ${tukendiMi ? 'grayscale-40' : 'group-hover:scale-105'}`}
+          className={`w-full h-full ${gorselHatali ? 'object-contain p-1.5' : 'object-cover'} transition-transform duration-500 ${tukendiMi ? 'grayscale-40' : 'group-hover:scale-105'}`}
           loading="lazy"
+          onError={() => {
+            if (!gorselHatali) {
+              setGorselHatali(true);
+            }
+          }}
         />
         <div className="absolute top-1.5 right-1.5 bg-black/70 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 text-amber-300 text-[10px] font-bold">
           <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />

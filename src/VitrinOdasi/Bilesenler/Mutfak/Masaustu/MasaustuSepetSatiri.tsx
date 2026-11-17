@@ -9,7 +9,14 @@ export const MasaustuSepetSatiri: React.FC<{ eleman: SepetElemani }> = ({ eleman
   return (
     <div className="flex items-center justify-between py-2 border-b border-purple-900/30 text-xs">
       <div className="flex-1 min-w-0 pr-2">
-        <p className="font-semibold text-white truncate">{eleman.yemek?.baslik || 'Lezzet'}</p>
+        <p className="font-semibold text-white truncate">
+          {eleman.yemek?.baslik || eleman.coklu_menu_baslik || 'Lezzet'}
+        </p>
+        {eleman.varyasyon && (
+          <p className="text-[10px] text-purple-300/75 line-clamp-2 mt-0.5 leading-snug">
+            {eleman.varyasyon}
+          </p>
+        )}
         <span className="text-[11px] text-amber-400 font-bold">{eleman.birim_fiyat} ₺</span>
       </div>
 

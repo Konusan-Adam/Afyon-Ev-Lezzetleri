@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SepetElemani, YemekTipi, MutfakTipi } from '@/src/veritabani/VeriTipleri';
 import { koleksiyonuCanliDinle } from '@/src/veritabani/FirebaseKoleksiyonServisi';
-import { veritabaninaSepeteEkle } from '@/src/MalzemeCekmeceleri/Sepet/sepeteEkle';
+import { veritabaninaSepeteEkle, type SepetEkBilgileri } from '@/src/MalzemeCekmeceleri/Sepet/sepeteEkle';
 import {
   veritabanindaSepetAdetiGuncelle,
   veritabanindanSepetElemaniniSil,
@@ -24,7 +24,7 @@ interface SepetHafizasiTip {
   toplamTeslimatUcreti: number;
   genelToplamTutar: number;
   yukleniyor: boolean;
-  sepeteEkle: (mutfakId: string, yemekId: string, adet: number, birimFiyat: number) => Promise<void>;
+  sepeteEkle: (mutfakId: string, yemekId: string, adet: number, birimFiyat: number, ekBilgiler?: SepetEkBilgileri) => Promise<void>;
   adetGuncelle: (sepetId: string, yeniAdet: number) => Promise<void>;
   sepettenSil: (sepetId: string) => Promise<void>;
   mutfakSepetiniTemizle: (mutfakId: string) => Promise<void>;
@@ -131,9 +131,10 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
     mutfakId: string,
     yemekId: string,
     adet: number,
-    birimFiyat: number
+    birimFiyat: number,
+    ekBilgiler?: SepetEkBilgileri
   ) => {
-    await veritabaninaSepeteEkle(musteriId, mutfakId, yemekId, adet, birimFiyat);
+    await veritabaninaSepeteEkle(musteriId, mutfakId, yemekId, adet, birimFiyat, ekBilgiler);
   };
 
   const adetGuncelle = async (sepetId: string, yeniAdet: number) => {

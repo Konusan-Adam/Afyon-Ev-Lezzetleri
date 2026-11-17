@@ -72,15 +72,23 @@ export const SiparisOzetKarti: React.FC<SiparisOzetKartiOzellikleri> = ({
               </span>
             </div>
 
-            <div className="space-y-1 pl-4">
+            <div className="space-y-1.5 pl-4">
               {grup.elemanlar.map((item: SepetElemani) => (
-                <div key={item.id} className="flex justify-between items-center text-[11px] text-gray-300">
-                  <span className="truncate pr-2">
-                    <strong className="text-amber-300">{item.adet}x</strong> {item.yemek?.baslik || 'Lezzet'}
-                  </span>
-                  <span className="font-semibold text-white shrink-0">
-                    {item.adet * item.birim_fiyat} ₺
-                  </span>
+                <div key={item.id} className="space-y-0.5">
+                  <div className="flex justify-between items-center text-[11px] text-gray-300">
+                    <span className="truncate pr-2">
+                      <strong className="text-amber-300">{item.adet}x</strong>{' '}
+                      {item.yemek?.baslik || item.coklu_menu_baslik || 'Lezzet'}
+                    </span>
+                    <span className="font-semibold text-white shrink-0">
+                      {item.adet * item.birim_fiyat} ₺
+                    </span>
+                  </div>
+                  {item.varyasyon && (
+                    <p className="text-[10px] text-purple-300/70 line-clamp-2 pl-3">
+                      {item.varyasyon}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

@@ -7,6 +7,7 @@ import { MobilMenuAramaVeKategori } from '@/src/VitrinOdasi/Bilesenler/Mutfak/Mo
 import { MutfakYemekIzgarasi } from '@/src/VitrinOdasi/Bilesenler/Mutfak/MutfakYemekIzgarasi';
 import { MobilMutfakBilgiPenceresi } from '@/src/VitrinOdasi/Bilesenler/Mutfak/Mobil/MobilMutfakBilgiPenceresi';
 import { MutfakHakkindaVeYorumlar } from '@/src/VitrinOdasi/Bilesenler/Mutfak/MutfakHakkindaVeYorumlar';
+import { CokluMenulerVitrini } from '@/src/VitrinOdasi/Bilesenler/CokluMenu/CokluMenulerVitrini';
 
 interface MobilMutfakVitriniOzellikleri {
   mutfak: Mutfak;
@@ -69,6 +70,14 @@ export const MobilMutfakVitrini: React.FC<MobilMutfakVitriniOzellikleri> = ({
         seciliKategori={seciliKategori}
         onKategoriSecildi={setSeciliKategori}
       />
+
+      <div className="px-4 pt-3">
+        <CokluMenulerVitrini
+          mutfakId={mutfak.id}
+          baslik="Çoklu Menü Paketleri"
+          kompaktMi
+        />
+      </div>
 
       <MutfakYemekIzgarasi yemekler={filtrelenmisYemekler} yukleniyor={yukleniyor} />
 

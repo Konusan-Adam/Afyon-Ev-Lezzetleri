@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Clock, Bike, ShieldCheck, Heart, Share2, Check } from 'lucide-react';
+import { Star, Clock, Bike, ShieldCheck, Heart, Share2, Check, MapPin, ShoppingBag } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
@@ -17,6 +17,12 @@ export const MasaustuMutfakBasligi: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) 
     (a) => a.mutfak_id === mutfak.id || (mutfak.kimlik && a.mutfak_id === mutfak.kimlik)
   );
   const afisGorseli = mutfakAfisi?.gorsel_url || mutfak.gorsel_url;
+
+  const teslimatUcreti = Number(ayarlar.taban_ucret) || 0;
+  const minTutar = typeof mutfak.min_siparis_tutari === 'number' ? mutfak.min_siparis_tutari : 100;
+  const hazirlanmaSuresi = mutfak.hazirlanma_suresi?.trim() || '25-35 dk';
+  const calismaSaatleri = mutfak.calisma_saatleri?.trim() || '09:00 - 21:00';
+  const mahalleBilgisi = mutfak.mahalle?.trim() || mutfak.adres?.trim() || 'Afyon Merkez';
 
   const paylasTiklandi = async () => {
     try {
@@ -37,49 +43,50 @@ export const MasaustuMutfakBasligi: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) 
             src={gorselUrlGuvenliYap(afisGorseli)}
             alt={mutfakAfisi?.baslik || mutfak.ad}
             className="w-full h-full object-cover"
-            style={{ objectPosition: `center ${mutfakAfisi?.konum_y ?? 50}%` }}
+            style={{ objectPosition: `center ${mutfakAfisi?.konum_y ?? 32}%` }}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#14061A]/95 via-[#14061A]/85 to-[#14061A]/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#14061A]/95 via-[#14061A]/75 to-[#14061A]/30" />
         </div>
       )}
 
-      {/* 1. Üst Sıra: Rozetler & Aksiyon Butonları */}
+      {/* 1. Üst Sıra: Sadeleştirilmiş Rozetler & Aksiyonlar */}
       <div className="relative z-20 p-4 sm:p-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-          {mutfakAfisi?.rozet && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-black bg-amber-500 text-stone-950 px-3 py-1.5 rounded-xl shadow-md uppercase tracking-wider">
+          {mutfakAfisi?.rozet ? (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-black bg-amber-500 text-stone-950 px-2.5 py-1 rounded-lg shadow-md uppercase tracking-wider">
               {mutfakAfisi.rozet}
             </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-black/50 backdrop-blur-md text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Onaylı Ev Mutfağı</span>
+            </span>
           )}
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#2C0E35]/90 backdrop-blur-md text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-xl shadow-md">
-            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-            <span>Onaylı Afyon Ev Mutfağı</span>
-          </span>
           {mutfak.acik_mi !== false ? (
-            <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/50 px-3 py-1.5 rounded-xl shadow-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Sipariş Alıyor (Açık)</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-emerald-950/85 backdrop-blur-md text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Açık</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-bold bg-rose-950/90 backdrop-blur-md text-rose-300 border border-rose-500/50 px-3 py-1.5 rounded-xl shadow-md">
-              <span className="w-2 h-2 rounded-full bg-rose-400" />
-              <span>Şu An Kapalı</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-950/85 backdrop-blur-md text-rose-300 border border-rose-500/40 px-2.5 py-1 rounded-lg">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+              <span>Kapalı</span>
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/40 text-amber-300 text-xs font-bold shadow-lg">
+          <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-amber-500/35 text-amber-300 text-xs font-bold">
             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span>{mutfak.puan?.toFixed(1) || '5.0'}</span>
           </div>
 
-          <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-purple-800/40 text-purple-200 text-xs font-semibold shadow-lg">
+          <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-purple-800/40 text-purple-200 text-xs font-semibold">
             <Bike className="w-3.5 h-3.5 text-[#DDAF53]" />
-            <span>{ayarlar.taban_ucret > 0 ? `${ayarlar.taban_ucret} ₺ Kurye` : 'Ücretsiz Kurye'}</span>
+            <span>{teslimatUcreti > 0 ? `${teslimatUcreti} ₺ Kurye` : 'Ücretsiz Kurye'}</span>
           </div>
 
           <button
@@ -104,20 +111,35 @@ export const MasaustuMutfakBasligi: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) 
         </div>
       </div>
 
-      {/* 2. Alt Sıra: Mutfak Başlığı & Açıklaması */}
-      <div className="relative z-20 p-4 sm:p-6 flex items-center gap-4">
-        <div className="space-y-1.5 min-w-0">
+      {/* 2. Alt Sıra: Mutfak Başlığı & Sade Operasyon Bilgileri */}
+      <div className="relative z-20 p-4 sm:p-6 flex flex-col gap-2.5">
+        <div className="space-y-1 min-w-0">
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight drop-shadow-md truncate">
             {mutfak.ad}
           </h1>
           {mutfakAfisi?.baslik && mutfakAfisi.baslik !== mutfak.ad && (
-            <p className="text-xs sm:text-sm text-amber-300 font-bold drop-shadow">
+            <p className="text-xs sm:text-sm text-amber-300/90 font-semibold drop-shadow">
               {mutfakAfisi.baslik}
             </p>
           )}
           <p className="text-xs sm:text-sm text-purple-200/90 drop-shadow-sm max-w-2xl line-clamp-2">
             {mutfak.aciklama || 'Afyonkarahisar anne eliyle taze pişirilen sıcak ev lezzetleri.'}
           </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-purple-200/90 pt-1">
+          <span className="inline-flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <span>{hazirlanmaSuresi} • {calismaSaatleri}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+            <span>Min. {minTutar} ₺</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-amber-400" />
+            <span>{mahalleBilgisi}</span>
+          </span>
         </div>
       </div>
     </div>

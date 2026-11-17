@@ -16,6 +16,7 @@ export function firestoreSiparisiniDonustur(d: any): TestSiparis {
     musteri_adi: d.musteri_adi || 'Müşteri',
     musteri_telefon: d.musteri_telefon,
     misafir_mi: d.misafir_mi,
+    iptal_kaynagi: d.iptal_kaynagi,
     teslimat_adresi_metni: d.teslimat_adresi_metni,
     mutfak_id: d.mutfak_id,
     kurye_id: d.kurye_id,
@@ -26,7 +27,9 @@ export function firestoreSiparisiniDonustur(d: any): TestSiparis {
     durum: d.durum || 'beklemede',
     durum_aciklamasi:
       d.durum_aciklamasi ||
-      (d.durum === 'iptal' ? 'Sipariş İptal Edildi.' : 'Siparişiniz hazırlanıyor.'),
+      (d.durum === 'iptal'
+        ? (d.iptal_kaynagi === 'mutfak' ? 'Mutfak Tarafından İptal Edildi' : 'Sipariş İptal Edildi.')
+        : 'Siparişiniz hazırlanıyor.'),
     toplam_tutar: Number(d.toplam_tutar || d.tutar) || 0,
     teslimat_ucreti: Number(d.teslimat_ucreti) || 0,
     odeme_yontemi: d.odeme_yontemi || 'kapida_nakit',

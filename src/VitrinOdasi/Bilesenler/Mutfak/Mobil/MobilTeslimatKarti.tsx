@@ -18,8 +18,10 @@ export const MobilTeslimatKarti: React.FC<MobilTeslimatKartiOzellikleri> = ({ mu
   const { ayarlar } = useKuryeAyarlari();
 
   const gelAlMi = teslimatTipi === 'gel_al';
-  const teslimatUcreti = gelAlMi ? 0 : ayarlar.taban_ucret;
-  const minTutar = ayarlar.ucretsiz_teslimat_esigi;
+  const teslimatUcreti = gelAlMi ? 0 : (Number(ayarlar.taban_ucret) || 0);
+  const minTutar =
+    typeof mutfak.min_siparis_tutari === 'number' ? Number(mutfak.min_siparis_tutari) : 100;
+  const hazirlanmaSuresi = mutfak.hazirlanma_suresi?.trim();
 
   const degistirTiklandi = () => {
     if (gelAlMi) {
@@ -42,13 +44,18 @@ export const MobilTeslimatKarti: React.FC<MobilTeslimatKartiOzellikleri> = ({ mu
           <div className="min-w-0">
             <h4 className="font-extrabold text-sm text-white truncate">
               {gelAlMi ? 'Gel Al' : 'Teslimat'}
+              {hazirlanmaSuresi ? (
+                <span className="ml-1.5 text-[11px] font-semibold text-amber-300/90">
+                  • {hazirlanmaSuresi}
+                </span>
+              ) : null}
             </h4>
             <div className="text-xs text-purple-200/70 truncate">
               <span className="text-emerald-400 font-semibold">
                 {teslimatUcreti === 0 ? 'Ücretsiz Teslimat' : `${teslimatUcreti} ₺ Teslimat`}
               </span>
               <span className="mx-1">•</span>
-              <span>Min. sepet {(minTutar ?? 0).toFixed(2)} TL</span>
+              <span>Min. sepet {minTutar} ₺</span>
             </div>
           </div>
         </div>

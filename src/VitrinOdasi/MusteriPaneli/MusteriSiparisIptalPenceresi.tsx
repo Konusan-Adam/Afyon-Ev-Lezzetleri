@@ -32,7 +32,7 @@ export const MusteriSiparisIptalPenceresi: React.FC<MusteriSiparisIptalPenceresi
     setYukleniyor(true);
 
     try {
-      await siparisIptalEt(siparisId, secilenSebep, aciklama);
+      await siparisIptalEt(siparisId, secilenSebep, aciklama, 'musteri');
     } catch {}
 
     setYukleniyor(false);

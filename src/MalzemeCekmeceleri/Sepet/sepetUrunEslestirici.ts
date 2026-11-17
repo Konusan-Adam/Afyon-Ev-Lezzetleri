@@ -54,10 +54,22 @@ export function sepetElemanlariniZenginlestir(
     const eslesenYemek =
       item.yemek ||
       bulunanYemek ||
-      (bulunanSubeUrunu ? subeUrununuYemegeDonustur(bulunanSubeUrunu) : undefined);
+      (bulunanSubeUrunu ? subeUrununuYemegeDonustur(bulunanSubeUrunu) : undefined) ||
+      (item.coklu_menu_mu
+        ? {
+            id: item.yemek_id || item.id,
+            mutfak_id: item.mutfak_id || '',
+            baslik: item.coklu_menu_baslik || 'Çoklu Menü',
+            aciklama: item.varyasyon || '',
+            fiyat: item.birim_fiyat || 0,
+            kategori: 'Çoklu Menü',
+            gorsel_url: item.coklu_menu_gorsel || '/marka_logosu.jpg',
+            puan: 5.0,
+          }
+        : undefined);
 
     const hedefMutfakId = item.mutfak_id || eslesenYemek?.mutfak_id;
-    const bulunanMutfak = mutfaklar.find((m) => m.id === hedefMutfakId);
+    const bulunanMutfak = mutfaklar.find((m) => m.id === hedefMutfakId || m.kimlik === hedefMutfakId);
     const bulunanSube = !bulunanMutfak
       ? subeler.find((s) => (s.id || s.kimlik) === hedefMutfakId)
       : undefined;

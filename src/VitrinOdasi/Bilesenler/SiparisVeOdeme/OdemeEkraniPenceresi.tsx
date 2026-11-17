@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ArrowLeft, AlertCircle } from 'lucide-react';
 import { sepetHafizasiKullan, teslimatHafizasiKullan, useOnSiparis, type MutfakSepetGrubu } from '@/src/OrtakHavuz';
 import { veritabaninaSiparisOlustur } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/siparisIslemleri';
@@ -274,11 +275,14 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
         const siparisElemanlari = tekGrup.elemanlar.map((e: any) => ({
           id: e.id || e.yemek_id || 'el-' + Math.random(),
           yemek_id: e.yemek_id || e.yemek?.id || e.id || 'yemek',
-          baslik: e.yemek?.baslik || e.baslik || e.yemek_baslik || 'Ürün',
-          yemek_baslik: e.yemek?.baslik || e.baslik || e.yemek_baslik || 'Ürün',
+          baslik: e.yemek?.baslik || e.coklu_menu_baslik || e.baslik || e.yemek_baslik || 'Ürün',
+          yemek_baslik: e.yemek?.baslik || e.coklu_menu_baslik || e.baslik || e.yemek_baslik || 'Ürün',
           fiyat: e.birim_fiyat || e.fiyat || 0,
           birim_fiyat: e.birim_fiyat,
           adet: e.adet,
+          ...(e.coklu_menu_mu ? { coklu_menu_mu: true } : {}),
+          ...(Array.isArray(e.secilen_ogeler) ? { secilen_ogeler: e.secilen_ogeler } : {}),
+          ...(e.varyasyon ? { varyasyon: e.varyasyon } : {}),
         }));
 
         const teslimatUcreti = gelAlMi ? 0 : tekGrup.teslimatUcreti;
@@ -363,8 +367,8 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none">
+  const modalIcerigi = (
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none">
       <div
         ref={containerRef}
         className="w-full max-w-lg bg-[#180A1F] border border-[#521E5C] rounded-3xl text-white shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
@@ -520,7 +524,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
           )}
           sepet={aktifGruplar.flatMap((g) =>
             g.elemanlar.map((e: any) => ({
-              ad: e.yemek?.baslik || e.baslik || 'Ev Yemeği',
+              ad: e.yemek?.baslik || e.coklu_menu_baslik || e.baslik || 'Ev Yemeği',
               fiyat: Number(e.birim_fiyat || e.fiyat || 0),
               adet: Number(e.adet || 1),
             }))
@@ -539,4 +543,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
       )}
     </div>
   );
+
+  if (typeof document === 'undefined') return modalIcerigi;
+  return createPortal(modalIcerigi, document.body);
 };

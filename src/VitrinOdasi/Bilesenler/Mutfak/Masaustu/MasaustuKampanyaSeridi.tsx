@@ -2,12 +2,10 @@ import React from 'react';
 import { Tag, Bike } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { useAdminKuponu } from '@/src/MalzemeCekmeceleri/useAdminKuponu';
-import { useMutfakTeslimatAyari } from '@/src/MalzemeCekmeceleri/useMutfakTeslimatAyari';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 
-export const MasaustuKampanyaSeridi: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => {
+export const MasaustuKampanyaSeridi: React.FC<{ mutfak: Mutfak }> = ({ mutfak: _mutfak }) => {
   const { kupon } = useAdminKuponu();
-  const { ayar: mutfakTeslimat } = useMutfakTeslimatAyari(mutfak.id);
   const { ayarlar: kuryeAyarlari } = useKuryeAyarlari();
   const [kopyalandi, setKopyalandi] = React.useState(false);
 
@@ -24,7 +22,7 @@ export const MasaustuKampanyaSeridi: React.FC<{ mutfak: Mutfak }> = ({ mutfak })
   const kuryeLimiti =
     Number(kuryeAyarlari.ucretsiz_teslimat_esigi) > 0
       ? Number(kuryeAyarlari.ucretsiz_teslimat_esigi)
-      : Number(mutfakTeslimat.ucretsizTeslimatLimiti) || 2000;
+      : 2000;
 
   if (!kupon.aktif && !kuryeKampanyasiAktif) {
     return null;

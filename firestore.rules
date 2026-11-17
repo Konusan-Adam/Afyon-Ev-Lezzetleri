@@ -139,6 +139,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /coklu_menuler/{menuId} {
+      allow read: if true;
+      allow write: if isValidId(menuId);
+    }
+
     match /tamamlanan_siparisler/{siparisId} {
       allow read, write: if true;
     }

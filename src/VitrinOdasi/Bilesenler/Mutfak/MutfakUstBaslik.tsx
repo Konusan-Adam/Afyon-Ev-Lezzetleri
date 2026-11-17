@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Star, Clock, Bike, ShieldCheck, Heart, Share2, ShoppingBag, Check } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan, favoriHafizasiKullan } from '@/src/OrtakHavuz';
-import { useMutfakTeslimatAyari } from '@/src/MalzemeCekmeceleri/useMutfakTeslimatAyari';
+import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 import { useMutfakAfisleri } from '@/src/MalzemeCekmeceleri/Mutfak/useMutfakAfisleri';
 
 interface MutfakUstBaslikOzellikleri {
@@ -16,10 +16,13 @@ export const MutfakUstBaslik: React.FC<MutfakUstBaslikOzellikleri> = ({
 }) => {
   const { toplamUrunSayisi, sepetPaneliAc } = sepetHafizasiKullan();
   const { mutfakFavoriMi, mutfakFavoriDegistir } = favoriHafizasiKullan();
-  const { ayar } = useMutfakTeslimatAyari(mutfak.id);
+  const { ayarlar } = useKuryeAyarlari();
   const { afisler } = useMutfakAfisleri();
   const favoride = mutfakFavoriMi(mutfak.id);
   const [kopyalandi, setKopyalandi] = useState<boolean>(false);
+
+  const teslimatUcreti = Number(ayarlar.taban_ucret) || 0;
+  const hazirlanmaSuresi = mutfak.hazirlanma_suresi?.trim() || '25-35 dk';
 
   const mutfakAfisi = afisler.find(
     (a) => a.mutfak_id === mutfak.id || (mutfak.kimlik && a.mutfak_id === mutfak.kimlik)
@@ -163,8 +166,13 @@ export const MutfakUstBaslik: React.FC<MutfakUstBaslikOzellikleri> = ({
             </div>
 
             <div className="flex items-center gap-1 bg-black/40 px-2.5 py-1.5 rounded-xl border border-purple-800/40 text-purple-200 text-xs font-medium">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>{hazirlanmaSuresi}</span>
+            </div>
+
+            <div className="flex items-center gap-1 bg-black/40 px-2.5 py-1.5 rounded-xl border border-purple-800/40 text-purple-200 text-xs font-medium">
               <Bike className="w-3.5 h-3.5 text-purple-300" />
-              <span>{ayar.teslimatUcreti > 0 ? `${ayar.teslimatUcreti} ₺` : 'Ücretsiz'}</span>
+              <span>{teslimatUcreti > 0 ? `${teslimatUcreti} ₺` : 'Ücretsiz'}</span>
             </div>
           </div>
         </div>

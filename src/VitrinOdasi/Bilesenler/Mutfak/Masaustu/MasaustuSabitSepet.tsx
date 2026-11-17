@@ -20,10 +20,10 @@ export const MasaustuSabitSepet: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => 
   }, [grup]);
 
   const urunSayisi = grup ? grup.elemanlar.reduce((t, e) => t + e.adet, 0) : 0;
-  const minTutar = mutfak.min_siparis_tutari || 100;
+  const minTutar = typeof mutfak.min_siparis_tutari === 'number' ? mutfak.min_siparis_tutari : 100;
   const araToplam = grup?.araToplam || 0;
   const minUlasildi = araToplam >= minTutar;
-  const yuzde = Math.min(100, Math.round((araToplam / minTutar) * 100));
+  const yuzde = minTutar > 0 ? Math.min(100, Math.round((araToplam / minTutar) * 100)) : 100;
 
   const aktifGrup = grup || sonGrupRef.current;
 

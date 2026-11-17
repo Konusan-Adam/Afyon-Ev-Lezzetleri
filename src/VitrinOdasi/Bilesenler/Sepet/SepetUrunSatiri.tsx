@@ -10,8 +10,8 @@ interface SepetUrunSatiriOzellikleri {
 export const SepetUrunSatiri: React.FC<SepetUrunSatiriOzellikleri> = ({ eleman }) => {
   const { adetGuncelle, sepettenSil } = sepetHafizasiKullan();
 
-  const yemekAdi = eleman.yemek?.baslik || 'Afyon Yöresel Yemeği';
-  const gorselUrl = eleman.yemek?.gorsel_url || '/marka_logosu.jpg';
+  const yemekAdi = eleman.yemek?.baslik || eleman.coklu_menu_baslik || 'Afyon Yöresel Yemeği';
+  const gorselUrl = eleman.yemek?.gorsel_url || eleman.coklu_menu_gorsel || '/marka_logosu.jpg';
   const toplamFiyat = eleman.birim_fiyat * eleman.adet;
 
   return (
@@ -19,12 +19,20 @@ export const SepetUrunSatiri: React.FC<SepetUrunSatiriOzellikleri> = ({ eleman }
       <img
         src={gorselUrl}
         alt={yemekAdi}
-        className="w-12 h-12 rounded-lg object-cover border border-[#521E5C] shrink-0"
+        className="w-12 h-12 rounded-lg object-cover border border-[#521E5C] shrink-0 bg-[#290F30]"
         referrerPolicy="no-referrer"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = '/marka_logosu.jpg';
+        }}
       />
 
       <div className="flex-1 min-w-0">
         <h4 className="font-semibold text-white truncate">{yemekAdi}</h4>
+        {eleman.varyasyon && (
+          <p className="text-[10px] text-purple-200/75 line-clamp-2 mt-0.5 leading-snug">
+            {eleman.varyasyon}
+          </p>
+        )}
         <div className="text-[#CFA353] font-bold mt-0.5">{eleman.birim_fiyat} ₺ / adet</div>
       </div>
 
