@@ -40,11 +40,20 @@ export const MasaustuMutfakVitrini: React.FC<MasaustuMutfakVitriniOzellikleri> =
 
   return (
     <div className="w-full min-h-screen bg-[#1A0A1D] text-white">
-      {mutfak.acik_mi === false && (
+      {mutfak.mola_durumu === true ? (
+        <div className="bg-amber-500 text-stone-950 px-4 py-2.5 text-center text-sm font-black border-b border-amber-600 flex items-center justify-center gap-2">
+          <span>
+            ☕ Mutfak Dinlenmede / Molada
+            {(mutfak.mola_bitis_zamani || mutfak.mola_bitis_saati)
+              ? ` — Tahmini Açılış: ${mutfak.mola_bitis_zamani || mutfak.mola_bitis_saati}`
+              : ' — Sipariş alımı geçici olarak durdurulmuştur'}
+          </span>
+        </div>
+      ) : mutfak.acik_mi === false ? (
         <div className="bg-rose-900/90 text-white px-4 py-2.5 text-center text-sm font-black border-b border-rose-700/50 flex items-center justify-center gap-2">
           <span>🚫 BU MUTFAK ŞU AN KAPALIDIR — Menüyü İnceleyebilirsiniz</span>
         </div>
-      )}
+      ) : null}
       {/* 1. Ekmek Kırıntısı / Yol Haritası */}
       <MasaustuYolHaritasi mutfak={mutfak} geriDonTiklandi={geriDonTiklandi} />
 

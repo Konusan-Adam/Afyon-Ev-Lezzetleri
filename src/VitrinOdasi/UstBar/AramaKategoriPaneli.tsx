@@ -1,11 +1,15 @@
-import React, { useRef, useState } from 'react';
-import { ChevronRight, ChevronLeft, Sparkles, TrendingUp } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronRight, TrendingUp } from 'lucide-react';
 import { kategorileriGetir, Kategori } from '@/src/MalzemeCekmeceleri/kategorileriGetir';
+import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
+import { AramaAltKategoriMegaAlani } from './AramaAltKategoriMegaAlani';
 
 interface AramaKategoriPaneliProps {
   acik: boolean;
   kapat: () => void;
-  kategoriSec: (kategoriAdi: string) => void;
+  seciliKategoriAd?: string;
+  seciliAltKategoriAd?: string;
+  kategoriSec: (kategoriAdi: string, altKategoriAdi?: string) => void;
   aramaSec: (metin: string) => void;
   tema?: 'koyu' | 'acik';
 }
@@ -22,20 +26,58 @@ const POPULER_ARAMALAR = [
   'Katmer',
 ];
 
+const VARSAYILAN_TABAK = 'https://pngimg.com/uploads/plate/plate_PNG5337.png';
+
 export const AramaKategoriPaneli: React.FC<AramaKategoriPaneliProps> = ({
   acik,
   kapat,
+  seciliKategoriAd,
+  seciliAltKategoriAd,
   kategoriSec,
   aramaSec,
   tema = 'koyu',
 }) => {
-  const { kategoriler } = kategorileriGetir();
+  const { kategoriler, altKategoriler } = kategorileriGetir();
   const listeRef = useRef<HTMLDivElement>(null);
+  const kapatmaZamanlayiciRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [aktifSekme, setAktifSekme] = useState<string>('hepsi');
+  const [hoverKategori, setHoverKategori] = useState<Kategori | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (kapatmaZamanlayiciRef.current) clearTimeout(kapatmaZamanlayiciRef.current);
+    };
+  }, []);
 
   if (!acik) return null;
 
   const acikMi = tema === 'acik';
+
+  const zamanlayiciTemizle = () => {
+    if (kapatmaZamanlayiciRef.current) {
+      clearTimeout(kapatmaZamanlayiciRef.current);
+      kapatmaZamanlayiciRef.current = null;
+    }
+  };
+
+  const hoverBaslat = (kat: Kategori | null) => {
+    zamanlayiciTemizle();
+    if (!kat) {
+      setHoverKategori(null);
+      return;
+    }
+    setAktifSekme(kat.id);
+    const altVarMi = altKategoriler.some((a) => a.ust_kategori_id === kat.id);
+    setHoverKategori(altVarMi ? kat : null);
+  };
+
+  const hoverBitirPlanla = () => {
+    zamanlayiciTemizle();
+    kapatmaZamanlayiciRef.current = setTimeout(() => {
+      setHoverKategori(null);
+    }, 180);
+  };
 
   const sagaKaydir = () => {
     if (listeRef.current) {
@@ -43,13 +85,10 @@ export const AramaKategoriPaneli: React.FC<AramaKategoriPaneliProps> = ({
     }
   };
 
-  const solaKaydir = () => {
-    if (listeRef.current) {
-      listeRef.current.scrollBy({ left: -240, behavior: 'smooth' });
-    }
-  };
-
   const gosterilenKategoriler = kategoriler.filter((k) => k.id !== 'hepsi');
+  const aktifHoverAltKategoriler = hoverKategori
+    ? altKategoriler.filter((a) => a.ust_kategori_id === hoverKategori.id)
+    : [];
 
   return (
     <div
@@ -59,102 +98,168 @@ export const AramaKategoriPaneli: React.FC<AramaKategoriPaneliProps> = ({
           : 'bg-[#180A1F]/98 border-amber-500/40 text-white'
       }`}
     >
-      {/* 1. Üst Hızlı Sekmeler (Yemeksepeti Modeli) */}
-      <div className={`flex items-center gap-4 pb-2.5 overflow-x-auto no-scrollbar text-xs font-bold border-b ${
-        acikMi ? 'border-amber-200' : 'border-purple-900/40'
-      }`}>
-        <button
-          type="button"
-          onClick={() => {
-            setAktifSekme('hepsi');
-            kategoriSec('Tümü');
-            kapat();
-          }}
-          className={`pb-1 cursor-pointer transition-all border-b-2 whitespace-nowrap ${
-            aktifSekme === 'hepsi'
-              ? 'text-amber-500 border-amber-500'
-              : acikMi
-              ? 'text-gray-600 border-transparent hover:text-black'
-              : 'text-gray-400 border-transparent hover:text-white'
+      {/* Kategori Sekmeleri + Görsel Kartlar + Alt Kategori Mega Alanı */}
+      <div onMouseLeave={hoverBitirPlanla} className="space-y-3">
+        {/* 1. Üst Hızlı Sekmeler (Yemeksepeti Modeli — Hover ile alt menüyü tetikler) */}
+        <div
+          className={`flex items-center gap-4 pb-2.5 overflow-x-auto no-scrollbar text-xs font-bold border-b ${
+            acikMi ? 'border-amber-200' : 'border-purple-900/40'
           }`}
         >
-          Hepsi
-        </button>
-        {gosterilenKategoriler.map((kat) => (
           <button
-            key={kat.id}
             type="button"
+            onMouseEnter={() => {
+              zamanlayiciTemizle();
+              setAktifSekme('hepsi');
+              setHoverKategori(null);
+            }}
             onClick={() => {
-              setAktifSekme(kat.id);
-              kategoriSec(kat.ad);
+              setAktifSekme('hepsi');
+              kategoriSec('Tümü', undefined);
               kapat();
             }}
-            className={`pb-1 cursor-pointer transition-all border-b-2 whitespace-nowrap ${
-              aktifSekme === kat.id
+            className={`pb-1 cursor-pointer transition-all border-b-2 whitespace-nowrap shrink-0 ${
+              aktifSekme === 'hepsi'
                 ? 'text-amber-500 border-amber-500'
                 : acikMi
                 ? 'text-gray-600 border-transparent hover:text-black'
                 : 'text-gray-400 border-transparent hover:text-white'
             }`}
           >
-            {kat.ad}
+            Hepsi
           </button>
-        ))}
-      </div>
-
-      {/* 2. Görsel Kategori Kartları (Yemeksepeti Stili Sere Serpe) */}
-      <div className="relative group">
-        <div
-          ref={listeRef}
-          className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth py-1"
-        >
           {gosterilenKategoriler.map((kat) => (
-            <div
+            <button
               key={kat.id}
+              type="button"
+              onMouseEnter={() => hoverBaslat(kat)}
               onClick={() => {
-                kategoriSec(kat.ad);
+                setAktifSekme(kat.id);
+                kategoriSec(kat.ad, undefined);
                 kapat();
               }}
-              className={`flex flex-col items-center gap-2 p-2.5 rounded-2xl cursor-pointer transition-all shrink-0 w-24 text-center group/card border ${
-                acikMi
-                  ? 'bg-white hover:bg-amber-50 border-amber-200 hover:border-amber-400 shadow-sm'
-                  : 'bg-[#240C29] hover:bg-[#381342] border-purple-900/40 hover:border-amber-400/50'
+              className={`pb-1 cursor-pointer transition-all border-b-2 whitespace-nowrap shrink-0 ${
+                aktifSekme === kat.id || hoverKategori?.id === kat.id
+                  ? 'text-amber-500 border-amber-500'
+                  : acikMi
+                  ? 'text-gray-600 border-transparent hover:text-black'
+                  : 'text-gray-400 border-transparent hover:text-white'
               }`}
             >
-              <div className={`w-14 h-14 rounded-2xl p-1.5 flex items-center justify-center border group-hover/card:scale-105 transition-transform overflow-hidden ${
-                acikMi ? 'bg-[#FAF4EB] border-amber-200' : 'bg-[#150618] border-purple-900/30'
-              }`}>
-                <img
-                  src={kat.resim_url || 'https://pngimg.com/uploads/plate/plate_PNG5337.png'}
-                  alt={kat.ad}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
-              </div>
-              <span className={`text-[11px] font-semibold leading-tight line-clamp-2 ${
-                acikMi ? 'text-gray-800 group-hover/card:text-amber-700' : 'text-gray-200 group-hover/card:text-amber-300'
-              }`}>
-                {kat.ad}
-              </span>
-            </div>
+              {kat.ad}
+            </button>
           ))}
         </div>
 
-        {/* Sağa Kaydırma Oku › */}
-        <button
-          type="button"
-          onClick={sagaKaydir}
-          className={`absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border shadow-lg flex items-center justify-center cursor-pointer transition-all ${
-            acikMi
-              ? 'bg-white border-amber-300 text-amber-700 hover:bg-amber-100'
-              : 'bg-[#1A081E] border-amber-400/50 text-amber-300 hover:bg-amber-500 hover:text-black'
-          }`}
-          title="Sağa Kaydır"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        {/* 2. Görsel Kategori Kartları (Üzerine gelince alt kategorileri açılır) */}
+        <div className="relative group">
+          <div
+            ref={listeRef}
+            className="flex items-stretch gap-3 overflow-x-auto no-scrollbar scroll-smooth py-1"
+          >
+            {gosterilenKategoriler.map((kat) => {
+              const altSayisi = altKategoriler.filter((a) => a.ust_kategori_id === kat.id).length;
+              const vurguluMu = hoverKategori?.id === kat.id;
+              const seciliMi = seciliKategoriAd === kat.ad;
+              const gorselSrc = gorselUrlGuvenliYap(kat.resim_url) || VARSAYILAN_TABAK;
+
+              return (
+                <button
+                  key={kat.id}
+                  type="button"
+                  onMouseEnter={() => hoverBaslat(kat)}
+                  onClick={() => {
+                    kategoriSec(kat.ad, undefined);
+                    kapat();
+                  }}
+                  className={`flex flex-col items-center gap-1.5 p-2.5 rounded-2xl cursor-pointer transition-all shrink-0 w-24 text-center group/card border ${
+                    vurguluMu || seciliMi
+                      ? acikMi
+                        ? 'bg-amber-50 border-amber-400 shadow-sm'
+                        : 'bg-[#381342] border-amber-400/70 shadow-sm'
+                      : acikMi
+                      ? 'bg-white hover:bg-amber-50 border-amber-200 hover:border-amber-400 shadow-sm'
+                      : 'bg-[#240C29] hover:bg-[#381342] border-purple-900/40 hover:border-amber-400/50'
+                  }`}
+                >
+                  <div
+                    className={`w-14 h-14 rounded-2xl p-1.5 flex items-center justify-center border group-hover/card:scale-105 transition-transform overflow-hidden ${
+                      acikMi ? 'bg-[#FAF4EB] border-amber-200' : 'bg-[#150618] border-purple-900/30'
+                    }`}
+                  >
+                    <img
+                      src={gorselSrc}
+                      alt={kat.ad}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const hedef = e.target as HTMLImageElement;
+                        if (!hedef.src.endsWith('/marka_logosu.jpg')) {
+                          hedef.src = '/marka_logosu.jpg';
+                        }
+                      }}
+                    />
+                  </div>
+                  <span
+                    className={`text-[11px] font-semibold leading-tight line-clamp-2 ${
+                      vurguluMu || seciliMi
+                        ? acikMi
+                          ? 'text-amber-800'
+                          : 'text-amber-300'
+                        : acikMi
+                        ? 'text-gray-800 group-hover/card:text-amber-700'
+                        : 'text-gray-200 group-hover/card:text-amber-300'
+                    }`}
+                  >
+                    {kat.ad}
+                  </span>
+                  {altSayisi > 0 && (
+                    <span
+                      className={`text-[10px] tabular-nums ${
+                        acikMi ? 'text-gray-500' : 'text-purple-300/75'
+                      }`}
+                    >
+                      {altSayisi} çeşit
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sağa Kaydırma Oku */}
+          <button
+            type="button"
+            onClick={sagaKaydir}
+            className={`absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full border shadow-lg flex items-center justify-center cursor-pointer transition-all ${
+              acikMi
+                ? 'bg-white border-amber-300 text-amber-700 hover:bg-amber-100'
+                : 'bg-[#1A081E] border-amber-400/50 text-amber-300 hover:bg-amber-500 hover:text-black'
+            }`}
+            title="Sağa Kaydır"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* 2.1 Masaüstü Hover Mega Menü Alanı (Üzerine gelinen kategorinin alt çeşitleri) */}
+        <AramaAltKategoriMegaAlani
+          kategori={hoverKategori}
+          altKategoriler={aktifHoverAltKategoriler}
+          seciliKategoriAd={seciliKategoriAd}
+          seciliAltKategoriAd={seciliAltKategoriAd}
+          acikMi={acikMi}
+          onMouseEnter={zamanlayiciTemizle}
+          onMouseLeave={hoverBitirPlanla}
+          onTumKategoriSec={(katAd) => {
+            kategoriSec(katAd, undefined);
+            kapat();
+          }}
+          onAltKategoriSec={(katAd, altAd) => {
+            kategoriSec(katAd, altAd);
+            kapat();
+          }}
+        />
       </div>
 
       {/* 3. Popüler Afyon Aramaları Çipleri */}

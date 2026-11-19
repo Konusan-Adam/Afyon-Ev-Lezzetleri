@@ -5,6 +5,7 @@ import { MutfakTipi } from '@/src/veritabani/VeriTipleri';
 import { siparisDegerlendirildiMi } from '@/src/MalzemeCekmeceleri/Degerlendirme/degerlendirmeDeposu';
 import { SiparisDurumCubugu } from './SiparisDurumCubugu';
 import { TekrarSiparisButonu } from './TekrarSiparisButonu';
+import { tarihSaatFormatla } from '@/src/MalzemeCekmeceleri/Ortak/tarihFormatlayici';
 
 interface MusteriSiparisKartiOzellikleri {
   siparis: TestSiparis;
@@ -14,7 +15,7 @@ interface MusteriSiparisKartiOzellikleri {
   onTakipEt: (kod: string) => void;
   onQrAc: (kod: string) => void;
   onIptalEt: (bilgi: { id: string; kodu: string }) => void;
-  onDegerlendir: (bilgi: { siparisKimligi: string; mutfakId: string; mutfakAdi: string; yemekler: string[] }) => void;
+  onDegerlendir: (bilgi: { siparisKimligi: string; siparisKodu: string; mutfakId: string; mutfakAdi: string; yemekler: string[] }) => void;
 }
 
 export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
@@ -52,7 +53,7 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
         <div className="flex items-center gap-2">
           <span className={`w-2.5 h-2.5 rounded-full ${noktaRengi}`} />
           <span className="font-bold text-white text-xs">#{sip.siparis_kodu}</span>
-          <span className="text-[10px] text-purple-300">({sip.olusturma_tarihi})</span>
+          <span className="text-[10px] text-purple-300">({tarihSaatFormatla(sip.olusturma_tarihi)})</span>
         </div>
         <div className="flex items-center gap-2">
           {sip.odemeDurumu === 'odendi' && (
@@ -158,6 +159,7 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
               type="button"
               onClick={() => onDegerlendir({
                 siparisKimligi: sip.id,
+                siparisKodu: sip.siparis_kodu || sip.siparisKodu || sip.id,
                 mutfakId: sip.mutfak_id || '',
                 mutfakAdi: mutfak?.ad || 'Afyon Ev Mutfağı',
                 yemekler: (sip.elemanlar || []).map((e: { yemek_baslik?: string; baslik?: string }) => e.yemek_baslik || e.baslik || ''),

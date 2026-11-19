@@ -5,6 +5,7 @@ import { SiparisDegerlendirmesi } from '@/src/MalzemeCekmeceleri/Degerlendirme/D
 
 interface DegerlendirmePenceresiOzellikleri {
   siparisKimligi: string;
+  siparisKodu?: string;
   mutfakId: string;
   mutfakAdi: string;
   musteriAdi: string;
@@ -15,6 +16,7 @@ interface DegerlendirmePenceresiOzellikleri {
 
 export const DegerlendirmePenceresi: React.FC<DegerlendirmePenceresiOzellikleri> = ({
   siparisKimligi,
+  siparisKodu,
   mutfakId,
   mutfakAdi,
   musteriAdi,
@@ -31,8 +33,11 @@ export const DegerlendirmePenceresi: React.FC<DegerlendirmePenceresiOzellikleri>
     e.preventDefault();
     const kayit = degerlendirmeKaydet({
       siparis_kimligi: siparisKimligi,
+      siparis_kodu: siparisKodu || siparisKimligi,
       mutfak_id: mutfakId,
       musteri_adi: musteriAdi || 'Afyonlu Misafir',
+      puan: lezzetPuani,
+      yorum: yorum.trim() || 'Ellerinize sağlık, çok lezzetliydi!',
       lezzet_puani: lezzetPuani,
       kurye_puani: kuryePuani,
       yorum_metni: yorum.trim() || 'Ellerinize sağlık, çok lezzetliydi!',

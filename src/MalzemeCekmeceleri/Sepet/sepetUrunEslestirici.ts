@@ -52,9 +52,9 @@ export function sepetElemanlariniZenginlestir(
       : undefined;
 
     const eslesenYemek =
-      item.yemek ||
       bulunanYemek ||
       (bulunanSubeUrunu ? subeUrununuYemegeDonustur(bulunanSubeUrunu) : undefined) ||
+      item.yemek ||
       (item.coklu_menu_mu
         ? {
             id: item.yemek_id || item.id,
@@ -75,9 +75,9 @@ export function sepetElemanlariniZenginlestir(
       : undefined;
 
     const eslesenMutfak =
-      item.mutfak ||
       bulunanMutfak ||
-      (bulunanSube ? subeyiMutfagaDonustur(bulunanSube) : undefined);
+      (bulunanSube ? subeyiMutfagaDonustur(bulunanSube) : undefined) ||
+      item.mutfak;
 
     return {
       ...item,

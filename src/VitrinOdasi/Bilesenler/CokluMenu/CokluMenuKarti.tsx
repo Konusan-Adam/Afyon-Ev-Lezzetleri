@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Clock, Store, Layers, ChevronRight } from 'lucide-react';
+import { Clock, Store, Layers, ChevronRight, Coffee } from 'lucide-react';
 import { CokluMenuTipi } from '@/src/veritabani/VeriTipleri';
 import { CokluMenuKolajGorseli } from './CokluMenuKolajGorseli';
+import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
+import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface CokluMenuKartiProps {
   menu: CokluMenuTipi;
@@ -9,7 +11,14 @@ interface CokluMenuKartiProps {
 }
 
 export const CokluMenuKarti: React.FC<CokluMenuKartiProps> = ({ menu, onSec }) => {
+  const { mutfaklarListesi } = sepetHafizasiKullan();
   const [hover, setHover] = useState(false);
+
+  const bagliMutfak = mutfaklarListesi.find(
+    (m) => m.id === menu.mutfak_id || m.kimlik === menu.mutfak_id
+  );
+  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+
   const cesitSayisi = menu.kalemler?.length || 0;
   const hazirlanma = menu.hazirlanma_suresi?.trim() || '35-45 dk';
   const kalemToplam = (menu.kalemler || []).reduce((t, k) => t + (Number(k.fiyat) || 0), 0);
@@ -22,7 +31,6 @@ export const CokluMenuKarti: React.FC<CokluMenuKartiProps> = ({ menu, onSec }) =
       onMouseLeave={() => setHover(false)}
       className="bg-[#240E2A] rounded-2xl border border-purple-900/50 hover:border-amber-500/60 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-purple-950/60 overflow-hidden flex flex-col justify-between cursor-pointer group active:scale-[0.99] h-full"
     >
-      {/* Üst: Bölünmüş Görsel Kolajı */}
       <div className="relative">
         <CokluMenuKolajGorseli
           kalemler={menu.kalemler || []}
@@ -31,20 +39,27 @@ export const CokluMenuKarti: React.FC<CokluMenuKartiProps> = ({ menu, onSec }) =
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#240E2A] via-transparent to-black/35 pointer-events-none" />
 
-        {/* Çeşit Sayısı Rozeti */}
         <div className="absolute top-2.5 left-2.5 bg-amber-500 text-[#1A0A1D] text-[11px] font-black px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
           <Layers className="w-3.5 h-3.5 shrink-0" />
           <span>{cesitSayisi} Çeşit</span>
         </div>
 
-        {/* Hazırlık Süresi */}
         <div className="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-md border border-purple-700/50 text-purple-100 text-[11px] font-semibold px-2 py-0.5 rounded-lg flex items-center gap-1">
           <Clock className="w-3 h-3 text-amber-400" />
           <span>{hazirlanma}</span>
         </div>
+
+        {molaBilgisi.siparisEngelliMi && (
+          <div className="absolute bottom-2 inset-x-2 bg-amber-950/90 border border-amber-500/60 text-amber-200 text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
+            <Coffee className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">
+              {molaBilgisi.moladaMi ? 'Mutfak Dinlenmede / Molada' : 'Mutfak Kapalı'}
+              {molaBilgisi.molaBitisZamani ? ` • Açılış: ${molaBilgisi.molaBitisZamani}` : ''}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Alt: Başlık, Mutfak ve Fiyat */}
       <div className="p-3.5 flex-1 flex flex-col justify-between gap-3">
         <div>
           {menu.mutfak_adi && (

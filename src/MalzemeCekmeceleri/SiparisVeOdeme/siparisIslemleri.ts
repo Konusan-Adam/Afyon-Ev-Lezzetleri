@@ -69,6 +69,14 @@ export async function veritabaninaSiparisOlustur(
       : girdi.subeAdi || 'Afyon Ev Lezzetleri Şubesi'
     : await mutfakAdiniCoz(girdi.mutfakId);
 
+  const normalizedElemanlar = girdi.elemanlar.map((el: any) => ({
+    ...el,
+    yemek_id: el.yemek_id || el.id || 'yemek',
+    baslik: el.baslik || el.yemek_baslik || 'Ürün',
+    adet: Number(el.adet) || 1,
+    birim_fiyat: Number(el.birim_fiyat ?? el.fiyat) || 0,
+  }));
+
   const yeniSiparisKaydi: TestSiparis = {
     id: siparisId,
     siparisKodu,
@@ -90,8 +98,8 @@ export async function veritabaninaSiparisOlustur(
     durum_aciklamasi: subeSiparisiMi
       ? 'Sipariş şubeye iletildi, hazırlanıyor.'
       : 'Sipariş alındı, mutfağın onaylaması bekleniyor.',
-    elemanlar: girdi.elemanlar,
-    urunler: girdi.elemanlar,
+    elemanlar: normalizedElemanlar,
+    urunler: normalizedElemanlar,
     toplam_tutar: dogrulama.hesaplananToplam,
     tutar: dogrulama.hesaplananToplam,
     toplamTutar: dogrulama.hesaplananToplam,
@@ -104,7 +112,7 @@ export async function veritabaninaSiparisOlustur(
     odeme_yontemi: girdi.odemeYontemi,
     odemeDurumu,
     paytrOid: girdi.paytrOid || '',
-    olusturma_tarihi: new Date().toLocaleDateString('tr-TR') + ' ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+    olusturma_tarihi: new Date().toISOString(),
     tahmini_teslimat: girdi.tahminiTeslimat || '40-50 dk',
   };
 

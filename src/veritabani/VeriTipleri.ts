@@ -17,6 +17,9 @@ export interface MutfakTipi {
   onayli_mi?: boolean;
   onay_durumu?: string;
   acik_mi?: boolean;
+  mola_durumu?: boolean;
+  mola_bitis_zamani?: string;
+  mola_bitis_saati?: string;
   calisma_saatleri?: string;
   hazirlanma_suresi?: string;
   belgeler?: any;

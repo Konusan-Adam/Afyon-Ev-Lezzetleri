@@ -2,9 +2,24 @@ import React from 'react';
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import { SepetElemani } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
+import { yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 export const MasaustuSepetSatiri: React.FC<{ eleman: SepetElemani }> = ({ eleman }) => {
-  const { adetGuncelle, sepettenSil } = sepetHafizasiKullan();
+  const { adetGuncelle, sepettenSil, sepetElemanlari } = sepetHafizasiKullan();
+
+  const stokBilgisi = !eleman.coklu_menu_mu && eleman.yemek
+    ? yemekStokDurumuHesapla(eleman.yemek, eleman.mutfak)
+    : null;
+
+  const digerSatirlarToplami = sepetElemanlari
+    .filter((e) => e.yemek_id === eleman.yemek_id && e.id !== eleman.id)
+    .reduce((t, e) => t + e.adet, 0);
+
+  const maksStokUlasildi = Boolean(
+    stokBilgisi?.stokTakibiVarMi &&
+      stokBilgisi.kalanStok !== undefined &&
+      eleman.adet + digerSatirlarToplami >= stokBilgisi.kalanStok
+  );
 
   return (
     <div className="flex items-center justify-between py-2 border-b border-purple-900/30 text-xs">
@@ -17,7 +32,14 @@ export const MasaustuSepetSatiri: React.FC<{ eleman: SepetElemani }> = ({ eleman
             {eleman.varyasyon}
           </p>
         )}
-        <span className="text-[11px] text-amber-400 font-bold">{eleman.birim_fiyat} ₺</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-amber-400 font-bold">{eleman.birim_fiyat} ₺</span>
+          {maksStokUlasildi && stokBilgisi?.kalanStok !== undefined && (
+            <span className="text-[9px] text-amber-300/90 font-semibold">
+              (Maks. {stokBilgisi.kalanStok} {stokBilgisi.birim})
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -40,8 +62,14 @@ export const MasaustuSepetSatiri: React.FC<{ eleman: SepetElemani }> = ({ eleman
 
           <button
             type="button"
-            onClick={() => adetGuncelle(eleman.id, eleman.adet + 1)}
-            className="w-6 h-6 flex items-center justify-center text-purple-300 hover:text-white hover:bg-purple-900/50 cursor-pointer"
+            disabled={maksStokUlasildi}
+            onClick={() => !maksStokUlasildi && adetGuncelle(eleman.id, eleman.adet + 1)}
+            title={maksStokUlasildi ? 'Stok üst sınırına ulaşıldı' : 'Adet Artır'}
+            className={`w-6 h-6 flex items-center justify-center ${
+              maksStokUlasildi
+                ? 'text-purple-700 cursor-not-allowed'
+                : 'text-purple-300 hover:text-white hover:bg-purple-900/50 cursor-pointer'
+            }`}
           >
             <Plus className="w-3 h-3" />
           </button>

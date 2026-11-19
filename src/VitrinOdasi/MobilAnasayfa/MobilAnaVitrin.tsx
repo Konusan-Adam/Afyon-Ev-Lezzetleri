@@ -107,8 +107,8 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
           />
         </div>
 
-        {/* Sadece Mobil ve Tablet: Dairesel Kategoriler (Masaüstünde Gizli) */}
-        <div className="lg:hidden px-4">
+        {/* Sadece Mobil ve Tablet: Kategoriler (Masaüstünde Gizli — Arama Çubuğunda Mega Menü) */}
+        <div className="px-4 lg:hidden">
           <MobilKategoriler />
         </div>
 

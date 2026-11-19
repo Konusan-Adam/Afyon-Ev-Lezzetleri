@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ShoppingBag, CheckCircle2, AlertCircle, AlertTriangle, Ban } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan, MutfakSepetGrubu } from '@/src/OrtakHavuz';
 import { MasaustuSepetSatiri } from './MasaustuSepetSatiri';
 import { MasaustuSepetOzeti } from './MasaustuSepetOzeti';
 import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
+import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 export const MasaustuSabitSepet: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => {
   const { mutfakGruplari } = sepetHafizasiKullan();
@@ -19,11 +20,23 @@ export const MasaustuSabitSepet: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => 
     }
   }, [grup]);
 
+  const molaBilgisi = mutfakMolaDurumuGetir(grup?.mutfak || mutfak);
   const urunSayisi = grup ? grup.elemanlar.reduce((t, e) => t + e.adet, 0) : 0;
   const minTutar = typeof mutfak.min_siparis_tutari === 'number' ? mutfak.min_siparis_tutari : 100;
   const araToplam = grup?.araToplam || 0;
   const minUlasildi = araToplam >= minTutar;
   const yuzde = minTutar > 0 ? Math.min(100, Math.round((araToplam / minTutar) * 100)) : 100;
+
+  const minTutarTamamlamayanUrunVar = Boolean(
+    grup &&
+      !minUlasildi &&
+      grup.elemanlar.some(
+        (e) =>
+          !e.coklu_menu_mu &&
+          e.yemek &&
+          yemekStokDurumuHesapla(e.yemek, grup.mutfak || mutfak).minTutarTamamlanmazMi
+      )
+  );
 
   const aktifGrup = grup || sonGrupRef.current;
 
@@ -38,6 +51,13 @@ export const MasaustuSabitSepet: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => 
           {urunSayisi} Ürün
         </span>
       </div>
+
+      {molaBilgisi.siparisEngelliMi && (
+        <div className="bg-amber-950/70 border border-amber-500/60 p-2.5 rounded-xl flex items-start gap-2 text-amber-200 text-[11px] font-semibold">
+          <Ban className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <span>{molaBilgisi.uyariMetni}</span>
+        </div>
+      )}
 
       {!grup || grup.elemanlar.length === 0 ? (
         <div className="py-10 text-center text-purple-300/60 text-xs">
@@ -59,6 +79,12 @@ export const MasaustuSabitSepet: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => 
               {minUlasildi ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <AlertCircle className="w-3 h-3 text-amber-400" />}
               <span>{minUlasildi ? 'Min. tutara ulaşıldı!' : `Sipariş için ${minTutar - araToplam} ₺ daha ekleyin.`}</span>
             </p>
+            {minTutarTamamlamayanUrunVar && (
+              <p className="flex items-start gap-1.5 text-[10px] text-amber-200 bg-amber-950/60 border border-amber-700/50 rounded-lg px-2 py-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                <span>Tek başına min. {minTutar} ₺ sipariş tutarını tamamlamaz, yanına ek ürün eklemelisiniz</span>
+              </p>
+            )}
           </div>
 
           <div className="max-h-56 overflow-y-auto pr-1 no-scrollbar space-y-1">
@@ -67,7 +93,11 @@ export const MasaustuSabitSepet: React.FC<{ mutfak: Mutfak }> = ({ mutfak }) => 
             ))}
           </div>
 
-          <MasaustuSepetOzeti grup={grup} minUlasildi={minUlasildi} odemeTiklandi={() => setOdemeAcik(true)} />
+          <MasaustuSepetOzeti
+            grup={grup}
+            minUlasildi={minUlasildi && !molaBilgisi.siparisEngelliMi}
+            odemeTiklandi={() => !molaBilgisi.siparisEngelliMi && setOdemeAcik(true)}
+          />
         </>
       )}
 

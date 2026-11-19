@@ -48,11 +48,20 @@ export const MobilMutfakVitrini: React.FC<MobilMutfakVitriniOzellikleri> = ({
 
   return (
     <div className="w-full bg-[#120415] min-h-screen pb-32 text-white select-none">
-      {mutfak.acik_mi === false && (
-        <div className="bg-rose-900/90 text-white px-4 py-3 text-center text-xs font-bold border-b border-rose-700/50 flex items-center justify-center gap-2 animate-pulse">
+      {mutfak.mola_durumu === true ? (
+        <div className="bg-amber-500 text-stone-950 px-4 py-3 text-center text-xs font-black border-b border-amber-600 flex items-center justify-center gap-2">
+          <span>
+            ☕ Mutfak Dinlenmede / Molada
+            {(mutfak.mola_bitis_zamani || mutfak.mola_bitis_saati)
+              ? ` • Tahmini Açılış: ${mutfak.mola_bitis_zamani || mutfak.mola_bitis_saati}`
+              : ' • Sipariş alımı geçici olarak durduruldu'}
+          </span>
+        </div>
+      ) : mutfak.acik_mi === false ? (
+        <div className="bg-rose-900/90 text-white px-4 py-3 text-center text-xs font-bold border-b border-rose-700/50 flex items-center justify-center gap-2">
           <span>🚫 Bu mutfak şu an kapalıdır. Menüyü inceleyebilir ancak sipariş veremezsiniz.</span>
         </div>
-      )}
+      ) : null}
       <MobilMutfakKapak
         mutfak={mutfak}
         geriDonTiklandi={geriDonTiklandi}

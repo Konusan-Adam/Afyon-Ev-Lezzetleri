@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Store, AlertCircle, CheckCircle, ArrowRight, Trash2, Bike } from 'lucide-react';
+import { Store, AlertCircle, CheckCircle, ArrowRight, Trash2, Bike, AlertTriangle, Ban } from 'lucide-react';
 import { MutfakSepetGrubu } from '@/src/MalzemeCekmeceleri/Sepet/sepetGruplayici';
 import { SepetUrunSatiri } from '@/src/VitrinOdasi/Bilesenler';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
 import { SepetElemani } from '@/src/veritabani/VeriTipleri';
+import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface MutfakSepetKartiOzellikleri {
   grup: MutfakSepetGrubu;
@@ -21,13 +22,25 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
   } = teslimatHafizasiKullan();
   const [odemeAcik, setOdemeAcik] = useState(false);
 
+  const molaBilgisi = mutfakMolaDurumuGetir(grup.mutfak);
+  const minTutar = typeof grup.mutfak.min_siparis_tutari === 'number' ? grup.mutfak.min_siparis_tutari : 100;
+  const minTutarTamamlamayanUrunVar = Boolean(
+    !grup.minTutarUlasildi &&
+      grup.elemanlar.some(
+        (e) =>
+          !e.coklu_menu_mu &&
+          e.yemek &&
+          yemekStokDurumuHesapla(e.yemek, grup.mutfak).minTutarTamamlanmazMi
+      )
+  );
+
   const gelAlMi = teslimatTipi === 'gel_al';
   const teslimatUcreti = gelAlMi ? 0 : grup.teslimatUcreti;
   const nihaiToplam = grup.araToplam + teslimatUcreti;
+  const siparisVerilebilir = grup.minTutarUlasildi && !molaBilgisi.siparisEngelliMi;
 
   return (
     <div className="bg-[#1D0A20] border border-[#521E5C] rounded-2xl p-4 text-xs text-white space-y-3 shadow-lg select-none">
-      {/* Mutfak Başlığı */}
       <div className="flex items-center justify-between border-b border-[#3E1646] pb-2.5">
         <div className="flex items-center gap-2 min-w-0">
           <div className="w-8 h-8 rounded-full bg-[#321138] border border-[#CFA353] flex items-center justify-center shrink-0">
@@ -38,7 +51,7 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
             <span className="text-[10px] text-[#A872B5]">
               {gelAlMi
                 ? 'Teslimat: Şubeden Gel Al (0 ₺)'
-                : `Min. Sipariş: ${grup.mutfak.min_siparis_tutari || 100} ₺ | Kurye: ${grup.teslimatUcreti} ₺`}
+                : `Min. Sipariş: ${minTutar} ₺ | Kurye: ${grup.teslimatUcreti} ₺`}
             </span>
           </div>
         </div>
@@ -53,7 +66,13 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
         </button>
       </div>
 
-      {/* Teslimat Tercihi Hızlı Seçimi */}
+      {molaBilgisi.siparisEngelliMi && (
+        <div className="flex items-start gap-2 bg-amber-950/70 border border-amber-500/60 text-amber-200 px-3 py-2 rounded-xl font-semibold">
+          <Ban className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <span>{molaBilgisi.uyariMetni}</span>
+        </div>
+      )}
+
       <div className="bg-[#140616] p-2 rounded-xl border border-[#3E1646] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           {gelAlMi ? (
@@ -86,20 +105,28 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
         </button>
       </div>
 
-      {/* Ürün Listesi */}
       <div className="space-y-2">
         {grup.elemanlar.map((item: SepetElemani) => (
           <SepetUrunSatiri key={item.id} eleman={item} />
         ))}
       </div>
 
-      {/* Minimum Tutar Uyarı / Bilgi Çubuğu */}
       {!grup.minTutarUlasildi ? (
-        <div className="flex items-center gap-2 bg-amber-950/60 border border-amber-700/60 text-amber-200 px-3 py-2 rounded-xl">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>
-            Siparişi tamamlamak için <strong>{grup.kalanMinTutar} ₺</strong> daha eklemelisiniz.
-          </span>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 bg-amber-950/60 border border-amber-700/60 text-amber-200 px-3 py-2 rounded-xl">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              Siparişi tamamlamak için <strong>{grup.kalanMinTutar} ₺</strong> daha eklemelisiniz.
+            </span>
+          </div>
+          {minTutarTamamlamayanUrunVar && (
+            <div className="flex items-start gap-2 bg-amber-950/50 border border-amber-600/50 text-amber-100 px-3 py-2 rounded-xl text-[11px]">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <span>
+                Tek başına min. {minTutar} ₺ sipariş tutarını tamamlamaz, yanına ek ürün eklemelisiniz
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="flex items-center gap-2 bg-emerald-950/60 border border-emerald-700/60 text-emerald-200 px-3 py-2 rounded-xl">
@@ -108,7 +135,6 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
         </div>
       )}
 
-      {/* Tutar Özeti & Yalnızca Bu Mutfağı Satın Alma Seçeneği */}
       <div className="pt-2 border-t border-[#3E1646] flex items-center justify-between gap-3">
         <div>
           <div className="text-[11px] text-gray-400">
@@ -122,11 +148,11 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
         {mutfakGruplari.length > 1 && (
           <button
             type="button"
-            disabled={!grup.minTutarUlasildi}
-            onClick={() => setOdemeAcik(true)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-              grup.minTutarUlasildi
-                ? 'bg-[#321138] hover:bg-[#4D1857] text-[#F5D28A] border border-amber-500/40 shadow-sm'
+            disabled={!siparisVerilebilir}
+            onClick={() => siparisVerilebilir && setOdemeAcik(true)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all ${
+              siparisVerilebilir
+                ? 'bg-[#321138] hover:bg-[#4D1857] text-[#F5D28A] border border-amber-500/40 shadow-sm cursor-pointer'
                 : 'bg-[#3E1646] text-gray-500 border border-[#521E5C] cursor-not-allowed opacity-60'
             }`}
             title="Yalnızca bu mutfağa ait ürünleri ayrı satın al"

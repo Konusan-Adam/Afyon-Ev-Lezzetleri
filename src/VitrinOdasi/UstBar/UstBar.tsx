@@ -169,8 +169,10 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
             <AramaKategoriPaneli
               acik={odaklandi}
               kapat={() => setOdaklandi(false)}
-              kategoriSec={(katAd) => {
-                filtreleriUygula({ ...(aktifFiltreler || {}), kategori: katAd, altKategori: undefined });
+              seciliKategoriAd={aktifFiltreler?.kategori}
+              seciliAltKategoriAd={aktifFiltreler?.altKategori}
+              kategoriSec={(katAd, altAd) => {
+                filtreleriUygula({ ...(aktifFiltreler || {}), kategori: katAd, altKategori: altAd });
               }}
               aramaSec={(metin) => {
                 aramaMetniniDegistir(metin);

@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Minus, ShoppingBag, Clock, Store, Layers, Check } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Clock, Store, Layers, Check, Ban } from 'lucide-react';
 import { CokluMenuTipi } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
 import { CokluMenuKalemSatiri } from './CokluMenuKalemSatiri';
+import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface CokluMenuDetayModaliProps {
   menu: CokluMenuTipi;
@@ -12,11 +13,16 @@ interface CokluMenuDetayModaliProps {
 }
 
 export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu, onKapat }) => {
-  const { sepeteEkle } = sepetHafizasiKullan();
+  const { sepeteEkle, mutfaklarListesi } = sepetHafizasiKullan();
   const [secilenAdet, setSecilenAdet] = useState(1);
   const [kalemNotlari, setKalemNotlari] = useState<Record<string, string>>({});
   const [ekleniyor, setEkleniyor] = useState(false);
   const [eklendi, setEklendi] = useState(false);
+
+  const bagliMutfak = mutfaklarListesi.find(
+    (m) => m.id === menu.mutfak_id || m.kimlik === menu.mutfak_id
+  );
+  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
 
   const siraliKalemler = useMemo(() => {
     return [...(menu.kalemler || [])].sort((a, b) => (a.sira ?? 0) - (b.sira ?? 0));
@@ -32,7 +38,7 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
   };
 
   const sepeteAktar = async () => {
-    if (ekleniyor) return;
+    if (ekleniyor || molaBilgisi.siparisEngelliMi) return;
     setEkleniyor(true);
 
     const secilenOgeler = siraliKalemler.map((k) => {
@@ -80,7 +86,6 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
         onClick={(e) => e.stopPropagation()}
         className="w-full sm:max-w-xl bg-[#180A1F] border-t sm:border border-[#521E5C] rounded-t-3xl sm:rounded-3xl text-white shadow-2xl flex flex-col max-h-[92vh] overflow-hidden"
       >
-        {/* Başlık */}
         <div className="p-4 sm:p-5 border-b border-purple-900/50 bg-[#220B2B] flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0 space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
@@ -119,8 +124,14 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
           </button>
         </div>
 
-        {/* Yemek Listesi (Tamamı sira alanına göre sıralı) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {molaBilgisi.siparisEngelliMi && (
+            <div className="bg-amber-950/70 border border-amber-500/60 p-3 rounded-xl flex items-center gap-2.5 text-amber-200 text-xs font-semibold">
+              <Ban className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{molaBilgisi.uyariMetni}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-xs text-purple-300/80 px-1">
             <span className="font-bold text-amber-300">Paket İçeriği ({siraliKalemler.length} Yemek)</span>
             <span>İstediğiniz yemeğe not ekleyebilirsiniz</span>
@@ -137,13 +148,13 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
           ))}
         </div>
 
-        {/* Alt Aksiyon Barı */}
         <div className="p-4 border-t border-purple-900/50 bg-[#1C0922] flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center bg-[#120415] border border-purple-800/60 rounded-xl overflow-hidden">
             <button
               type="button"
+              disabled={molaBilgisi.siparisEngelliMi || secilenAdet <= 1}
               onClick={() => setSecilenAdet((a) => Math.max(1, a - 1))}
-              className="w-9 h-9 flex items-center justify-center text-amber-400 hover:bg-purple-900/40 cursor-pointer"
+              className="w-9 h-9 flex items-center justify-center text-amber-400 hover:bg-purple-900/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               aria-label="Adet Azalt"
             >
               <Minus className="w-4 h-4" />
@@ -151,8 +162,9 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
             <span className="w-8 text-center font-black text-sm text-white">{secilenAdet}</span>
             <button
               type="button"
+              disabled={molaBilgisi.siparisEngelliMi}
               onClick={() => setSecilenAdet((a) => a + 1)}
-              className="w-9 h-9 flex items-center justify-center text-amber-400 hover:bg-purple-900/40 cursor-pointer"
+              className="w-9 h-9 flex items-center justify-center text-amber-400 hover:bg-purple-900/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               aria-label="Adet Artır"
             >
               <Plus className="w-4 h-4" />
@@ -161,15 +173,22 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
 
           <button
             type="button"
-            disabled={ekleniyor || eklendi}
+            disabled={ekleniyor || eklendi || molaBilgisi.siparisEngelliMi}
             onClick={sepeteAktar}
-            className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer ${
-              eklendi
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-[#1A0A1D] active:scale-[0.99]'
+            className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg ${
+              molaBilgisi.siparisEngelliMi
+                ? 'bg-stone-800 text-stone-400 border border-stone-700 cursor-not-allowed'
+                : eklendi
+                ? 'bg-emerald-600 text-white cursor-default'
+                : 'bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-[#1A0A1D] active:scale-[0.99] cursor-pointer'
             }`}
           >
-            {eklendi ? (
+            {molaBilgisi.siparisEngelliMi ? (
+              <>
+                <Ban className="w-4 h-4" />
+                <span>{molaBilgisi.moladaMi ? 'Mutfak Molada' : 'Mutfak Kapalı'}</span>
+              </>
+            ) : eklendi ? (
               <>
                 <Check className="w-4 h-4 stroke-[3]" />
                 <span>Sepete Eklendi!</span>

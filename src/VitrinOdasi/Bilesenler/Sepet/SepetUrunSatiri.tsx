@@ -2,17 +2,32 @@ import React from 'react';
 import { Plus, Minus, Trash2 } from 'lucide-react';
 import { SepetElemani } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
+import { yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface SepetUrunSatiriOzellikleri {
   eleman: SepetElemani;
 }
 
 export const SepetUrunSatiri: React.FC<SepetUrunSatiriOzellikleri> = ({ eleman }) => {
-  const { adetGuncelle, sepettenSil } = sepetHafizasiKullan();
+  const { adetGuncelle, sepettenSil, sepetElemanlari } = sepetHafizasiKullan();
 
   const yemekAdi = eleman.yemek?.baslik || eleman.coklu_menu_baslik || 'Afyon Yöresel Yemeği';
   const gorselUrl = eleman.yemek?.gorsel_url || eleman.coklu_menu_gorsel || '/marka_logosu.jpg';
   const toplamFiyat = eleman.birim_fiyat * eleman.adet;
+
+  const stokBilgisi = !eleman.coklu_menu_mu && eleman.yemek
+    ? yemekStokDurumuHesapla(eleman.yemek, eleman.mutfak)
+    : null;
+
+  const digerSatirlarToplami = sepetElemanlari
+    .filter((e) => e.yemek_id === eleman.yemek_id && e.id !== eleman.id)
+    .reduce((t, e) => t + e.adet, 0);
+
+  const maksStokUlasildi = Boolean(
+    stokBilgisi?.stokTakibiVarMi &&
+      stokBilgisi.kalanStok !== undefined &&
+      eleman.adet + digerSatirlarToplami >= stokBilgisi.kalanStok
+  );
 
   return (
     <div className="flex items-center gap-3 bg-[#230C27] border border-[#3E1646] p-2.5 rounded-xl text-xs select-none">
@@ -33,10 +48,16 @@ export const SepetUrunSatiri: React.FC<SepetUrunSatiriOzellikleri> = ({ eleman }
             {eleman.varyasyon}
           </p>
         )}
-        <div className="text-[#CFA353] font-bold mt-0.5">{eleman.birim_fiyat} ₺ / adet</div>
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          <span className="text-[#CFA353] font-bold">{eleman.birim_fiyat} ₺ / adet</span>
+          {maksStokUlasildi && stokBilgisi?.kalanStok !== undefined && (
+            <span className="text-[10px] text-amber-300 font-semibold">
+              (Maks. {stokBilgisi.kalanStok} {stokBilgisi.birim})
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Adet Değiştirici */}
       <div className="flex items-center gap-1.5 bg-[#140615] border border-[#521E5C] rounded-lg px-2 py-1 shrink-0">
         <button
           type="button"
@@ -51,15 +72,19 @@ export const SepetUrunSatiri: React.FC<SepetUrunSatiriOzellikleri> = ({ eleman }
         </span>
         <button
           type="button"
-          onClick={() => adetGuncelle(eleman.id, eleman.adet + 1)}
-          className="text-[#DDAF53] hover:text-white transition-colors cursor-pointer"
-          title="Adet Artır"
+          disabled={maksStokUlasildi}
+          onClick={() => !maksStokUlasildi && adetGuncelle(eleman.id, eleman.adet + 1)}
+          className={`transition-colors ${
+            maksStokUlasildi
+              ? 'text-purple-700 cursor-not-allowed'
+              : 'text-[#DDAF53] hover:text-white cursor-pointer'
+          }`}
+          title={maksStokUlasildi ? 'Stok üst sınırına ulaşıldı' : 'Adet Artır'}
         >
           <Plus className="w-3 h-3" />
         </button>
       </div>
 
-      {/* Tutar & Sil */}
       <div className="flex flex-col items-end shrink-0 pl-1">
         <span className="font-bold text-[#F5D28A]">{toplamFiyat} ₺</span>
         <button

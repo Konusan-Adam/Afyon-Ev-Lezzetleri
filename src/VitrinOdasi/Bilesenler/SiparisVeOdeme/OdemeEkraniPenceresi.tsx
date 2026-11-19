@@ -17,6 +17,7 @@ import { misafirProfiliniGetir, misafirProfiliniKaydetVeGuncelle, type MisafirPr
 import { useKuponHesaplayici } from '@/src/MalzemeCekmeceleri/useKuponHesaplayici';
 import { useOdemeSecenekleri } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/useOdemeSecenekleri';
 import { PaytrOdemePenceresi } from './PaytrOdemePenceresi';
+import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface OdemeEkraniPenceresiOzellikleri {
   grup?: MutfakSepetGrubu;
@@ -30,7 +31,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
   onKapat,
 }) => {
   const { aktifKullanici } = kullaniciHafizasiKullan();
-  const { mutfakSepetiniTemizle, sepetiTamamenTemizle, sepetPaneliKapat } = sepetHafizasiKullan();
+  const { mutfakSepetiniTemizle, sepetiTamamenTemizle, sepetPaneliKapat, mutfaklarListesi } = sepetHafizasiKullan();
   const {
     teslimatTipi,
     seciliAdres,
@@ -195,6 +196,15 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
     if (aktifGruplar.length === 0) {
       setHataMesaji('Sepetinizde sipariş verilecek ürün bulunmuyor.');
       return;
+    }
+
+    for (const g of aktifGruplar) {
+      const canliMutfak = mutfaklarListesi.find((m) => m.id === g.mutfakId || m.kimlik === g.mutfakId) || g.mutfak;
+      const molaBilgisi = mutfakMolaDurumuGetir(canliMutfak);
+      if (molaBilgisi.siparisEngelliMi) {
+        setHataMesaji(`${canliMutfak.ad}: ${molaBilgisi.uyariMetni}`);
+        return;
+      }
     }
 
     const musteriIsmi = aktifKullanici ? aktifKullanici.ad_soyad : adSoyad.trim();

@@ -46,6 +46,16 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
 
   return (
     <header className="relative w-full">
+      {mutfak.mola_durumu && (
+        <div className="bg-amber-500 text-stone-950 px-4 py-2.5 text-xs font-black text-center flex items-center justify-center gap-2 shadow-lg">
+          <span>
+            ☕ Mutfak Dinlenmede / Molada
+            {(mutfak.mola_bitis_zamani || mutfak.mola_bitis_saati)
+              ? ` • Tahmini Açılış: ${mutfak.mola_bitis_zamani || mutfak.mola_bitis_saati}`
+              : ' • Geçici olarak sipariş alınmamaktadır'}
+          </span>
+        </div>
+      )}
       {/* Kapak Alanı: Mutfak Özel Afişi */}
       <div className="relative h-[230px] sm:h-[260px] w-full bg-gradient-to-b from-[#3B1448] via-[#260B2F] to-[#120415] overflow-hidden">
         {afisGorseli ? (
@@ -130,7 +140,11 @@ export const MobilMutfakKapak: React.FC<MobilMutfakKapakOzellikleri> = ({
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               <span>{mutfak.puan?.toFixed(1) || '5.0'}</span>
             </span>
-            {mutfak.acik_mi !== false ? (
+            {mutfak.mola_durumu ? (
+              <span className="inline-flex items-center gap-1 bg-amber-950/90 backdrop-blur-sm text-amber-300 border border-amber-500/50 px-2.5 py-0.5 rounded-full font-bold shadow-sm text-[11px]">
+                <span>Dinlenmede / Molada</span>
+              </span>
+            ) : mutfak.acik_mi !== false ? (
               <span className="inline-flex items-center gap-1 bg-emerald-950/90 backdrop-blur-sm text-emerald-300 border border-emerald-500/50 px-2.5 py-0.5 rounded-full font-bold shadow-sm text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Açık</span>

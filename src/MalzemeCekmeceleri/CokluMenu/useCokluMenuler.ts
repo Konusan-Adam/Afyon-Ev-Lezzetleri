@@ -15,7 +15,7 @@ function gecerliCokluMenuMu(menu: CokluMenuTipi, aktifMutfaklar: MutfakTipi[]): 
     (m) => m.id === menu.mutfak_id || m.kimlik === menu.mutfak_id
   );
   if (!bagliMutfak) return false;
-  return onayliMutfakMi(bagliMutfak) && bagliMutfak.acik_mi !== false;
+  return onayliMutfakMi(bagliMutfak);
 }
 
 export function useCokluMenuler(hedefMutfakId?: string) {

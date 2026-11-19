@@ -1,7 +1,8 @@
 import React from 'react';
-import { Star, Clock, ShieldCheck, MapPin, Truck } from 'lucide-react';
+import { Star, Clock, ShieldCheck, MapPin, Truck, Coffee } from 'lucide-react';
 import { MutfakTipi } from '@/src/veritabani/VeriTipleri';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
+import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface Props {
   mutfak: MutfakTipi;
@@ -9,11 +10,11 @@ interface Props {
 
 export const MutfakKarti: React.FC<Props> = ({ mutfak }) => {
   const { ayarlar } = useKuryeAyarlari();
-  const kapaliMi = mutfak.acik_mi === false;
+  const molaBilgisi = mutfakMolaDurumuGetir(mutfak);
   const teslimatUcreti = Number(ayarlar.taban_ucret) || 0;
 
   return (
-    <div className={`bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full ${kapaliMi ? 'opacity-75' : ''}`}>
+    <div className={`bg-white rounded-2xl border border-stone-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full ${molaBilgisi.siparisEngelliMi ? 'opacity-80' : ''}`}>
       <div className="h-40 w-full relative overflow-hidden bg-[#290F30] flex items-center justify-center">
         <img
           src="/marka_logosu.jpg"
@@ -21,11 +22,17 @@ export const MutfakKarti: React.FC<Props> = ({ mutfak }) => {
           className="w-full h-full object-contain p-2"
           loading="lazy"
         />
-        {kapaliMi && (
-          <div className="absolute inset-0 bg-stone-950/60 flex items-center justify-center">
-            <span className="bg-stone-800 text-stone-200 font-bold text-xs px-3 py-1 rounded-lg">
-              Şuan Kapalı
+        {molaBilgisi.siparisEngelliMi && (
+          <div className="absolute inset-0 bg-stone-950/70 flex flex-col items-center justify-center gap-1 px-3 text-center">
+            <span className={`${molaBilgisi.moladaMi ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-stone-200'} font-bold text-xs px-3 py-1 rounded-lg inline-flex items-center gap-1.5`}>
+              {molaBilgisi.moladaMi && <Coffee className="w-3.5 h-3.5" />}
+              {molaBilgisi.moladaMi ? 'Mutfak Dinlenmede / Molada' : 'Şuan Kapalı'}
             </span>
+            {molaBilgisi.moladaMi && molaBilgisi.molaBitisZamani && (
+              <span className="text-[11px] font-semibold text-amber-200">
+                Tahmini Açılış: {molaBilgisi.molaBitisZamani}
+              </span>
+            )}
           </div>
         )}
         {mutfak.hijyen_onayli_mi && (

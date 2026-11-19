@@ -48,6 +48,30 @@ function yerelHafizadanYukle(): SiparisDegerlendirmesi[] {
 
 yerelDegerlendirmeler = yerelHafizadanYukle();
 
+export function firestoreDegerlendirmeDonustur(d: any): SiparisDegerlendirmesi {
+  const puanDegeri = Number(d.puan ?? d.lezzet_puani) || 5;
+  const yorumMetni = String(d.yorum ?? d.yorum_metni ?? '');
+  const hamTarih = d.tarih || d.olusturma_tarihi;
+
+  return {
+    kimlik: d.id || d.kimlik || `deg-${Math.random()}`,
+    siparis_kimligi: d.siparis_id || d.siparis_kimligi || d.siparis_kodu || '',
+    siparis_kodu: d.siparis_kodu || d.siparis_id || d.siparis_kimligi || '',
+    mutfak_id: d.mutfak_id || '',
+    musteri_adi: d.musteri_adi || 'Afyonlu Misafir',
+    puan: puanDegeri,
+    yorum: yorumMetni,
+    lezzet_puani: Number(d.lezzet_puani ?? d.puan) || puanDegeri,
+    kurye_puani: Number(d.kurye_puani ?? d.puan) || puanDegeri,
+    yorum_metni: yorumMetni,
+    tarih: typeof hamTarih === 'string' && hamTarih ? hamTarih : new Date().toISOString(),
+    yemek_basliklari: Array.isArray(d.yemek_basliklari) ? d.yemek_basliklari : undefined,
+    onayli_mi: d.onayli_mi !== false,
+    mutfak_cevabi: typeof d.mutfak_cevabi === 'string' && d.mutfak_cevabi.trim() ? d.mutfak_cevabi.trim() : undefined,
+    cevap_tarihi: typeof d.cevap_tarihi === 'string' && d.cevap_tarihi.trim() ? d.cevap_tarihi.trim() : undefined,
+  };
+}
+
 // Canlı Firebase'den değerlendirmeleri arka planda çek ve senkronize et
 export async function canliDegerlendirmeleriCek(): Promise<SiparisDegerlendirmesi[]> {
   const silinenler = silinenleriGetir();
@@ -61,17 +85,7 @@ export async function canliDegerlendirmeleriCek(): Promise<SiparisDegerlendirmes
     if (fbDegerlendirmeler && Array.isArray(fbDegerlendirmeler) && fbDegerlendirmeler.length > 0) {
       const donusturulen: SiparisDegerlendirmesi[] = fbDegerlendirmeler
         .filter((d: any) => !silinenler.includes(d.id || d.kimlik))
-        .map((d: any) => ({
-          kimlik: d.id || d.kimlik || `deg-${Math.random()}`,
-          siparis_kimligi: d.siparis_id || d.siparis_kimligi || '',
-          mutfak_id: d.mutfak_id || '',
-          musteri_adi: d.musteri_adi || 'Afyonlu Misafir',
-          lezzet_puani: Number(d.lezzet_puani) || 5,
-          kurye_puani: Number(d.kurye_puani) || 5,
-          yorum_metni: d.yorum_metni || '',
-          tarih: d.olusturma_tarihi ? (typeof d.olusturma_tarihi === 'string' ? d.olusturma_tarihi : new Date(d.olusturma_tarihi).toLocaleDateString('tr-TR')) : 'Bugün',
-          onayli_mi: Boolean(d.onayli_mi)
-        }));
+        .map(firestoreDegerlendirmeDonustur);
 
       // Birleştir (Tekilleştirilmiş)
       const harita = new Map<string, SiparisDegerlendirmesi>();
@@ -132,10 +146,22 @@ export function degerlendirmeKaydet(
   yeniDegerlendirme: Omit<SiparisDegerlendirmesi, 'kimlik' | 'tarih'>
 ): SiparisDegerlendirmesi {
   const tumu = degerlendirmeleriGetir();
+  const puanVal = Number(yeniDegerlendirme.puan ?? yeniDegerlendirme.lezzet_puani ?? 5);
+  const yorumVal = String(yeniDegerlendirme.yorum ?? yeniDegerlendirme.yorum_metni ?? 'Ellerinize sağlık!');
+  const sipKoduVal = String(yeniDegerlendirme.siparis_kodu ?? yeniDegerlendirme.siparis_kimligi ?? '');
+
+  const isoSimdi = new Date().toISOString();
+
   const olusturulan: SiparisDegerlendirmesi = {
     ...yeniDegerlendirme,
     kimlik: `deg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-    tarih: 'Az önce'
+    puan: puanVal,
+    yorum: yorumVal,
+    siparis_kodu: sipKoduVal,
+    lezzet_puani: puanVal,
+    yorum_metni: yorumVal,
+    tarih: isoSimdi,
+    onayli_mi: yeniDegerlendirme.onayli_mi ?? true,
   };
 
   const guncel = [olusturulan, ...tumu];
@@ -149,8 +175,19 @@ export function degerlendirmeKaydet(
   // Canlı Firebase varsa veritabanına yaz
   if (canliFirebaseAktifMi()) {
     belgeKaydet('degerlendirmeler', olusturulan.kimlik, {
-      ...olusturulan,
-      olusturma_tarihi: new Date().toISOString()
+      mutfak_id: olusturulan.mutfak_id,
+      musteri_adi: olusturulan.musteri_adi,
+      puan: olusturulan.puan,
+      yorum: olusturulan.yorum,
+      tarih: isoSimdi,
+      siparis_kodu: olusturulan.siparis_kodu,
+      siparis_id: olusturulan.siparis_kimligi,
+      lezzet_puani: olusturulan.lezzet_puani,
+      kurye_puani: olusturulan.kurye_puani,
+      yorum_metni: olusturulan.yorum_metni,
+      yemek_basliklari: olusturulan.yemek_basliklari || [],
+      onayli_mi: olusturulan.onayli_mi !== false,
+      olusturma_tarihi: isoSimdi
     }).catch(err => console.warn('Firebase değerlendirme kaydetme hatası:', err));
   }
 

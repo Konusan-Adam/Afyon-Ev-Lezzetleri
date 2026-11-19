@@ -42,18 +42,31 @@ export const MOBIL_KATEGORI_LISTESI: MobilKategoriElemani[] = [
 interface KategoriDaireselKartiOzellikleri {
   kategori: MobilKategoriElemani;
   secili: boolean;
+  vurgulu?: boolean;
+  altSayisi?: number;
+  acikTemaMi?: boolean;
   onSec: (id: string) => void;
+  onMouseEnter?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onMouseLeave?: () => void;
 }
 
 export const KategoriDaireselKarti: React.FC<KategoriDaireselKartiOzellikleri> = ({
   kategori,
   secili,
-  onSec
+  vurgulu = false,
+  altSayisi = 0,
+  acikTemaMi = false,
+  onSec,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   return (
     <button
       type="button"
       onClick={() => onSec(kategori.id)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      aria-haspopup={altSayisi > 0 ? 'menu' : undefined}
       className="group flex flex-col items-center gap-2 shrink-0 w-[78px] focus:outline-none cursor-pointer select-none transition-transform duration-200 active:scale-95"
     >
       {/* Çerçevesiz, Kutusuz, Gerçek İştah Açıcı Yemek Resmi */}
@@ -62,13 +75,19 @@ export const KategoriDaireselKarti: React.FC<KategoriDaireselKartiOzellikleri> =
           src={kategori.resimUrl}
           alt={kategori.baslik}
           className={`w-14 h-14 object-contain transition-all duration-300 pointer-events-none drop-shadow-md ${
-            secili
+            secili || vurgulu
               ? 'scale-110 drop-shadow-[0_4px_14px_rgba(251,191,36,0.6)]'
               : 'group-hover:scale-105 opacity-90 group-hover:opacity-100'
           }`}
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            const hedef = e.target as HTMLImageElement;
+            if (!hedef.src.endsWith('/marka_logosu.jpg')) {
+              hedef.src = '/marka_logosu.jpg';
+            }
+          }}
         />
-        {secili && (
+        {(secili || vurgulu) && (
           <span className="absolute -bottom-1 w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-300" />
         )}
       </div>
@@ -76,8 +95,12 @@ export const KategoriDaireselKarti: React.FC<KategoriDaireselKartiOzellikleri> =
       {/* Sade, Ferah, Doğal Kategori Başlığı */}
       <span
         className={`text-[11px] leading-tight text-center font-medium line-clamp-2 transition-colors ${
-          secili
-            ? 'text-amber-400 font-bold'
+          secili || vurgulu
+            ? acikTemaMi
+              ? 'text-amber-700 font-bold'
+              : 'text-amber-400 font-bold'
+            : acikTemaMi
+            ? 'text-gray-700 group-hover:text-amber-700'
             : 'text-purple-200/75 group-hover:text-white'
         }`}
       >

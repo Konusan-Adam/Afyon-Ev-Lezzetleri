@@ -22,7 +22,6 @@ import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { TepeReklamBari } from './ReklamVeDuyuru/TepeReklamBari';
 import { OnSiparisSecici } from './Bilesenler/OnSiparisVePorsiyon/OnSiparisSecici';
-import { porsiyonDusur } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/PorsiyonServisi';
 import { Yemek, Mutfak } from '@/src/veritabani/VeriTipleri';
 import { UrunOzellestirmePenceresi } from './Bilesenler/UrunSecenekleri/UrunOzellestirmePenceresi';
 import { koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
@@ -60,7 +59,7 @@ export const AnaSayfaVitrini: React.FC = () => {
     sifirla,
   } = aramaVeFiltreKullan();
 
-  const { sepetPaneliAc, sepeteEkle } = sepetHafizasiKullan();
+  const { sepetPaneliAc, sepeteEkle, sepetUyarisi, sepetUyarisiTemizle } = sepetHafizasiKullan();
   const { goruntulenenPanel, panelDegistir } = kullaniciHafizasiKullan();
 
   // Şube Müdürü doğrudan kendi şubesinin vitrinini müşteri gözüyle açtığında tetiklenir
@@ -257,7 +256,6 @@ export const AnaSayfaVitrini: React.FC = () => {
                   konfig.adet,
                   konfig.birim_fiyat
                 );
-                porsiyonDusur(seciliYemekModal.id, konfig.adet);
                 setSeciliYemekModal(null);
               }}
             />
@@ -336,7 +334,6 @@ export const AnaSayfaVitrini: React.FC = () => {
               konfig.adet,
               konfig.birim_fiyat
             );
-            porsiyonDusur(seciliYemekModal.id, konfig.adet);
             setSeciliYemekModal(null);
           }}
         />
@@ -356,6 +353,15 @@ export const AnaSayfaVitrini: React.FC = () => {
 
       {/* 🤖 Afyon Lezzet Danışmanı (Hareketli Logo ve Yapay Zeka Asistanı) */}
       <LezzetDanismaniVitrini />
+
+      {sepetUyarisi && (
+        <div
+          onClick={sepetUyarisiTemizle}
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[90] max-w-md w-[92%] bg-amber-950/95 border border-amber-500 text-amber-100 text-xs font-bold px-4 py-3 rounded-2xl shadow-2xl text-center cursor-pointer"
+        >
+          {sepetUyarisi}
+        </div>
+      )}
     </main>
   );
 };

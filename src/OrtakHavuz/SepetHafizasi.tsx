@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { SepetElemani, YemekTipi, MutfakTipi } from '@/src/veritabani/VeriTipleri';
+import { SepetElemani, YemekTipi, MutfakTipi, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 import { koleksiyonuCanliDinle } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { veritabaninaSepeteEkle, type SepetEkBilgileri } from '@/src/MalzemeCekmeceleri/Sepet/sepeteEkle';
 import {
@@ -10,8 +10,8 @@ import {
 import { sepetiMutfaklaraGöreGrupla, MutfakSepetGrubu } from '@/src/MalzemeCekmeceleri/Sepet/sepetGruplayici';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { sepetElemanlariniZenginlestir } from '@/src/MalzemeCekmeceleri/Sepet/sepetUrunEslestirici';
-import { GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
+import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 interface SepetHafizasiTip {
   sepetPaneliAcik: boolean;
@@ -19,6 +19,10 @@ interface SepetHafizasiTip {
   sepetPaneliKapat: () => void;
   sepetElemanlari: SepetElemani[];
   mutfakGruplari: MutfakSepetGrubu[];
+  mutfaklarListesi: MutfakTipi[];
+  yemeklerListesi: YemekTipi[];
+  sepetUyarisi: string | null;
+  sepetUyarisiTemizle: () => void;
   toplamUrunSayisi: number;
   toplamSepetTutari: number;
   toplamTeslimatUcreti: number;
@@ -37,6 +41,10 @@ const SepetContext = createContext<SepetHafizasiTip>({
   sepetPaneliKapat: () => {},
   sepetElemanlari: [],
   mutfakGruplari: [],
+  mutfaklarListesi: [],
+  yemeklerListesi: [],
+  sepetUyarisi: null,
+  sepetUyarisiTemizle: () => {},
   toplamUrunSayisi: 0,
   toplamSepetTutari: 0,
   toplamTeslimatUcreti: 0,
@@ -53,12 +61,26 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
   const { aktifKullanici } = kullaniciHafizasiKullan();
   const [sepetPaneliAcik, setSepetPaneliAcik] = useState<boolean>(false);
   const [sepetElemanlari, setSepetElemanlari] = useState<SepetElemani[]>([]);
+  const [mutfaklarState, setMutfaklarState] = useState<MutfakTipi[]>([]);
+  const [yemeklerState, setYemeklerState] = useState<YemekTipi[]>([]);
+  const [sepetUyarisi, setSepetUyarisi] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState<boolean>(true);
 
-  // Dinamik Müşteri ID: Aktif kullanıcı varsa onun kimliği, yoksa misafir ID
+  const uyariGoster = (mesaj: string) => {
+    setSepetUyarisi(mesaj);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('afyon_vitrin_uyari', { detail: { mesaj } }));
+    }
+  };
+
+  useEffect(() => {
+    if (!sepetUyarisi) return;
+    const zamanlayici = setTimeout(() => setSepetUyarisi(null), 4000);
+    return () => clearTimeout(zamanlayici);
+  }, [sepetUyarisi]);
+
   const musteriId = aktifKullanici?.kimlik || 'misafir_yerel_sepet';
 
-  // 🔥 Firebase Firestore Canlı Dinleyici ile Sepet Verilerini, Yemek, Mutfak ve Şube Detaylarıyla Senkronize Etme
   useEffect(() => {
     setYukleniyor(true);
     let abonelikCikarSepet = () => {};
@@ -95,11 +117,13 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
 
     abonelikCikarYemek = koleksiyonuCanliDinle<YemekTipi>('yemekler', (yListesi) => {
       mevcutYemekler = yListesi || [];
+      setYemeklerState(mevcutYemekler);
       sepetiHaritalaVeGuncelle();
     });
 
     abonelikCikarMutfak = koleksiyonuCanliDinle<MutfakTipi>('mutfaklar', (mListesi) => {
       mevcutMutfaklar = mListesi || [];
+      setMutfaklarState(mevcutMutfaklar);
       sepetiHaritalaVeGuncelle();
     });
 
@@ -134,15 +158,85 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
     birimFiyat: number,
     ekBilgiler?: SepetEkBilgileri
   ) => {
-    await veritabaninaSepeteEkle(musteriId, mutfakId, yemekId, adet, birimFiyat, ekBilgiler);
+    const bagliMutfak = mutfaklarState.find((m) => m.id === mutfakId || m.kimlik === mutfakId);
+    const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+    if (molaBilgisi.siparisEngelliMi) {
+      uyariGoster(molaBilgisi.uyariMetni);
+      return;
+    }
+
+    let eklenecekAdet = Math.max(1, Number(adet) || 1);
+
+    if (!ekBilgiler?.coklu_menu_mu) {
+      const canliYemek = yemeklerState.find((y) => y.id === yemekId);
+      if (canliYemek) {
+        const stokBilgisi = yemekStokDurumuHesapla(canliYemek, bagliMutfak);
+        if (stokBilgisi.tukendiMi) {
+          uyariGoster(`${canliYemek.baslik} şu an tükendi.`);
+          return;
+        }
+        if (stokBilgisi.stokTakibiVarMi && stokBilgisi.kalanStok !== undefined) {
+          const sepettekiToplam = sepetElemanlari
+            .filter((e) => e.yemek_id === yemekId)
+            .reduce((t, e) => t + e.adet, 0);
+          const kalanHak = Math.max(0, stokBilgisi.kalanStok - sepettekiToplam);
+          if (kalanHak <= 0) {
+            uyariGoster(`Stok sınırı: Bu üründen en fazla ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ekleyebilirsiniz.`);
+            return;
+          }
+          if (eklenecekAdet > kalanHak) {
+            eklenecekAdet = kalanHak;
+            uyariGoster(`Stok sınırı nedeniyle sepetteki toplam adet ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ile sınırlandı.`);
+          }
+        }
+      }
+    }
+
+    await veritabaninaSepeteEkle(musteriId, mutfakId, yemekId, eklenecekAdet, birimFiyat, ekBilgiler);
   };
 
   const adetGuncelle = async (sepetId: string, yeniAdet: number) => {
+    if (yeniAdet <= 0) {
+      await sepettenSil(sepetId);
+      return;
+    }
+
+    const mevcutEleman = sepetElemanlari.find((e) => e.id === sepetId);
+    if (mevcutEleman) {
+      const hedefMutfakId = mevcutEleman.mutfak_id || mevcutEleman.yemek?.mutfak_id;
+      const bagliMutfak = mutfaklarState.find((m) => m.id === hedefMutfakId || m.kimlik === hedefMutfakId) || mevcutEleman.mutfak;
+      const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+
+      if (molaBilgisi.siparisEngelliMi && yeniAdet > mevcutEleman.adet) {
+        uyariGoster(molaBilgisi.uyariMetni);
+        return;
+      }
+
+      if (!mevcutEleman.coklu_menu_mu && mevcutEleman.yemek_id) {
+        const canliYemek = yemeklerState.find((y) => y.id === mevcutEleman.yemek_id) || mevcutEleman.yemek;
+        if (canliYemek) {
+          const stokBilgisi = yemekStokDurumuHesapla(canliYemek, bagliMutfak);
+          if (stokBilgisi.stokTakibiVarMi && stokBilgisi.kalanStok !== undefined) {
+            const digerSatirlarToplami = sepetElemanlari
+              .filter((e) => e.yemek_id === mevcutEleman.yemek_id && e.id !== sepetId)
+              .reduce((t, e) => t + e.adet, 0);
+            const buSatirMaks = Math.max(0, stokBilgisi.kalanStok - digerSatirlarToplami);
+            if (yeniAdet > buSatirMaks) {
+              uyariGoster(`Stok sınırı: Bu üründen en fazla ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ekleyebilirsiniz.`);
+              if (mevcutEleman.adet !== buSatirMaks && buSatirMaks > 0) {
+                await veritabanindaSepetAdetiGuncelle(sepetId, buSatirMaks);
+              }
+              return;
+            }
+          }
+        }
+      }
+    }
+
     await veritabanindaSepetAdetiGuncelle(sepetId, yeniAdet);
   };
 
   const sepettenSil = async (sepetId: string) => {
-    // 🚀 Anında arayüzden (optimistic) kaldır
     setSepetElemanlari((oncekiler) => oncekiler.filter((e) => e.id !== sepetId));
     await veritabanindanSepetElemaniniSil(sepetId);
   };
@@ -178,6 +272,10 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
         sepetPaneliKapat: () => setSepetPaneliAcik(false),
         sepetElemanlari,
         mutfakGruplari,
+        mutfaklarListesi: mutfaklarState,
+        yemeklerListesi: yemeklerState,
+        sepetUyarisi,
+        sepetUyarisiTemizle: () => setSepetUyarisi(null),
         toplamUrunSayisi,
         toplamSepetTutari,
         toplamTeslimatUcreti,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
+import { temaHafizasiKullan } from '@/src/OrtakHavuz/TemaHafizasi';
 import { kategorileriGetir, Kategori } from '@/src/MalzemeCekmeceleri/kategorileriGetir';
 import { KategoriDaireselKarti, MobilKategoriElemani } from './KategoriDaireselKarti';
 import { MobilKategoriModal } from './MobilKategoriModal';
@@ -10,12 +11,14 @@ const VARSAYILAN_RESIM = 'https://pngimg.com/uploads/plate/plate_PNG5337.png';
 
 export const MobilKategoriler: React.FC = () => {
   const { aktifFiltreler, filtreleriUygula, altKategoriFiltresiniTemizle, kategoriFiltresiniTemizle } = aramaVeFiltreKullan();
+  const { tema } = temaHafizasiKullan();
+  const acikTemaMi = tema === 'acik';
   const { kategoriler, altKategoriler } = kategorileriGetir();
-  
+
   const seciliKategoriAd = aktifFiltreler?.kategori || 'Tümü';
   const seciliAltKategoriAd = aktifFiltreler?.altKategori;
 
-  // Seçilen kategori için açılan Bottom-Sheet Modalı
+  // Mobil & Tablet: Tıklama ile açılan Bottom-Sheet Modalı
   const [modalAcik, setModalAcik] = useState(false);
   const [modalKategori, setModalKategori] = useState<Kategori | null>(null);
 
@@ -25,7 +28,7 @@ export const MobilKategoriler: React.FC = () => {
       return;
     }
 
-    const secilenNesne = kategoriler.find(k => k.ad === kategoriAdi);
+    const secilenNesne = kategoriler.find((k) => k.ad === kategoriAdi);
     if (secilenNesne) {
       setModalKategori(secilenNesne);
       setModalAcik(true);
@@ -37,7 +40,7 @@ export const MobilKategoriler: React.FC = () => {
       filtreleriUygula({
         ...(aktifFiltreler || {}),
         kategori: modalKategori.ad,
-        altKategori: undefined
+        altKategori: undefined,
       });
     }
   };
@@ -47,27 +50,27 @@ export const MobilKategoriler: React.FC = () => {
       filtreleriUygula({
         ...(aktifFiltreler || {}),
         kategori: modalKategori.ad,
-        altKategori: altAd
+        altKategori: altAd,
       });
     }
   };
 
   const bagliAltKategoriler = modalKategori
-    ? altKategoriler.filter(alt => alt.ust_kategori_id === modalKategori.id)
+    ? altKategoriler.filter((alt) => alt.ust_kategori_id === modalKategori.id)
     : [];
 
   const gorulenIdler = new Set<string>();
   const donusturulmusKategoriler: MobilKategoriElemani[] = [];
 
   for (const k of kategoriler) {
-    const elemanId = (k.id === 'hepsi' || k.ad === 'Tümü') ? 'Tümü' : k.ad;
+    const elemanId = k.id === 'hepsi' || k.ad === 'Tümü' ? 'Tümü' : k.ad;
     if (gorulenIdler.has(elemanId)) continue;
     gorulenIdler.add(elemanId);
 
     donusturulmusKategoriler.push({
       id: elemanId,
       baslik: elemanId === 'Tümü' ? 'Tüm Lezzetler' : k.ad,
-      resimUrl: gorselUrlGuvenliYap(k.resim_url) || VARSAYILAN_RESIM
+      resimUrl: gorselUrlGuvenliYap(k.resim_url) || VARSAYILAN_RESIM,
     });
   }
 
@@ -80,6 +83,7 @@ export const MobilKategoriler: React.FC = () => {
             key={`mobil-kat-${kategori.id}`}
             kategori={kategori}
             secili={seciliKategoriAd === (kategori.id === 'Tümü' ? 'Tümü' : kategori.baslik)}
+            acikTemaMi={acikTemaMi}
             onSec={kategoriyeTiklandi}
           />
         ))}
@@ -94,7 +98,7 @@ export const MobilKategoriler: React.FC = () => {
             <button
               type="button"
               onClick={() => altKategoriFiltresiniTemizle()}
-              className="ml-1 p-0.5 rounded-full hover:bg-amber-500 text-purple-950"
+              className="ml-1 p-0.5 rounded-full hover:bg-amber-500 text-purple-950 cursor-pointer"
             >
               <X className="w-3 h-3" />
             </button>
@@ -102,7 +106,7 @@ export const MobilKategoriler: React.FC = () => {
         </div>
       )}
 
-      {/* 🚀 ALTTAN AÇILAN MEGA MODAL (BOTTOM-SHEET) */}
+      {/* 🚀 MOBİL & TABLET: ALTTAN AÇILAN MEGA MODAL (BOTTOM-SHEET) */}
       <MobilKategoriModal
         acik={modalAcik}
         onKapat={() => setModalAcik(false)}

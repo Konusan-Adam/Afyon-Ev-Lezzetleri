@@ -39,6 +39,7 @@ export const MusteriPaneli: React.FC = () => {
   const [qrGosterilecekSiparisKodu, setQrGosterilecekSiparisKodu] = useState<string | null>(null);
   const [degerlendirilecekSiparis, setDegerlendirilecekSiparis] = useState<{
     siparisKimligi: string;
+    siparisKodu: string;
     mutfakId: string;
     mutfakAdi: string;
     yemekler: string[];
@@ -164,6 +165,7 @@ export const MusteriPaneli: React.FC = () => {
       {degerlendirilecekSiparis && (
         <DegerlendirmePenceresi
           siparisKimligi={degerlendirilecekSiparis.siparisKimligi}
+          siparisKodu={degerlendirilecekSiparis.siparisKodu}
           mutfakId={degerlendirilecekSiparis.mutfakId}
           mutfakAdi={degerlendirilecekSiparis.mutfakAdi}
           musteriAdi={aktifKullanici?.ad_soyad || sonMisafirAd || 'Misafir Müşteri'}

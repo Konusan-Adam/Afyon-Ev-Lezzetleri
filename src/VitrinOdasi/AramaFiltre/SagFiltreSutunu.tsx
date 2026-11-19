@@ -24,7 +24,7 @@ export const SagFiltreSutunu: React.FC = () => {
     aktifFiltreSayisi 
   } = aramaVeFiltreKullan();
   
-  const { kategoriler } = kategorileriGetir();
+  const { kategoriler, altKategoriler } = kategorileriGetir();
   const { tema } = temaHafizasiKullan();
   const acikMi = tema === 'acik';
 
@@ -39,6 +39,7 @@ export const SagFiltreSutunu: React.FC = () => {
   }, [kategoriler, aktifFiltreler.aramaMetni, dahaFazlaGoster]);
 
   const seciliKategori = aktifFiltreler.kategori || 'Tümü';
+  const seciliAltKategori = aktifFiltreler.altKategori;
   const seciliSiralama = aktifFiltreler.siralama || 'varsayilan';
   const seciliMinPuan = aktifFiltreler.minPuan;
 
@@ -48,9 +49,17 @@ export const SagFiltreSutunu: React.FC = () => {
 
   const kategoriSec = (katAd: string) => {
     if (seciliKategori === katAd) {
-      filtreleriGuncelle({ kategori: 'Tümü' });
+      filtreleriGuncelle({ kategori: 'Tümü', altKategori: undefined });
     } else {
-      filtreleriGuncelle({ kategori: katAd });
+      filtreleriGuncelle({ kategori: katAd, altKategori: undefined });
+    }
+  };
+
+  const altKategoriSec = (katAd: string, altAd: string) => {
+    if (seciliKategori === katAd && seciliAltKategori === altAd) {
+      filtreleriGuncelle({ kategori: katAd, altKategori: undefined });
+    } else {
+      filtreleriGuncelle({ kategori: katAd, altKategori: altAd });
     }
   };
 
@@ -215,31 +224,63 @@ export const SagFiltreSutunu: React.FC = () => {
               <span>Tüm Ev Lezzetleri</span>
             </button>
 
-            {/* Dinamik Kategoriler */}
+            {/* Dinamik Kategoriler ve Alt Kategorileri */}
             {gorunenKategoriler.map((kat) => {
               const secili = seciliKategori === kat.ad;
+              const bagliAltlar = altKategoriler.filter((a) => a.ust_kategori_id === kat.id);
               return (
-                <button
-                  key={kat.id}
-                  type="button"
-                  onClick={() => kategoriSec(kat.ad)}
-                  className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left ${
-                    secili
-                      ? acikMi ? 'bg-amber-100 text-amber-950 font-black' : 'bg-purple-900/50 text-amber-300 font-black'
-                      : acikMi ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-purple-950/40 text-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                <div key={kat.id} className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => kategoriSec(kat.ad)}
+                    className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left ${
                       secili
-                        ? 'border-amber-500 bg-amber-500 text-purple-950'
-                        : acikMi ? 'border-gray-300 bg-white' : 'border-purple-800 bg-transparent'
+                        ? acikMi ? 'bg-amber-100 text-amber-950 font-black' : 'bg-purple-900/50 text-amber-300 font-black'
+                        : acikMi ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-purple-950/40 text-gray-300'
                     }`}
                   >
-                    {secili && <Check className="w-3 h-3 stroke-[3]" />}
-                  </span>
-                  <span className="truncate">{kat.ad}</span>
-                </button>
+                    <span
+                      className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                        secili
+                          ? 'border-amber-500 bg-amber-500 text-purple-950'
+                          : acikMi ? 'border-gray-300 bg-white' : 'border-purple-800 bg-transparent'
+                      }`}
+                    >
+                      {secili && <Check className="w-3 h-3 stroke-[3]" />}
+                    </span>
+                    <span className="truncate flex-1">{kat.ad}</span>
+                    {bagliAltlar.length > 0 && (
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${acikMi ? 'bg-amber-100 text-amber-800' : 'bg-purple-950/80 text-purple-300'}`}>
+                        {bagliAltlar.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {secili && bagliAltlar.length > 0 && (
+                    <div className="pl-6 space-y-1 pb-1">
+                      {bagliAltlar.map((alt) => {
+                        const altSecili = seciliAltKategori === alt.ad;
+                        return (
+                          <button
+                            key={alt.id}
+                            type="button"
+                            onClick={() => altKategoriSec(kat.ad, alt.ad)}
+                            className={`w-full flex items-center gap-1.5 py-1 px-2 rounded-lg text-[11px] font-medium transition-all cursor-pointer text-left ${
+                              altSecili
+                                ? 'bg-amber-500 text-purple-950 font-extrabold'
+                                : acikMi
+                                  ? 'text-gray-600 hover:bg-amber-50 hover:text-amber-900'
+                                  : 'text-purple-200/80 hover:bg-purple-900/40 hover:text-amber-300'
+                            }`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${altSecili ? 'bg-purple-950' : 'bg-amber-400'}`} />
+                            <span className="truncate">{alt.ad}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

@@ -7,6 +7,7 @@ import { TeslimatTipiSecici } from '@/src/VitrinOdasi/Bilesenler';
 import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { KuryeUcretBilgiKarti } from '@/src/VitrinOdasi/Bilesenler';
+import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
 
 export const CokluSepetVitrini: React.FC = () => {
   const {
@@ -28,8 +29,9 @@ export const CokluSepetVitrini: React.FC = () => {
   const gercekTeslimatUcreti = gelAlMi ? 0 : toplamTeslimatUcreti;
   const nihaiGenelToplam = toplamSepetTutari + gercekTeslimatUcreti;
 
-  // Tüm mutfakların minimum tutar şartı sağlandı mı?
   const tumMinTutarlarUygun = mutfakGruplari.every((g) => g.minTutarUlasildi);
+  const moladaMutfakVar = mutfakGruplari.some((g) => mutfakMolaDurumuGetir(g.mutfak).siparisEngelliMi);
+  const odemeEngelli = !tumMinTutarlarUygun || moladaMutfakVar;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden select-none">
@@ -118,26 +120,30 @@ export const CokluSepetVitrini: React.FC = () => {
 
               <button
                 type="button"
-                disabled={!tumMinTutarlarUygun}
-                onClick={() => setTopluOdemeAcik(true)}
-                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg active:scale-98 ${
-                  tumMinTutarlarUygun
-                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-[#F5D28A] text-[#130713] hover:brightness-110 shadow-amber-500/25'
+                disabled={odemeEngelli}
+                onClick={() => !odemeEngelli && setTopluOdemeAcik(true)}
+                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-98 ${
+                  !odemeEngelli
+                    ? 'bg-gradient-to-r from-amber-500 via-amber-400 to-[#F5D28A] text-[#130713] hover:brightness-110 shadow-amber-500/25 cursor-pointer'
                     : 'bg-purple-950/60 text-gray-500 border border-purple-900/40 cursor-not-allowed'
                 }`}
               >
                 <Zap className="w-4 h-4 fill-[#130713]" />
                 <span>
-                  {mutfakGruplari.length > 1
+                  {moladaMutfakVar
+                    ? 'Moladaki / Kapalı Mutfak Sepette'
+                    : mutfakGruplari.length > 1
                     ? `Tüm ${mutfakGruplari.length} Mutfağı Tek Seferde Satın Al (${nihaiGenelToplam} ₺) 🚀`
                     : `Siparişi Tamamla (${nihaiGenelToplam} ₺) 🚀`}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {!tumMinTutarlarUygun && (
+              {(!tumMinTutarlarUygun || moladaMutfakVar) && (
                 <p className="text-[10px] text-amber-300/80 text-center">
-                  * Lütfen her mutfağın minimum sepet tutarını tamamlayınız.
+                  {moladaMutfakVar
+                    ? '* Sepetinizde şu an dinlenmede veya kapalı mutfak bulunuyor.'
+                    : '* Lütfen her mutfağın minimum sepet tutarını tamamlayınız.'}
                 </p>
               )}
             </div>

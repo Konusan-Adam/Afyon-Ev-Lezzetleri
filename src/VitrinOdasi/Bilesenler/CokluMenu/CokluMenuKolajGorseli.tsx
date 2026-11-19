@@ -44,11 +44,9 @@ export const CokluMenuKolajGorseli: React.FC<CokluMenuKolajGorseliProps> = ({
   baslik,
 }) => {
   const siraliKalemler = [...(kalemler || [])].sort((a, b) => (a.sira ?? 0) - (b.sira ?? 0));
+  const kapakListesi = (kapakGorselleri || []).filter((u) => Boolean(u && u.trim()));
   const kalemGorselleri = siraliKalemler.map((k) => k.gorsel_url).filter((u) => Boolean(u && u.trim()));
-  const kaynakGorseller =
-    kalemGorselleri.length > 0
-      ? kalemGorselleri
-      : (kapakGorselleri || []).filter((u) => Boolean(u && u.trim()));
+  const kaynakGorseller = kapakListesi.length > 0 ? kapakListesi : kalemGorselleri;
 
   const gorselListesi =
     kaynakGorseller.length > 0 ? kaynakGorseller.slice(0, 6) : ['/marka_logosu.jpg'];
