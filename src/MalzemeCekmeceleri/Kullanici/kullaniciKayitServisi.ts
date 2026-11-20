@@ -35,6 +35,8 @@ export async function veritabaninaKullaniciKaydet(
     isletme_adi: yeniKullanici.isletme_adi || '',
     arac_tipi: yeniKullanici.arac_tipi || '',
     ilce: yeniKullanici.ilce || 'Merkez',
+    guvenlik_sorusu: (yeniKullanici as any).guvenlik_sorusu || '',
+    guvenlik_cevabi: (yeniKullanici as any).guvenlik_cevabi ? String((yeniKullanici as any).guvenlik_cevabi).trim().toLowerCase() : '',
     onayli_mi: yeniKullanici.rol === 'musteri',
     onay_durumu: yeniKullanici.rol === 'musteri' ? 'onaylandi' : 'beklemede',
     askida_mi: false,

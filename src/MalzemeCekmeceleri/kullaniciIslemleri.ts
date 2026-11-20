@@ -1,2 +1,2 @@
 export { veritabaninaKullaniciKaydet } from './Kullanici/kullaniciKayitServisi';
-export { veritabanindanKullaniciGirisYaptir } from './Kullanici/kullaniciGirisServisi';
+export { veritabanindanKullaniciGirisYaptir, kullaniciGuvenlikSorusuGetir, sifreSifirlaGuvenlikSorusuIle } from './Kullanici/kullaniciGirisServisi';

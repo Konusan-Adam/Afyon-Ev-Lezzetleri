@@ -167,6 +167,8 @@ export interface Kullanici {
   arac_tipi?: string;
   plaka?: string;
   ilce?: string;
+  guvenlik_sorusu?: string;
+  guvenlik_cevabi?: string;
   onayli_mi?: boolean;
   olusturma_tarihi?: string;
 }

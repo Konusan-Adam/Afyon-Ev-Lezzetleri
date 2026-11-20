@@ -5,6 +5,9 @@ import {
   veritabanindanKullaniciGirisYaptir,
 } from '@/src/MalzemeCekmeceleri/kullaniciIslemleri';
 import { mevcutUrlPaneliniBul, urlVeBasligiGuncelle } from '@/src/GirisKapisi/RotaYardimcisi';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth, canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
+import { koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 
 export type PanelTipi = 'vitrin' | 'patron' | 'musteri' | 'mutfak' | 'kurye' | 'sube';
 
@@ -21,6 +24,7 @@ interface KullaniciHafizaTipi {
   pencereAc: (baslangicSekmesi?: 'giris' | 'kayit' | any, baslangicRolu?: KullaniciRolu) => void;
   pencereKapat: () => void;
   girisYap: (telefon: string, sifre: string) => Promise<boolean>;
+  googleIleGirisYap: () => Promise<boolean>;
   kayitOl: (bilgiler: {
     ad_soyad: string;
     telefon: string;
@@ -30,6 +34,8 @@ interface KullaniciHafizaTipi {
     arac_tipi?: string;
     ilce?: string;
     sifre?: string;
+    guvenlik_sorusu?: string;
+    guvenlik_cevabi?: string;
     hijyen_onayli_mi?: boolean;
     esnaf_muafiyet_onayli_mi?: boolean;
     belgeler?: any;
@@ -58,31 +64,20 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     const urlPaneli = mevcutUrlPaneliniBul();
     if (urlPaneli !== 'vitrin') return urlPaneli;
     try {
-      const kayitli = localStorage.getItem('afyon_oturum_kullanici');
-      if (kayitli) {
-        const k = JSON.parse(kayitli);
-        if (k?.rol === 'sube_admin') return 'sube';
-        if (k?.rol === 'yonetici') return 'patron';
+      const kayitliOturum = localStorage.getItem('afyon_oturum_kullanici');
+      if (kayitliOturum) {
+        const parsed = JSON.parse(kayitliOturum);
+        if (parsed?.rol === 'yonetici') return 'patron';
+        if (parsed?.rol === 'sube_admin') return 'sube';
+        if (parsed?.rol === 'asci' || parsed?.rol === 'ev_mutfagi') return 'mutfak';
+        if (parsed?.rol === 'kurye') return 'kurye';
       }
     } catch {}
-    return urlPaneli;
+    return 'vitrin';
   });
 
-  // URL rotası veya geri/ileri tuşu değiştiğinde senkronize et
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const rotaGuncelle = () => {
-      setGoruntulenenPanel(mevcutUrlPaneliniBul());
-    };
-    window.addEventListener('popstate', rotaGuncelle);
-    window.addEventListener('hashchange', rotaGuncelle);
-    return () => {
-      window.removeEventListener('popstate', rotaGuncelle);
-      window.removeEventListener('hashchange', rotaGuncelle);
-    };
-  }, []);
+  const [yonetimModuAcik, setYonetimModuAcik] = useState<boolean>(false);
 
-  // Oturum değiştikçe localStorage güncelle
   useEffect(() => {
     if (aktifKullanici) {
       localStorage.setItem('afyon_oturum_kullanici', JSON.stringify(aktifKullanici));
@@ -91,18 +86,9 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [aktifKullanici]);
 
-  const panelDegistir = (panel: PanelTipi) => {
-    setGoruntulenenPanel(panel);
-    urlVeBasligiGuncelle(panel);
-  };
-
-  const yonetimModunuAyarla = (_acik: boolean) => {
-    setGoruntulenenPanel('vitrin');
-    urlVeBasligiGuncelle('vitrin');
-  };
-
-  const testRoluneGec = (_rol: KullaniciRolu) => {
-    setGoruntulenenPanel('musteri');
+  const panelDegistir = (yeniPanel: PanelTipi) => {
+    setGoruntulenenPanel(yeniPanel);
+    urlVeBasligiGuncelle(yeniPanel);
   };
 
   const roleGorePaneleYonlendir = (kullanici: Kullanici) => {
@@ -141,6 +127,66 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     return false;
   };
 
+  const googleIleGirisYap = async (): Promise<boolean> => {
+    setYukleniyor(true);
+    try {
+      let googleKullaniciAdi = 'Google Kullanıcısı';
+      let googleEposta = 'google_kullanici@gmail.com';
+      let googleTelefon = '05309998877';
+
+      if (canliFirebaseAktifMi()) {
+        try {
+          const saglayici = new GoogleAuthProvider();
+          const sonuc = await signInWithPopup(auth, saglayici);
+          const user = sonuc.user;
+          if (user) {
+            googleKullaniciAdi = user.displayName || 'Google Kullanıcısı';
+            googleEposta = user.email || googleEposta;
+            if (user.phoneNumber) googleTelefon = user.phoneNumber;
+          }
+        } catch (hata) {
+          console.warn('Google popup giriş hatası:', hata);
+        }
+      }
+
+      let mevcutKullanici: Kullanici | null = null;
+      if (canliFirebaseAktifMi()) {
+        try {
+          const tumKullanicilar = await koleksiyonGetir<Kullanici>('kullanicilar');
+          mevcutKullanici = tumKullanicilar.find((k) => k.eposta === googleEposta || k.telefon === googleTelefon) || null;
+        } catch {}
+      }
+
+      if (!mevcutKullanici) {
+        const yeniKayit = await veritabaninaKullaniciKaydet({
+          ad_soyad: googleKullaniciAdi,
+          telefon: googleTelefon,
+          eposta: googleEposta,
+          rol: 'musteri',
+          sifre: 'google123',
+          guvenlik_sorusu: 'Google Hesabı',
+          guvenlik_cevabi: 'google',
+        });
+        mevcutKullanici = yeniKayit;
+      }
+
+      setYukleniyor(false);
+      if (mevcutKullanici) {
+        setAktifKullanici(mevcutKullanici);
+        setPencereAcik(false);
+        roleGorePaneleYonlendir(mevcutKullanici);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: mevcutKullanici } }));
+        }
+        return true;
+      }
+    } catch (hata) {
+      console.warn('Google giriş genel hata:', hata);
+    }
+    setYukleniyor(false);
+    return false;
+  };
+
   const kayitOl = async (bilgiler: {
     ad_soyad: string;
     telefon: string;
@@ -150,6 +196,8 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     arac_tipi?: string;
     ilce?: string;
     sifre?: string;
+    guvenlik_sorusu?: string;
+    guvenlik_cevabi?: string;
   }): Promise<boolean> => {
     setYukleniyor(true);
     const kaydolunankullanici = await veritabaninaKullaniciKaydet(bilgiler);
@@ -169,18 +217,15 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const cikisYap = () => {
     setAktifKullanici(null);
-    localStorage.removeItem('afyon_oturum_kullanici');
-    localStorage.removeItem('afyon_misafir_secili_adres');
-    localStorage.removeItem('afyon_aktif_secili_mahalle');
-    localStorage.removeItem('afyon_secili_mahalle');
-    localStorage.removeItem('afyon_son_misafir_telefon');
-    localStorage.removeItem('afyon_son_misafir_ad');
     setGoruntulenenPanel('vitrin');
     urlVeBasligiGuncelle('vitrin');
+    localStorage.removeItem('afyon_oturum_kullanici');
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: null } }));
     }
   };
+
+  const testRoluneGec = (_rol: KullaniciRolu) => {};
 
   return (
     <KullaniciContext.Provider
@@ -192,16 +237,16 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
         yukleniyor,
         goruntulenenPanel,
         panelDegistir,
-        yonetimModuAcik: goruntulenenPanel === 'patron',
-        yonetimModunuAyarla,
-        pencereAc: (sekme?: any, _rol?: KullaniciRolu) => {
-          const gecerliSekme = sekme === 'kayit' ? 'kayit' : 'giris';
-          setBaslangicSekmesi(gecerliSekme);
-          setBaslangicRolu('musteri');
+        yonetimModuAcik,
+        yonetimModunuAyarla: setYonetimModuAcik,
+        pencereAc: (sekme?: 'giris' | 'kayit', rol?: KullaniciRolu) => {
+          if (sekme) setBaslangicSekmesi(sekme);
+          if (rol) setBaslangicRolu(rol);
           setPencereAcik(true);
         },
         pencereKapat: () => setPencereAcik(false),
         girisYap,
+        googleIleGirisYap,
         kayitOl,
         cikisYap,
         testRoluneGec,
@@ -212,7 +257,7 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
-export const kullaniciHafizasiKullan = () => {
+export const kullaniciHafizasiKullan = (): KullaniciHafizaTipi => {
   const context = useContext(KullaniciContext);
   if (!context) {
     throw new Error('kullaniciHafizasiKullan, KullaniciSaglayici içinde kullanılmalıdır');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, MapPin, Heart } from 'lucide-react';
+import { ShoppingBag, MapPin, Heart, Clock, CheckCircle } from 'lucide-react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
@@ -34,6 +34,8 @@ export const MusteriPaneli: React.FC = () => {
     return 'siparisler';
   });
 
+  const [siparisGorunumModu, setSiparisGorunumModu] = useState<'aktif' | 'gecmis'>('aktif');
+
   const [iptalEdilecekSiparis, setIptalEdilecekSiparis] = useState<{ id: string; kodu: string } | null>(null);
   const [takipEdilecekSiparisKodu, setTakipEdilecekSiparisKodu] = useState<string | null>(null);
   const [qrGosterilecekSiparisKodu, setQrGosterilecekSiparisKodu] = useState<string | null>(null);
@@ -62,7 +64,6 @@ export const MusteriPaneli: React.FC = () => {
   const [mutfakIptalBildirimi, setMutfakIptalBildirimi] = useState<{ siparisKodu: string; aciklama?: string } | null>(null);
 
   useEffect(() => {
-    // Mutfak tarafından yeni iptal edilen siparişleri kontrol et ve sesli/görsel modal göster
     const mutfaktanIptalEdilen = siparisler.find(
       (s) => s.durum === 'iptal' && s.iptal_kaynagi === 'mutfak'
     );
@@ -78,6 +79,10 @@ export const MusteriPaneli: React.FC = () => {
     }
   }, [siparisler]);
 
+  const aktifSiparisler = siparisler.filter((s) => s.durum !== 'teslim_edildi' && s.durum !== 'iptal');
+  const gecmisSiparisler = siparisler.filter((s) => s.durum === 'teslim_edildi' || s.durum === 'iptal');
+  const gosterilenSiparisler = siparisGorunumModu === 'aktif' ? aktifSiparisler : gecmisSiparisler;
+
   const qrSeciliSiparis = qrGosterilecekSiparisKodu
     ? siparisler.find((s) => (s.siparis_kodu || s.id || s.siparisKodu) === qrGosterilecekSiparisKodu)
     : undefined;
@@ -85,6 +90,11 @@ export const MusteriPaneli: React.FC = () => {
   const sekmeButonSinifi = (aktif: boolean) =>
     `flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap ${
       aktif ? 'bg-[#6D237A] text-white shadow-md' : 'bg-[#180A1F] text-gray-400 hover:text-white border border-[#3E1646]'
+    }`;
+
+  const altSekmeButonSinifi = (aktif: boolean) =>
+    `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
+      aktif ? 'bg-amber-500 text-black shadow-sm' : 'bg-[#1C0922] text-gray-400 hover:text-white border border-purple-900/40'
     }`;
 
   return (
@@ -103,7 +113,7 @@ export const MusteriPaneli: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-purple-950">
           <button type="button" onClick={() => setAktifSekme('siparisler')} className={sekmeButonSinifi(aktifSekme === 'siparisler')}>
             <ShoppingBag className="w-4 h-4 text-amber-400" />
-            <span>Siparişlerim ({siparisler.filter((s) => s.durum !== 'iptal').length})</span>
+            <span>Siparişlerim ({aktifSiparisler.length > 0 ? `${aktifSiparisler.length} Aktif` : siparisler.length})</span>
           </button>
           <button type="button" onClick={() => setAktifSekme('adresler')} className={sekmeButonSinifi(aktifSekme === 'adresler')}>
             <MapPin className="w-4 h-4 text-amber-400" />
@@ -117,13 +127,37 @@ export const MusteriPaneli: React.FC = () => {
 
         {aktifSekme === 'siparisler' && (
           <div className="space-y-4">
-            {siparisler.length === 0 ? (
+            {/* Aktif / Geçmiş Sipariş Alt Sekme Butonları */}
+            <div className="flex items-center gap-2 pb-2">
+              <button
+                type="button"
+                onClick={() => setSiparisGorunumModu('aktif')}
+                className={altSekmeButonSinifi(siparisGorunumModu === 'aktif')}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Aktif Siparişler ({aktifSiparisler.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSiparisGorunumModu('gecmis')}
+                className={altSekmeButonSinifi(siparisGorunumModu === 'gecmis')}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Geçmiş Siparişler ({gecmisSiparisler.length})</span>
+              </button>
+            </div>
+
+            {gosterilenSiparisler.length === 0 ? (
               <div className="py-12 text-center text-gray-400 text-xs bg-[#180A1F] rounded-2xl border border-purple-900/40">
                 <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-amber-400 opacity-50" />
-                <p>Henüz verilmiş bir siparişiniz bulunmuyor.</p>
+                <p>
+                  {siparisGorunumModu === 'aktif'
+                    ? 'Şu an devam eden aktif siparişiniz bulunmuyor.'
+                    : 'Geçmişte tamamlanmış veya iptal edilmiş siparişiniz bulunmuyor.'}
+                </p>
               </div>
             ) : (
-              siparisler.map((sip) => (
+              gosterilenSiparisler.map((sip) => (
                 <MusteriSiparisKarti
                   key={sip.id}
                   siparis={sip}
