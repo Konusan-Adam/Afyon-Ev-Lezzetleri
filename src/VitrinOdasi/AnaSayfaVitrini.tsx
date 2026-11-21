@@ -6,6 +6,7 @@ import { CokluSepetVitrini } from './Bilesenler/Sepet/CokluSepetVitrini';
 import { OrtakSepetPenceresi } from './Bilesenler/Sepet/OrtakSepetPenceresi';
 import { YuzenSepetBari } from './Bilesenler/Sepet/YuzenSepetBari';
 import { MasaustuUstSepetBari } from './Bilesenler/Sepet/MasaustuUstSepetBari';
+import { BasaDonButonu } from './Bilesenler/BasaDonButonu';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { AdresSecimPenceresi } from './Bilesenler/AdresVeKonum/AdresSecimPenceresi';
 import { HaritaAdresSecici } from './Bilesenler/AdresVeKonum/HaritaAdresSecici';
@@ -241,6 +242,7 @@ export const AnaSayfaVitrini: React.FC = () => {
 
           {/* Sepet ve Pencereler */}
           <YuzenSepetBari />
+          <BasaDonButonu />
           <CokluSepetVitrini />
           <OrtakSepetPenceresi />
           <KullaniciGirisPenceresi />
@@ -358,6 +360,7 @@ export const AnaSayfaVitrini: React.FC = () => {
 
       {/* 🤖 Afyon Lezzet Danışmanı (Hareketli Logo ve Yapay Zeka Asistanı) */}
       <LezzetDanismaniVitrini />
+      <BasaDonButonu />
 
       {sepetUyarisi && (
         <div
