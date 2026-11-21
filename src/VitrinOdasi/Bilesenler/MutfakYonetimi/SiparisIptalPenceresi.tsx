@@ -19,15 +19,31 @@ export const SiparisIptalPenceresi: React.FC<SiparisIptalPenceresiOzellikleri> =
   const [seciliGerekce, setSeciliGerekce] = useState<IptalGerekcesi>(HAZIR_IPTAL_GEREKCELERI[0]);
   const [aciklamaNotu, setAciklamaNotu] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [hataMesaji, setHataMesaji] = useState('');
 
-  const iptaliOnayla = () => {
+  const iptaliOnayla = async () => {
+    setHataMesaji('');
     setYukleniyor(true);
-    setTimeout(() => {
-      siparisIptalEt(siparisKimligi, seciliGerekce.baslik, aciklamaNotu, 'mutfak');
+    try {
+      const basarili = await siparisIptalEt(
+        siparisKimligi,
+        seciliGerekce.baslik,
+        aciklamaNotu,
+        'mutfak',
+        siparisNo
+      );
+      if (!basarili) {
+        setHataMesaji('İptal işlemi veritabanına kaydedilemedi. Lütfen tekrar deneyiniz.');
+        setYukleniyor(false);
+        return;
+      }
       setYukleniyor(false);
       onBasarili();
       onKapat();
-    }, 400);
+    } catch {
+      setHataMesaji('İptal işlemi sırasında bir hata oluştu.');
+      setYukleniyor(false);
+    }
   };
 
   return (
@@ -102,6 +118,12 @@ export const SiparisIptalPenceresi: React.FC<SiparisIptalPenceresiOzellikleri> =
             className="w-full bg-[#140616] border border-[#3E1646] rounded-xl p-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
           />
         </div>
+
+        {hataMesaji && (
+          <div className="mb-4 p-2.5 rounded-xl bg-rose-950/70 border border-rose-500/60 text-rose-200 text-[11px] font-medium">
+            {hataMesaji}
+          </div>
+        )}
 
         {/* Butonlar */}
         <div className="flex items-center gap-3">

@@ -5,6 +5,7 @@ import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 import { useMutfaklar } from '@/src/MalzemeCekmeceleri/MutfakCekmecesi';
 import { useMusteriSiparisleri } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
+import { siparisAktifMi, siparisIptalMi } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/siparisDurumYardimcisi';
 import { veritabanindanAdresleriGetir } from '@/src/MalzemeCekmeceleri/AdresVeKonum/adresIslemleri';
 import { MusteriAdresi } from '@/src/veritabani/VeriTipleri';
 import { DegerlendirmePenceresi } from '../Bilesenler/Degerlendirme/DegerlendirmePenceresi';
@@ -65,12 +66,12 @@ export const MusteriPaneli: React.FC = () => {
 
   useEffect(() => {
     const mutfaktanIptalEdilen = siparisler.find(
-      (s) => s.durum === 'iptal' && s.iptal_kaynagi === 'mutfak'
+      (s) => siparisIptalMi(s.durum) && s.iptal_kaynagi === 'mutfak'
     );
     if (mutfaktanIptalEdilen) {
       const gorulduKey = `afyon_mutfak_iptal_goruldu_${mutfaktanIptalEdilen.id || mutfaktanIptalEdilen.siparis_kodu}`;
-      if (typeof window !== 'undefined' && !sessionStorage.getItem(gorulduKey)) {
-        sessionStorage.setItem(gorulduKey, '1');
+      if (typeof window !== 'undefined' && !localStorage.getItem(gorulduKey)) {
+        localStorage.setItem(gorulduKey, '1');
         setMutfakIptalBildirimi({
           siparisKodu: mutfaktanIptalEdilen.siparis_kodu || mutfaktanIptalEdilen.id,
           aciklama: mutfaktanIptalEdilen.durum_aciklamasi,
@@ -79,8 +80,8 @@ export const MusteriPaneli: React.FC = () => {
     }
   }, [siparisler]);
 
-  const aktifSiparisler = siparisler.filter((s) => s.durum !== 'teslim_edildi' && s.durum !== 'iptal');
-  const gecmisSiparisler = siparisler.filter((s) => s.durum === 'teslim_edildi' || s.durum === 'iptal');
+  const aktifSiparisler = siparisler.filter((s) => siparisAktifMi(s.durum));
+  const gecmisSiparisler = siparisler.filter((s) => !siparisAktifMi(s.durum));
   const gosterilenSiparisler = siparisGorunumModu === 'aktif' ? aktifSiparisler : gecmisSiparisler;
 
   const qrSeciliSiparis = qrGosterilecekSiparisKodu
@@ -113,7 +114,7 @@ export const MusteriPaneli: React.FC = () => {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-purple-950">
           <button type="button" onClick={() => setAktifSekme('siparisler')} className={sekmeButonSinifi(aktifSekme === 'siparisler')}>
             <ShoppingBag className="w-4 h-4 text-amber-400" />
-            <span>Siparişlerim ({aktifSiparisler.length > 0 ? `${aktifSiparisler.length} Aktif` : siparisler.length})</span>
+            <span>Siparişlerim ({aktifSiparisler.length > 0 ? `${aktifSiparisler.length} Aktif` : '0'})</span>
           </button>
           <button type="button" onClick={() => setAktifSekme('adresler')} className={sekmeButonSinifi(aktifSekme === 'adresler')}>
             <MapPin className="w-4 h-4 text-amber-400" />

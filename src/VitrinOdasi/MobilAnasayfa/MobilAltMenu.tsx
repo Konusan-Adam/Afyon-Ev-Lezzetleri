@@ -3,7 +3,7 @@ import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Bike, Sto
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
-import { aktifMisafirSiparisSayisiGetir } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
+import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 import { MobilKesfetPenceresi } from './MobilKesfetPenceresi';
 
@@ -27,23 +27,12 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
   const [gorunur, setGorunur] = useState<boolean>(true);
   const [kesfetAcik, setKesfetAcik] = useState<boolean>(false);
   const [hesapMenusuAcik, setHesapMenusuAcik] = useState<boolean>(false);
-  const [aktifSiparisSayisi, setAktifSiparisSayisi] = useState<number>(aktifMisafirSiparisSayisiGetir());
+  const sonMisafirTelefon = typeof window !== 'undefined' ? localStorage.getItem('afyon_son_misafir_telefon') || '' : '';
+  const aktifSiparisSayisi = useAktifSiparisSayisi(
+    aktifKullanici?.kimlik,
+    aktifKullanici?.telefon || sonMisafirTelefon
+  );
   const sonKaydirmaYRef = useRef<number>(0);
-
-  useEffect(() => {
-    const siparisGuncelle = () => {
-      setAktifSiparisSayisi(aktifMisafirSiparisSayisiGetir());
-    };
-    window.addEventListener('afyon_siparis_durum_degisti', siparisGuncelle);
-    window.addEventListener('afyon_siparis_eklendi', siparisGuncelle);
-    window.addEventListener('storage', siparisGuncelle);
-
-    return () => {
-      window.removeEventListener('afyon_siparis_durum_degisti', siparisGuncelle);
-      window.removeEventListener('afyon_siparis_eklendi', siparisGuncelle);
-      window.removeEventListener('storage', siparisGuncelle);
-    };
-  }, []);
 
   useEffect(() => {
     const kaydirmaKontrol = () => {

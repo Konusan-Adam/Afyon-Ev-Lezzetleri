@@ -158,6 +158,7 @@ export interface GelAlSubesi {
 export interface Kullanici {
   id?: string;
   kimlik?: string;
+  firebase_uid?: string;
   ad_soyad: string;
   telefon: string;
   eposta?: string;

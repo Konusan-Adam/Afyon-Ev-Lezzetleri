@@ -1,9 +1,15 @@
 import { Kullanici } from '@/src/veritabani/VeriTipleri';
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
-import { koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { testKullaniciDogrula } from '@/src/veritabani/CanliVeriYardimcisi';
 import { telefonGecerliMi } from '@/src/MalzemeCekmeceleri/Dogrulama/telefonDogrulayici';
 import { telefonStandartCekirdek } from './telefonYardimcisi';
+
+type GuvenlikliKullanici = Kullanici & {
+  sifre?: string;
+  guvenlik_sorusu?: string;
+  guvenlik_cevabi?: string;
+};
 
 export async function veritabanindanKullaniciGirisYaptir(
   telefon: string,
@@ -14,6 +20,7 @@ export async function veritabanindanKullaniciGirisYaptir(
 
   const standartTelefon = telefonStandartCekirdek(telefon);
   const girilenSifre = sifre.trim();
+  if (!girilenSifre) return null;
 
   if (
     (standartTelefon === '5325420303' || standartTelefon === '5301234567' || standartTelefon === '5051234567') &&
@@ -34,11 +41,11 @@ export async function veritabanindanKullaniciGirisYaptir(
 
   if (canliFirebaseAktifMi()) {
     try {
-      const tumKullanicilar = await koleksiyonGetir<Kullanici>('kullanicilar');
+      const tumKullanicilar = await koleksiyonGetir<GuvenlikliKullanici>('kullanicilar');
       const bulunan = tumKullanicilar.find((k) => telefonStandartCekirdek(k.telefon || '') === standartTelefon);
       if (bulunan) {
-        const kayitliSifre = (bulunan as Kullanici & { sifre?: string }).sifre;
-        if (kayitliSifre && kayitliSifre !== girilenSifre) {
+        const kayitliSifre = bulunan.sifre?.trim();
+        if (!kayitliSifre || kayitliSifre !== girilenSifre) {
           return null;
         }
         return bulunan;
@@ -52,34 +59,26 @@ export async function veritabanindanKullaniciGirisYaptir(
   return testKullaniciDogrula(standartTelefon, girilenSifre);
 }
 
-import { belgeKaydet } from '@/src/veritabani/FirebaseKoleksiyonServisi';
-
-export async function kullaniciGuvenlikSorusuGetir(telefon: string): Promise<{ kimlik: string; soru: string } | null> {
+export async function kullaniciGuvenlikSorusuGetir(
+  telefon: string
+): Promise<{ kimlik: string; soru: string } | null> {
   const dogrulama = telefonGecerliMi(telefon);
   if (!dogrulama.gecerli) return null;
 
   const standartTelefon = telefonStandartCekirdek(telefon);
   if (canliFirebaseAktifMi()) {
     try {
-      const tumKullanicilar = await koleksiyonGetir<Kullanici & { sifre?: string; guvenlik_sorusu?: string }>('kullanicilar');
+      const tumKullanicilar = await koleksiyonGetir<GuvenlikliKullanici>('kullanicilar');
       const bulunan = tumKullanicilar.find((k) => telefonStandartCekirdek(k.telefon || '') === standartTelefon);
-      if (bulunan && bulunan.guvenlik_sorusu) {
+      if (bulunan && bulunan.guvenlik_sorusu?.trim()) {
         return {
           kimlik: bulunan.kimlik || bulunan.id || `tel_${standartTelefon}`,
-          soru: bulunan.guvenlik_sorusu,
+          soru: bulunan.guvenlik_sorusu.trim(),
         };
       }
     } catch (hata) {
       console.warn('Güvenlik sorusu getirme hatası:', hata);
     }
-  }
-
-  // Varsayılan / test kullanıcıları için
-  if (standartTelefon === '5325420303' || standartTelefon === '5301234567') {
-    return {
-      kimlik: 'yonetici_patron_01',
-      soru: 'En sevdiğin Afyon yemeği nedir?',
-    };
   }
 
   return null;
@@ -91,7 +90,7 @@ export async function sifreSifirlaGuvenlikSorusuIle(
   yeniSifre: string
 ): Promise<boolean> {
   const dogrulama = telefonGecerliMi(telefon);
-  if (!dogrulama.gecerli || !cevap.trim() || !yeniSifre.trim()) return false;
+  if (!dogrulama.gecerli || !cevap.trim() || yeniSifre.trim().length < 4) return false;
 
   const standartTelefon = telefonStandartCekirdek(telefon);
   const girilenCevap = cevap.trim().toLowerCase();
@@ -99,27 +98,21 @@ export async function sifreSifirlaGuvenlikSorusuIle(
 
   if (canliFirebaseAktifMi()) {
     try {
-      const tumKullanicilar = await koleksiyonGetir<Kullanici & { sifre?: string; guvenlik_cevabi?: string }>('kullanicilar');
+      const tumKullanicilar = await koleksiyonGetir<GuvenlikliKullanici>('kullanicilar');
       const bulunan = tumKullanicilar.find((k) => telefonStandartCekirdek(k.telefon || '') === standartTelefon);
-      if (bulunan && bulunan.guvenlik_cevabi) {
-        if (bulunan.guvenlik_cevabi.toLowerCase() === girilenCevap) {
-          const kimlikId = bulunan.kimlik || bulunan.id || `tel_${standartTelefon}`;
-          const guncelKayit = {
+      if (bulunan && bulunan.guvenlik_cevabi?.trim()) {
+        if (bulunan.guvenlik_cevabi.trim().toLowerCase() === girilenCevap) {
+          const kimlikId = bulunan.id || bulunan.kimlik || `tel_${standartTelefon}`;
+          const kayitBasarili = await belgeKaydet('kullanicilar', kimlikId, {
             ...bulunan,
             sifre: yeniSifreTemiz,
-          };
-          await belgeKaydet('kullanicilar', kimlikId, guncelKayit);
-          return true;
+          });
+          return kayitBasarili;
         }
       }
     } catch (hata) {
       console.warn('Şifre sıfırlama hatası:', hata);
     }
-  }
-
-  // Test / Yönetici hesabı için kontrol
-  if ((standartTelefon === '5325420303' || standartTelefon === '5301234567') && (girilenCevap === 'keşkek' || girilenCevap === 'bükme' || girilenCevap === 'afyon')) {
-    return true;
   }
 
   return false;

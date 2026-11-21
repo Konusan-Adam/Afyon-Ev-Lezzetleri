@@ -26,18 +26,27 @@ export const MusteriSiparisIptalPenceresi: React.FC<MusteriSiparisIptalPenceresi
   const [secilenSebep, setSecilenSebep] = useState(IPTAL_SEBEPLERI[0]);
   const [aciklama, setAciklama] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [hataMesaji, setHataMesaji] = useState('');
 
   const iptaliOnayla = async (e: React.FormEvent) => {
     e.preventDefault();
+    setHataMesaji('');
     setYukleniyor(true);
 
     try {
-      await siparisIptalEt(siparisId, secilenSebep, aciklama, 'musteri');
-    } catch {}
-
-    setYukleniyor(false);
-    onIptalEdildi();
-    onKapat();
+      const basarili = await siparisIptalEt(siparisId, secilenSebep, aciklama, 'musteri', siparisKodu);
+      if (!basarili) {
+        setHataMesaji('Sipariş iptali kaydedilemedi. Lütfen bağlantınızı kontrol edip tekrar deneyiniz.');
+        setYukleniyor(false);
+        return;
+      }
+      setYukleniyor(false);
+      onIptalEdildi();
+      onKapat();
+    } catch {
+      setHataMesaji('Sipariş iptal edilirken beklenmeyen bir hata oluştu.');
+      setYukleniyor(false);
+    }
   };
 
   return (
@@ -98,6 +107,12 @@ export const MusteriSiparisIptalPenceresi: React.FC<MusteriSiparisIptalPenceresi
               className="w-full bg-[#120614] border border-purple-900 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-400 resize-none placeholder-gray-600"
             />
           </div>
+
+          {hataMesaji && (
+            <div className="p-2.5 rounded-xl bg-rose-950/70 border border-rose-500/60 text-rose-200 text-[11px] font-medium">
+              {hataMesaji}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-purple-900/40">
             <button

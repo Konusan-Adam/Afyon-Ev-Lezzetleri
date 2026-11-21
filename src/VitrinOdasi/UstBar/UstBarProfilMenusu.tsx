@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { User, LogOut, ShieldCheck, UserCircle, ChefHat, Bike, ChevronDown, Store, Heart } from 'lucide-react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
-import { aktifMisafirSiparisSayisiGetir } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
+import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 
 interface UstBarProfilMenusuProps {
@@ -13,24 +13,13 @@ export const UstBarProfilMenusu: React.FC<UstBarProfilMenusuProps> = ({ tema = '
   const { aktifKullanici, pencereAc, panelDegistir, cikisYap } = kullaniciHafizasiKullan();
   const { toplamFavoriSayisi } = favoriHafizasiKullan();
   const [acik, setAcik] = useState(false);
-  const [aktifSiparisSayisi, setAktifSiparisSayisi] = useState<number>(aktifMisafirSiparisSayisiGetir());
+  const sonMisafirTelefon = typeof window !== 'undefined' ? localStorage.getItem('afyon_son_misafir_telefon') || '' : '';
+  const aktifSiparisSayisi = useAktifSiparisSayisi(
+    aktifKullanici?.kimlik,
+    aktifKullanici?.telefon || sonMisafirTelefon
+  );
   const ref = useRef<HTMLDivElement>(null);
   const acikMi = tema === 'acik';
-
-  useEffect(() => {
-    const siparisGuncelle = () => {
-      setAktifSiparisSayisi(aktifMisafirSiparisSayisiGetir());
-    };
-    window.addEventListener('afyon_siparis_durum_degisti', siparisGuncelle);
-    window.addEventListener('afyon_siparis_eklendi', siparisGuncelle);
-    window.addEventListener('storage', siparisGuncelle);
-
-    return () => {
-      window.removeEventListener('afyon_siparis_durum_degisti', siparisGuncelle);
-      window.removeEventListener('afyon_siparis_eklendi', siparisGuncelle);
-      window.removeEventListener('storage', siparisGuncelle);
-    };
-  }, []);
 
   useEffect(() => {
     const disariTiklandi = (e: MouseEvent) => {

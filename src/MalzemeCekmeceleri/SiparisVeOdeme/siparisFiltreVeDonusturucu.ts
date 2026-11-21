@@ -1,9 +1,13 @@
 import { TestSiparis } from '@/src/veritabani/CanliVeriYardimcisi';
 import { yerelSiparisleriGetir } from './yerelSiparisDeposu';
+import { standartSiparisDurumuGetir, siparisIptalMi } from './siparisDurumYardimcisi';
 
 export function firestoreSiparisiniDonustur(d: any): TestSiparis {
   const kod = d.siparis_kodu || d.siparisKodu || d.id;
   const gercekPin = d.pinKodu || d.pin_kodu || d.teslimat_kodu || d.pin || '';
+  const normalizeDurum = standartSiparisDurumuGetir(d.durum, d.asama);
+  const iptalMi = siparisIptalMi(normalizeDurum);
+  const ozelAciklama = d.durum_aciklamasi || d.durumAciklamasi;
 
   return {
     id: d.id,
@@ -21,14 +25,16 @@ export function firestoreSiparisiniDonustur(d: any): TestSiparis {
     mutfak_id: d.mutfak_id,
     kurye_id: d.kurye_id,
     kurye_adi: d.kurye_adi,
-    asama: d.asama,
+    asama: d.asama || normalizeDurum,
     kurye_alis_zamani: d.kurye_alis_zamani,
     kurye_teslim_aldi_mi: d.kurye_teslim_aldi_mi,
-    durum: d.durum || 'beklemede',
+    durum: normalizeDurum as TestSiparis['durum'],
     durum_aciklamasi:
-      d.durum_aciklamasi ||
-      (d.durum === 'iptal'
-        ? (d.iptal_kaynagi === 'mutfak' ? 'Mutfak Tarafından İptal Edildi' : 'Sipariş İptal Edildi.')
+      ozelAciklama ||
+      (iptalMi
+        ? d.iptal_kaynagi === 'mutfak'
+          ? 'Mutfak Tarafından İptal Edildi.'
+          : 'Sipariş İptal Edildi.'
         : 'Siparişiniz hazırlanıyor.'),
     toplam_tutar: Number(d.toplam_tutar || d.tutar) || 0,
     teslimat_ucreti: Number(d.teslimat_ucreti) || 0,
@@ -61,6 +67,7 @@ export function musteriSiparisleriniSuz(
   cihazSiparisleri.forEach((s) => {
     if (s.id) cihazAnahtarlari.add(s.id);
     if (s.siparis_kodu) cihazAnahtarlari.add(s.siparis_kodu);
+    if (s.siparisKodu) cihazAnahtarlari.add(s.siparisKodu);
   });
 
   return hamListe.filter((s) => {
@@ -69,7 +76,8 @@ export function musteriSiparisleriniSuz(
     const telUyusuyor = Boolean(temizTel.length === 10 && sTel.length === 10 && sTel === temizTel);
     const buCihazaAitMi = Boolean(
       (s.id && cihazAnahtarlari.has(s.id)) ||
-        (s.siparis_kodu && cihazAnahtarlari.has(s.siparis_kodu))
+        (s.siparis_kodu && cihazAnahtarlari.has(s.siparis_kodu)) ||
+        (s.siparisKodu && cihazAnahtarlari.has(s.siparisKodu))
     );
 
     if (!musteriId && temizTel.length < 10) {

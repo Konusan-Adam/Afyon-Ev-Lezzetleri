@@ -16,7 +16,7 @@ import {
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { ortakSepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
-import { yerelSiparisleriGetir } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
+import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 
 export interface TeslimatVeKullaniciBariOzellikleri {
@@ -32,6 +32,11 @@ export const TeslimatVeKullaniciBari: React.FC<TeslimatVeKullaniciBariOzellikler
   const teslimatHafizasi = teslimatHafizasiKullan();
   const ortakSepetHafizasi = ortakSepetHafizasiKullan();
   const kullaniciHafizasi = kullaniciHafizasiKullan();
+  const sonMisafirTelefon = typeof window !== 'undefined' ? localStorage.getItem('afyon_son_misafir_telefon') || '' : '';
+  const aktifSiparisSayisi = useAktifSiparisSayisi(
+    kullaniciHafizasi.aktifKullanici?.kimlik,
+    kullaniciHafizasi.aktifKullanici?.telefon || sonMisafirTelefon
+  );
   
   const [profilMenuAcik, setProfilMenuAcik] = useState(false);
   const profilMenuRef = useRef<HTMLDivElement>(null);
@@ -282,14 +287,14 @@ export const TeslimatVeKullaniciBari: React.FC<TeslimatVeKullaniciBariOzellikler
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              {yerelSiparisleriGetir().filter(s => s.durum !== 'iptal' && s.durum !== 'teslim_edildi').length > 0 && (
+              {aktifSiparisSayisi > 0 && (
                 <button
                   type="button"
                   onClick={() => kullaniciHafizasi.panelDegistir('musteri')}
                   className="bg-amber-600/25 hover:bg-amber-600/40 border border-amber-500/50 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                 >
                   <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Siparişlerim ({yerelSiparisleriGetir().filter(s => s.durum !== 'iptal' && s.durum !== 'teslim_edildi').length})</span>
+                  <span>Siparişlerim ({aktifSiparisSayisi})</span>
                 </button>
               )}
               <button

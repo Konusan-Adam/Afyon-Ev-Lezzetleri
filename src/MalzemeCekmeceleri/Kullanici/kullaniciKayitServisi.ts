@@ -27,35 +27,29 @@ export async function veritabaninaKullaniciKaydet(
   const kullaniciKaydi: Kullanici & { id: string; sifre: string; onay_durumu: string; askida_mi: boolean } = {
     id: kimlikId,
     kimlik: kimlikId,
+    firebase_uid: yeniKullanici.firebase_uid || '',
     ad_soyad: yeniKullanici.ad_soyad ? yeniKullanici.ad_soyad.trim() : 'İsimsiz',
     telefon: duzgunTelefon,
-    eposta: (yeniKullanici as any).eposta || '',
-    sifre: yeniKullanici.sifre || '1234',
+    eposta: yeniKullanici.eposta || '',
+    sifre: yeniKullanici.sifre?.trim() || '',
     rol: yeniKullanici.rol,
     isletme_adi: yeniKullanici.isletme_adi || '',
     arac_tipi: yeniKullanici.arac_tipi || '',
     ilce: yeniKullanici.ilce || 'Merkez',
-    guvenlik_sorusu: (yeniKullanici as any).guvenlik_sorusu || '',
-    guvenlik_cevabi: (yeniKullanici as any).guvenlik_cevabi ? String((yeniKullanici as any).guvenlik_cevabi).trim().toLowerCase() : '',
+    guvenlik_sorusu: yeniKullanici.guvenlik_sorusu || '',
+    guvenlik_cevabi: yeniKullanici.guvenlik_cevabi ? String(yeniKullanici.guvenlik_cevabi).trim().toLowerCase() : '',
     onayli_mi: yeniKullanici.rol === 'musteri',
     onay_durumu: yeniKullanici.rol === 'musteri' ? 'onaylandi' : 'beklemede',
     askida_mi: false,
     olusturma_tarihi: new Date().toISOString(),
   };
 
-  testKullaniciEkle(kullaniciKaydi as unknown as TestKullaniciKaydi);
-
-  if (yeniKullanici.rol === 'musteri') {
-    patronBildirimiEkle('yeni_musteri', 'Yeni Müşteri Kaydı', `${kullaniciKaydi.ad_soyad} (${kullaniciKaydi.telefon}) sisteme üye oldu.`);
-  } else if (yeniKullanici.rol === 'ev_mutfagi' || yeniKullanici.rol === 'ticari_restoran') {
-    patronBildirimiEkle('yeni_mutfak', 'Yeni Mutfak Başvurusu ⚠️', `${kullaniciKaydi.isletme_adi || kullaniciKaydi.ad_soyad} mutfak kaydı oluşturdu. Onay bekliyor.`, kimlikId);
-  } else if (yeniKullanici.rol === 'kurye') {
-    patronBildirimiEkle('yeni_kurye', 'Yeni Kurye Başvurusu 🛵', `${kullaniciKaydi.ad_soyad} kurye olmak için başvurdu. Onay bekliyor.`, kimlikId);
-  }
-
   if (canliFirebaseAktifMi()) {
     try {
-      await belgeKaydet('kullanicilar', kimlikId, kullaniciKaydi);
+      const kullaniciYazildi = await belgeKaydet('kullanicilar', kimlikId, kullaniciKaydi);
+      if (!kullaniciYazildi) {
+        return null;
+      }
       if (yeniKullanici.rol === 'ev_mutfagi' || yeniKullanici.rol === 'ticari_restoran') {
         const mutfakIsmi = yeniKullanici.isletme_adi?.trim() || yeniKullanici.ad_soyad.trim();
         await belgeKaydet('mutfaklar', kimlikId, {
@@ -82,7 +76,18 @@ export async function veritabaninaKullaniciKaydet(
       }
     } catch (hata) {
       console.warn('Firebase kullanıcı/mutfak kayıt hatası:', hata);
+      return null;
     }
+  }
+
+  testKullaniciEkle(kullaniciKaydi as unknown as TestKullaniciKaydi);
+
+  if (yeniKullanici.rol === 'musteri') {
+    patronBildirimiEkle('yeni_musteri', 'Yeni Müşteri Kaydı', `${kullaniciKaydi.ad_soyad} (${kullaniciKaydi.telefon}) sisteme üye oldu.`);
+  } else if (yeniKullanici.rol === 'ev_mutfagi' || yeniKullanici.rol === 'ticari_restoran') {
+    patronBildirimiEkle('yeni_mutfak', 'Yeni Mutfak Başvurusu ⚠️', `${kullaniciKaydi.isletme_adi || kullaniciKaydi.ad_soyad} mutfak kaydı oluşturdu. Onay bekliyor.`, kimlikId);
+  } else if (yeniKullanici.rol === 'kurye') {
+    patronBildirimiEkle('yeni_kurye', 'Yeni Kurye Başvurusu 🛵', `${kullaniciKaydi.ad_soyad} kurye olmak için başvurdu. Onay bekliyor.`, kimlikId);
   }
 
   return kullaniciKaydi;

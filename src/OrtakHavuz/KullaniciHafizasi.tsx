@@ -3,11 +3,12 @@ import { Kullanici, KullaniciRolu } from '@/src/veritabani/VeriTipleri';
 import {
   veritabaninaKullaniciKaydet,
   veritabanindanKullaniciGirisYaptir,
+  googleIleOturumAc,
+  googleKaydiniTamamla,
+  type GoogleKullaniciTaslagi,
+  type GoogleGirisSonucu,
 } from '@/src/MalzemeCekmeceleri/kullaniciIslemleri';
 import { mevcutUrlPaneliniBul, urlVeBasligiGuncelle } from '@/src/GirisKapisi/RotaYardimcisi';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth, canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
-import { koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 
 export type PanelTipi = 'vitrin' | 'patron' | 'musteri' | 'mutfak' | 'kurye' | 'sube';
 
@@ -24,7 +25,15 @@ interface KullaniciHafizaTipi {
   pencereAc: (baslangicSekmesi?: 'giris' | 'kayit' | any, baslangicRolu?: KullaniciRolu) => void;
   pencereKapat: () => void;
   girisYap: (telefon: string, sifre: string) => Promise<boolean>;
-  googleIleGirisYap: () => Promise<boolean>;
+  googleIleGirisYap: () => Promise<GoogleGirisSonucu>;
+  googleKayitTamamla: (bilgiler: {
+    uid: string;
+    adSoyad: string;
+    eposta: string;
+    telefon: string;
+    guvenlikSorusu?: string;
+    guvenlikCevabi?: string;
+  }) => Promise<boolean>;
   kayitOl: (bilgiler: {
     ad_soyad: string;
     telefon: string;
@@ -110,80 +119,54 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const oturumAcVeYonlendir = (kullanici: Kullanici) => {
+    setAktifKullanici(kullanici);
+    setPencereAcik(false);
+    roleGorePaneleYonlendir(kullanici);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: kullanici } }));
+    }
+  };
+
   const girisYap = async (telefon: string, sifre: string): Promise<boolean> => {
     setYukleniyor(true);
     const kullanici = await veritabanindanKullaniciGirisYaptir(telefon, sifre);
     setYukleniyor(false);
 
     if (kullanici) {
-      setAktifKullanici(kullanici);
-      setPencereAcik(false);
-      roleGorePaneleYonlendir(kullanici);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: kullanici } }));
-      }
+      oturumAcVeYonlendir(kullanici);
       return true;
     }
     return false;
   };
 
-  const googleIleGirisYap = async (): Promise<boolean> => {
+  const googleIleGirisYap = async (): Promise<GoogleGirisSonucu> => {
     setYukleniyor(true);
-    try {
-      let googleKullaniciAdi = 'Google Kullanıcısı';
-      let googleEposta = 'google_kullanici@gmail.com';
-      let googleTelefon = '05309998877';
-
-      if (canliFirebaseAktifMi()) {
-        try {
-          const saglayici = new GoogleAuthProvider();
-          const sonuc = await signInWithPopup(auth, saglayici);
-          const user = sonuc.user;
-          if (user) {
-            googleKullaniciAdi = user.displayName || 'Google Kullanıcısı';
-            googleEposta = user.email || googleEposta;
-            if (user.phoneNumber) googleTelefon = user.phoneNumber;
-          }
-        } catch (hata) {
-          console.warn('Google popup giriş hatası:', hata);
-        }
-      }
-
-      let mevcutKullanici: Kullanici | null = null;
-      if (canliFirebaseAktifMi()) {
-        try {
-          const tumKullanicilar = await koleksiyonGetir<Kullanici>('kullanicilar');
-          mevcutKullanici = tumKullanicilar.find((k) => k.eposta === googleEposta || k.telefon === googleTelefon) || null;
-        } catch {}
-      }
-
-      if (!mevcutKullanici) {
-        const yeniKayit = await veritabaninaKullaniciKaydet({
-          ad_soyad: googleKullaniciAdi,
-          telefon: googleTelefon,
-          eposta: googleEposta,
-          rol: 'musteri',
-          sifre: 'google123',
-          guvenlik_sorusu: 'Google Hesabı',
-          guvenlik_cevabi: 'google',
-        });
-        mevcutKullanici = yeniKayit;
-      }
-
-      setYukleniyor(false);
-      if (mevcutKullanici) {
-        setAktifKullanici(mevcutKullanici);
-        setPencereAcik(false);
-        roleGorePaneleYonlendir(mevcutKullanici);
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: mevcutKullanici } }));
-        }
-        return true;
-      }
-    } catch (hata) {
-      console.warn('Google giriş genel hata:', hata);
-    }
+    const sonuc = await googleIleOturumAc();
     setYukleniyor(false);
+
+    if (sonuc.durum === 'giris_basarili') {
+      oturumAcVeYonlendir(sonuc.kullanici);
+    }
+    return sonuc;
+  };
+
+  const googleKayitTamamla = async (bilgiler: {
+    uid: string;
+    adSoyad: string;
+    eposta: string;
+    telefon: string;
+    guvenlikSorusu?: string;
+    guvenlikCevabi?: string;
+  }): Promise<boolean> => {
+    setYukleniyor(true);
+    const kaydolunan = await googleKaydiniTamamla(bilgiler);
+    setYukleniyor(false);
+
+    if (kaydolunan) {
+      oturumAcVeYonlendir(kaydolunan);
+      return true;
+    }
     return false;
   };
 
@@ -204,12 +187,7 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     setYukleniyor(false);
 
     if (kaydolunankullanici) {
-      setAktifKullanici(kaydolunankullanici);
-      setPencereAcik(false);
-      roleGorePaneleYonlendir(kaydolunankullanici);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('afyon_oturum_degisti', { detail: { aktifKullanici: kaydolunankullanici } }));
-      }
+      oturumAcVeYonlendir(kaydolunankullanici);
       return true;
     }
     return false;
@@ -247,6 +225,7 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
         pencereKapat: () => setPencereAcik(false),
         girisYap,
         googleIleGirisYap,
+        googleKayitTamamla,
         kayitOl,
         cikisYap,
         testRoluneGec,
@@ -264,3 +243,5 @@ export const kullaniciHafizasiKullan = (): KullaniciHafizaTipi => {
   }
   return context;
 };
+
+export type { GoogleKullaniciTaslagi };

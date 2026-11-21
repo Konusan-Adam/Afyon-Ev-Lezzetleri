@@ -1,4 +1,5 @@
 import { TEST_SIPARISLERI, TestSiparis } from '@/src/veritabani/CanliVeriYardimcisi';
+import { siparisAktifMi, siparisIptalMi, standartSiparisDurumuGetir } from './siparisDurumYardimcisi';
 
 const SIPARIS_YEREL_DEPO_ANAHTARI = 'afyon_ev_lezzetleri_siparisleri_v1';
 
@@ -37,10 +38,62 @@ export function yerelSiparisKaydet(siparis: TestSiparis) {
   } catch {}
 }
 
+export function yerelSiparisSenkronizeEt(canliSiparisler: TestSiparis[]) {
+  try {
+    const mevcutYerel = yerelSiparisleriGetir();
+    if (mevcutYerel.length === 0) return;
+
+    const canliHarita = new Map<string, TestSiparis>();
+    canliSiparisler.forEach((s) => {
+      if (s.id) canliHarita.set(s.id, s);
+      if (s.siparis_kodu) canliHarita.set(s.siparis_kodu, s);
+      if (s.siparisKodu) canliHarita.set(s.siparisKodu, s);
+    });
+
+    let degistiMi = false;
+    const guncelYerel: TestSiparis[] = [];
+
+    for (const s of mevcutYerel) {
+      const eslesen =
+        (s.id && canliHarita.get(s.id)) ||
+        (s.siparis_kodu && canliHarita.get(s.siparis_kodu)) ||
+        (s.siparisKodu && canliHarita.get(s.siparisKodu));
+
+      if (!eslesen) {
+        degistiMi = true;
+        continue;
+      }
+
+      const normalizeDurum = standartSiparisDurumuGetir(eslesen.durum, eslesen.asama);
+      if (
+        s.durum !== normalizeDurum ||
+        s.durum_aciklamasi !== eslesen.durum_aciklamasi ||
+        s.iptal_kaynagi !== eslesen.iptal_kaynagi
+      ) {
+        degistiMi = true;
+      }
+
+      guncelYerel.push({
+        ...s,
+        ...eslesen,
+        durum: normalizeDurum as TestSiparis['durum'],
+      });
+    }
+
+    if (degistiMi) {
+      localStorage.setItem(SIPARIS_YEREL_DEPO_ANAHTARI, JSON.stringify(guncelYerel));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('afyon_yerel_siparis_senkron'));
+      }
+    }
+  } catch {}
+}
+
 export function yerelSiparisDurumGuncelle(
   siparisKimligi: string,
   yeniDurum: string,
-  durumAciklamasi?: string
+  durumAciklamasi?: string,
+  iptalKaynagi?: 'musteri' | 'mutfak'
 ) {
   try {
     const anahtarlar = [
@@ -64,12 +117,14 @@ export function yerelSiparisDurumGuncelle(
 
         const aciklama =
           durumAciklamasi ||
-          (yeniDurum === 'iptal' ? 'Sipariş İptal Edildi.' : s.durum_aciklamasi);
+          (siparisIptalMi(yeniDurum) ? 'Sipariş İptal Edildi.' : s.durum_aciklamasi);
         return {
           ...s,
           durum: yeniDurum,
+          asama: yeniDurum,
           durum_aciklamasi: aciklama,
           durumAciklamasi: aciklama,
+          ...(iptalKaynagi ? { iptal_kaynagi: iptalKaynagi } : {}),
         };
       });
       localStorage.setItem(anahtar, JSON.stringify(guncel));
@@ -84,7 +139,7 @@ export function yerelSiparisDurumGuncelle(
         s.durum = yeniDurum as TestSiparis['durum'];
         s.durum_aciklamasi =
           durumAciklamasi ||
-          (yeniDurum === 'iptal' ? 'Sipariş İptal Edildi.' : s.durum_aciklamasi);
+          (siparisIptalMi(yeniDurum) ? 'Sipariş İptal Edildi.' : s.durum_aciklamasi);
       }
     });
   } catch {}
@@ -92,5 +147,5 @@ export function yerelSiparisDurumGuncelle(
 
 export function aktifMisafirSiparisSayisiGetir(): number {
   const tumu = yerelSiparisleriGetir();
-  return tumu.filter((s) => s.durum !== 'iptal' && s.durum !== 'teslim_edildi').length;
+  return tumu.filter((s) => siparisAktifMi(s.durum)).length;
 }

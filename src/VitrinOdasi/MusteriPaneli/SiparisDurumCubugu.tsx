@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { siparisIptalMi, siparisTamamlandiMi } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/siparisDurumYardimcisi';
 
 interface SiparisDurumCubuguOzellikleri {
   durum: string;
@@ -12,8 +13,8 @@ export const SiparisDurumCubugu: React.FC<SiparisDurumCubuguOzellikleri> = ({
   durumAciklamasi,
   tahminiTeslimat,
 }) => {
-  const iptal = durum === 'iptal';
-  const tamamlandi = durum === 'teslim_edildi';
+  const iptal = siparisIptalMi(durum);
+  const tamamlandi = siparisTamamlandiMi(durum);
   const yolda = durum === 'yolda';
   const hazirlaniyor =
     durum === 'beklemede' ||

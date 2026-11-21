@@ -6,6 +6,7 @@ import { siparisDegerlendirildiMi } from '@/src/MalzemeCekmeceleri/Degerlendirme
 import { SiparisDurumCubugu } from './SiparisDurumCubugu';
 import { TekrarSiparisButonu } from './TekrarSiparisButonu';
 import { tarihSaatFormatla } from '@/src/MalzemeCekmeceleri/Ortak/tarihFormatlayici';
+import { siparisIptalMi, siparisTamamlandiMi } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/siparisDurumYardimcisi';
 
 interface MusteriSiparisKartiOzellikleri {
   siparis: TestSiparis;
@@ -30,8 +31,8 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
 }) => {
   const iptalEdilebilir = sip.durum === 'beklemede' || sip.durum === 'hazirlaniyor';
   const yolda = sip.durum === 'yolda';
-  const tamamlandi = sip.durum === 'teslim_edildi';
-  const iptal = sip.durum === 'iptal';
+  const tamamlandi = siparisTamamlandiMi(sip.durum);
+  const iptal = siparisIptalMi(sip.durum);
   const aktifSiparisMi = !tamamlandi && !iptal;
   const puanlandi = siparisDegerlendirildiMi(sip.id);
 

@@ -6,12 +6,14 @@ import {
   yerelSiparisleriGetir,
   yerelSiparisKaydet,
   yerelSiparisDurumGuncelle,
+  yerelSiparisSenkronizeEt,
   aktifMisafirSiparisSayisiGetir,
 } from './SiparisVeOdeme/yerelSiparisDeposu';
 import {
   firestoreSiparisiniDonustur,
   musteriSiparisleriniSuz,
 } from './SiparisVeOdeme/siparisFiltreVeDonusturucu';
+import { siparisAktifMi } from './SiparisVeOdeme/siparisDurumYardimcisi';
 
 export {
   yerelSiparisleriGetir,
@@ -43,40 +45,66 @@ export function useMusteriSiparisleri(musteriId?: string, musteriTelefon?: strin
   const [yukleniyor, setYukleniyor] = useState<boolean>(true);
   const [hata, setHata] = useState<string | null>(null);
 
+  const listeyiIsleVeAyarla = useCallback(
+    (canliKayitlar: any[]) => {
+      const donusturulmus = canliKayitlar.map(firestoreSiparisiniDonustur);
+      yerelSiparisSenkronizeEt(donusturulmus);
+
+      const tekilHarita = new Map<string, TestSiparis>();
+      donusturulmus.forEach((s) => tekilHarita.set(s.siparis_kodu || s.siparisKodu || s.id, s));
+
+      const yerel = yerelSiparisleriGetir();
+      yerel.forEach((s) => {
+        const kod = s.siparis_kodu || s.siparisKodu || s.id;
+        if (kod && tekilHarita.has(kod)) {
+          const canli = tekilHarita.get(kod)!;
+          tekilHarita.set(kod, {
+            ...s,
+            ...canli,
+            pinKodu: canli.pinKodu || s.pinKodu,
+            pin_kodu: canli.pin_kodu || s.pin_kodu,
+            teslimat_kodu: canli.teslimat_kodu || s.teslimat_kodu,
+            elemanlar: canli.elemanlar?.length > 0 ? canli.elemanlar : s.elemanlar,
+          });
+        }
+      });
+
+      const birlesik = Array.from(tekilHarita.values()).sort((a, b) => (b.id > a.id ? 1 : -1));
+      setSiparisler(musteriSiparisleriniSuz(birlesik, musteriId, musteriTelefon));
+      setYukleniyor(false);
+    },
+    [musteriId, musteriTelefon]
+  );
+
   const siparisleriYukle = useCallback(async () => {
     setYukleniyor(true);
     setHata(null);
-    const tekilHarita = new Map<string, TestSiparis>();
-    const yerel = yerelSiparisleriGetir();
 
     if (canliFirebaseAktifMi()) {
       try {
         const fbSiparisler = await koleksiyonGetir<any>('siparisler');
-        yerel.forEach((s) => tekilHaritadaBirlestir(tekilHarita, s));
-        (fbSiparisler || []).forEach((d: any) =>
-          tekilHaritadaBirlestir(tekilHarita, firestoreSiparisiniDonustur(d))
-        );
-        const birlesik = Array.from(tekilHarita.values()).sort((a, b) => (b.id > a.id ? 1 : -1));
-        setSiparisler(musteriSiparisleriniSuz(birlesik, musteriId, musteriTelefon));
-        setYukleniyor(false);
+        listeyiIsleVeAyarla(fbSiparisler || []);
         return;
       } catch (err: any) {
         console.warn('Firebase siparişler okunurken hata:', err);
       }
     }
 
+    const tekilHarita = new Map<string, TestSiparis>();
     TEST_SIPARISLERI.forEach((s) => tekilHaritadaBirlestir(tekilHarita, s));
-    yerel.forEach((s) => tekilHaritadaBirlestir(tekilHarita, s));
+    yerelSiparisleriGetir().forEach((s) => tekilHaritadaBirlestir(tekilHarita, s));
     const yedekListe = Array.from(tekilHarita.values()).sort((a, b) => (b.id > a.id ? 1 : -1));
     setSiparisler(musteriSiparisleriniSuz(yedekListe, musteriId, musteriTelefon));
     setYukleniyor(false);
-  }, [musteriId, musteriTelefon]);
+  }, [musteriId, musteriTelefon, listeyiIsleVeAyarla]);
 
   useEffect(() => {
     siparisleriYukle();
     let abonelikDurdur = () => {};
     if (canliFirebaseAktifMi()) {
-      abonelikDurdur = koleksiyonuCanliDinle<any>('siparisler', () => siparisleriYukle());
+      abonelikDurdur = koleksiyonuCanliDinle<any>('siparisler', (veriler) => {
+        listeyiIsleVeAyarla(veriler || []);
+      });
     }
     const olayDinle = () => siparisleriYukle();
     window.addEventListener('afyon_siparis_durum_degisti', olayDinle);
@@ -86,7 +114,12 @@ export function useMusteriSiparisleri(musteriId?: string, musteriTelefon?: strin
       window.removeEventListener('afyon_siparis_durum_degisti', olayDinle);
       window.removeEventListener('afyon_siparis_eklendi', olayDinle);
     };
-  }, [siparisleriYukle]);
+  }, [siparisleriYukle, listeyiIsleVeAyarla]);
 
   return { siparisler, yukleniyor, hata, yenile: siparisleriYukle };
+}
+
+export function useAktifSiparisSayisi(musteriId?: string, musteriTelefon?: string): number {
+  const { siparisler } = useMusteriSiparisleri(musteriId, musteriTelefon);
+  return siparisler.filter((s) => siparisAktifMi(s.durum)).length;
 }
