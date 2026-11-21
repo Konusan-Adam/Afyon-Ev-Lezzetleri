@@ -5,6 +5,7 @@ import { FiltrePaneli } from './AramaFiltre/FiltrePaneli';
 import { CokluSepetVitrini } from './Bilesenler/Sepet/CokluSepetVitrini';
 import { OrtakSepetPenceresi } from './Bilesenler/Sepet/OrtakSepetPenceresi';
 import { YuzenSepetBari } from './Bilesenler/Sepet/YuzenSepetBari';
+import { MasaustuUstSepetBari } from './Bilesenler/Sepet/MasaustuUstSepetBari';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { AdresSecimPenceresi } from './Bilesenler/AdresVeKonum/AdresSecimPenceresi';
 import { HaritaAdresSecici } from './Bilesenler/AdresVeKonum/HaritaAdresSecici';
@@ -224,6 +225,7 @@ export const AnaSayfaVitrini: React.FC = () => {
     return (
       <>
         <div className="w-full min-h-screen bg-[#1A0A1D]">
+          <MasaustuUstSepetBari />
           <MutfakDetayVitrini
             mutfak={seciliMutfak}
             geriDonTiklandi={() => setSeciliMutfak(null)}
@@ -273,7 +275,7 @@ export const AnaSayfaVitrini: React.FC = () => {
       <TepeReklamBari />
 
       {/* Masaüstü Tek Sıra Lüks Üst Bar */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block relative z-40">
         <UstBar
           aramaMetni={aramaMetni}
           aramaMetniniDegistir={aramaMetniniDegistir}
@@ -285,6 +287,9 @@ export const AnaSayfaVitrini: React.FC = () => {
           subeSecildi={(sube) => setSeciliSube(sube)}
         />
       </div>
+
+      {/* Masaüstü Yukarı Yapışık Sepet Barı (Sadece sepette ürün varken görünür) */}
+      <MasaustuUstSepetBari />
 
       {/* Mobil ve Tablet İçin Ana Vitrin */}
       <MobilAnaVitrin 
