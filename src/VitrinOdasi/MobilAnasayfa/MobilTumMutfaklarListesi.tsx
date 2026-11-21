@@ -1,6 +1,6 @@
 import React from 'react';
 import { Store } from 'lucide-react';
-import { mutfaklariGetir } from '@/src/MalzemeCekmeceleri/Mutfak/mutfaklariGetir';
+import { mutfaklariGetir, MIN_VITRIN_MUTFAK_SAYISI } from '@/src/MalzemeCekmeceleri/Mutfak/mutfaklariGetir';
 import { MobilDikeyMutfakKarti } from './MobilDikeyMutfakKarti';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
@@ -24,16 +24,8 @@ export const MobilTumMutfaklarListesi: React.FC<MobilTumMutfaklarListesiOzellikl
     );
   }, [mutfaklar, aramaMetni]);
 
-  if (yukleniyor && mutfaklar.length === 0) {
-    return (
-      <section className="w-full py-4 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse" />
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse" />
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse hidden sm:block" />
-        </div>
-      </section>
-    );
+  if (mutfaklar.length < MIN_VITRIN_MUTFAK_SAYISI) {
+    return null;
   }
 
   return (

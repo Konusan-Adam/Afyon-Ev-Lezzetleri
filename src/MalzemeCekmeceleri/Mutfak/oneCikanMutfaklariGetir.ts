@@ -17,5 +17,10 @@ export function oneCikanMutfaklariGetir() {
       .sort((a, b) => (b.puan ?? 0) - (a.puan ?? 0));
   }, [mutfaklar]);
 
-  return { oneCikanMutfaklar, yukleniyor, hata };
+  return {
+    oneCikanMutfaklar,
+    toplamMutfakSayisi: mutfaklar?.length ?? 0,
+    yukleniyor,
+    hata,
+  };
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { oneCikanMutfaklariGetir } from '@/src/MalzemeCekmeceleri/Mutfak/oneCikanMutfaklariGetir';
+import { MIN_VITRIN_MUTFAK_SAYISI } from '@/src/MalzemeCekmeceleri/Mutfak/mutfaklariGetir';
 import { MobilMutfakKarti } from './MobilMutfakKarti';
 import { MobilDikeyMutfakKarti } from './MobilDikeyMutfakKarti';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
@@ -12,19 +13,10 @@ interface MobilMutfaklarVitiriniOzellikleri {
 export const MobilMutfaklarVitirini: React.FC<MobilMutfaklarVitiriniOzellikleri> = ({
   mutfakSecildi
 }) => {
-  const { oneCikanMutfaklar, yukleniyor } = oneCikanMutfaklariGetir();
+  const { oneCikanMutfaklar, toplamMutfakSayisi, yukleniyor } = oneCikanMutfaklariGetir();
 
-  if (yukleniyor && oneCikanMutfaklar.length === 0) {
-    return (
-      <section className="w-full py-4 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse" />
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse" />
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse hidden sm:block" />
-          <div className="h-64 bg-purple-950/20 rounded-2xl animate-pulse hidden lg:block" />
-        </div>
-      </section>
-    );
+  if (yukleniyor || toplamMutfakSayisi < MIN_VITRIN_MUTFAK_SAYISI || oneCikanMutfaklar.length === 0) {
+    return null;
   }
 
   return (

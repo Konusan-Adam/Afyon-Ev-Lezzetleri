@@ -262,6 +262,8 @@ export interface MutfakAfisi {
   onay_durumu?: 'beklemede' | 'onaylandi' | 'reddedildi';
   onayli_mi?: boolean;
   konum_y?: number;
+  sira?: number;
+  red_nedeni?: string;
 }
 
 export interface CokluMenuKalemiTipi {

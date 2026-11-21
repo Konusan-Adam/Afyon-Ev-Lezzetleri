@@ -29,7 +29,7 @@ export const AnaAfisBannerVitrini: React.FC = () => {
       aktif_mi: true,
     }));
 
-    const genelAfisler = anaAfisListesi.filter((a) => a.aktif || a.aktif_mi !== false);
+    const genelAfisler = anaAfisListesi.filter((a) => a.aktif !== false && a.aktif_mi !== false);
     return [...mutfakSlaytları, ...genelAfisler];
   }, [mutfakAfisleri, anaAfisListesi]);
 

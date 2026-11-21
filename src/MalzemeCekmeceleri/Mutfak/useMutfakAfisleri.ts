@@ -14,9 +14,15 @@ export function useMutfakAfisleri() {
     }
 
     const durdur = koleksiyonuCanliDinle<MutfakAfisi>('mutfak_afisleri', (gelenListe) => {
-      const filtrelenmis = (gelenListe || []).filter(
-        (afis) => afis.aktif_mi === true && afis.onayli_mi === true
-      );
+      const filtrelenmis = (gelenListe || [])
+        .filter(
+          (afis) =>
+            afis.aktif_mi === true &&
+            afis.onayli_mi === true &&
+            afis.onay_durumu !== 'beklemede' &&
+            afis.onay_durumu !== 'reddedildi'
+        )
+        .sort((a, b) => (a.sira ?? 999) - (b.sira ?? 999));
       setAfisler(filtrelenmis);
       setYukleniyor(false);
     });
