@@ -13,7 +13,6 @@ import { MobilAltMenu } from '../MobilAnasayfa/MobilAltMenu';
 import { CokluSepetVitrini } from '../Bilesenler/Sepet/CokluSepetVitrini';
 import { YuzenSepetBari } from '../Bilesenler/Sepet/YuzenSepetBari';
 import { KullaniciGirisPenceresi } from '../KullaniciGiris/KullaniciGirisPenceresi';
-import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 
 interface SubeDetayVitriniProps {
@@ -39,7 +38,6 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
   const [seciliDetayUrun, setSeciliDetayUrun] = useState<SubeUrunu | null>(null);
   const [canliYayinAcik, setCanliYayinAcik] = useState<boolean>(false);
 
-  const { aktifKullanici, panelDegistir } = kullaniciHafizasiKullan();
   const { sepetPaneliAc } = sepetHafizasiKullan();
 
   const kategoriler = ['hepsi', ...Array.from(new Set(urunler.map((u) => u.kategori)))];
@@ -55,25 +53,6 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
 
   return (
     <div className="w-full min-h-screen bg-[#14061A] text-white pb-28">
-      {/* Şube Müdürü İnceleme Modu Şeridi */}
-      {aktifKullanici?.rol === 'sube_admin' && (
-        <div className="bg-[#2A102E] border-b border-[#521E5C] px-4 py-2.5 flex items-center justify-between text-xs text-stone-200">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>
-              <strong>Şube Müdürü Modu:</strong> Kendi şubenizi müşteri gözüyle inceliyorsunuz.
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => panelDegistir('sube')}
-            className="px-3 py-1 rounded-lg bg-[#6D237A] hover:bg-[#852C94] text-white font-bold transition-all cursor-pointer border border-[#9633A7]"
-          >
-            Panele Dön
-          </button>
-        </div>
-      )}
-
       {/* 1. Masaüstü Yol Haritası (Mutfak Vitrini ile Birebir Aynı Tasarım Dili) */}
       <div className="hidden lg:block">
         <SubeYolHaritasi sube={sube} geriDonTiklandi={geriDonTiklandi} />

@@ -18,6 +18,7 @@ import { mahalleyeEnYakinSubeyiBul } from '@/src/MalzemeCekmeceleri/Sube/SubeMes
 import { Mutfak, Yemek, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 import { PaytrGuvenlikRozeti } from '../MasaustuAltBilgi/PaytrGuvenlikRozeti';
 import { CokluMenulerVitrini } from '../Bilesenler/CokluMenu/CokluMenulerVitrini';
+import { SubeMenuleriVitrini } from './SubeMenuleriVitrini';
 
 interface MobilAnaVitrinProps {
   anasayfayaGitTiklandi?: () => void;
@@ -122,12 +123,18 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
               <AnaAfisBannerVitrini />
             </div>
 
-            {/* 1. Sıra: Mutfak Özel Afişleri Vitrini */}
+            {/* 1. Sıra: Şubelerden Hemen Hazır Menüler */}
+            <SubeMenuleriVitrini
+              enYakinSube={enYakinSube}
+              subeSecildi={subeSecildi}
+            />
+
+            {/* 2. Sıra: Mutfak Özel Afişleri Vitrini */}
             <div className="px-4 lg:px-0">
               <MutfakAfisleriBileseni />
             </div>
 
-            {/* 2. Sıra: Afyon Ev Mutfakları & Aşçıları */}
+            {/* 3. Sıra: Afyon Ev Mutfakları & Aşçıları */}
             <MobilTumMutfaklarListesi mutfakSecildi={mutfakDegistir} />
 
             {/* 3. Sıra: Öne Çıkan Yıldız Ev Mutfakları (Podyum) */}

@@ -17,7 +17,6 @@ import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { ortakSepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
-import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 
 export interface TeslimatVeKullaniciBariOzellikleri {
   teslimatTipi?: 'teslimat' | 'gel_al';
@@ -73,8 +72,6 @@ export const TeslimatVeKullaniciBari: React.FC<TeslimatVeKullaniciBariOzellikler
     switch (rol) {
       case 'yonetici':
         return { metin: 'Süper Admin (Patron)', renk: 'text-amber-400 bg-amber-500/20 border-amber-500/40' };
-      case 'sube_admin':
-        return { metin: 'Şube Müdürü', renk: 'text-[#DDAF53] bg-amber-500/20 border-amber-500/40' };
       case 'ev_mutfagi':
         return { metin: 'Ev Mutfağı & Aşçı', renk: 'text-purple-300 bg-purple-500/20 border-purple-500/40' };
       case 'ticari_restoran':
@@ -213,59 +210,30 @@ export const TeslimatVeKullaniciBari: React.FC<TeslimatVeKullaniciBariOzellikler
 
                   {/* Müşteri ve Yönetici İşlemleri */}
                   <div className="space-y-1">
-                    {kullaniciHafizasi.aktifKullanici?.rol === 'sube_admin' ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            kullaniciHafizasi.panelDegistir('sube');
-                            setProfilMenuAcik(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#6D237A] hover:bg-[#852C94] text-white text-xs font-bold transition-all cursor-pointer border border-[#9633A7] shadow-sm"
-                        >
-                          <Store className="w-4 h-4 text-[#DDAF53]" />
-                          <span className="text-[#DDAF53]">Şube Yönetim Paneli</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            subeVitriniAc(kullaniciHafizasi.aktifKullanici?.sube_id);
-                            setProfilMenuAcik(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#2B0E33] text-[#DDAF53] text-xs font-bold transition-all cursor-pointer border border-transparent hover:border-amber-500/40"
-                        >
-                          <Store className="w-4 h-4 text-[#DDAF53]" />
-                          <span>Şubemin Vitrinini Gör</span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        {kullaniciHafizasi.aktifKullanici?.rol === 'yonetici' && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              kullaniciHafizasi.panelDegistir('patron');
-                              setProfilMenuAcik(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-xs font-bold transition-all cursor-pointer border border-amber-500/50"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-amber-400" />
-                            <span>Patron Masası</span>
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            kullaniciHafizasi.panelDegistir('musteri');
-                            setProfilMenuAcik(false);
-                          }}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#2B0E33] text-gray-200 text-xs font-semibold transition-all cursor-pointer border border-transparent hover:border-purple-800/40"
-                        >
-                          <UserCircle className="w-4 h-4 text-blue-400" />
-                          <span>Siparişlerim & Hesabım</span>
-                        </button>
-                      </>
+                    {kullaniciHafizasi.aktifKullanici?.rol === 'yonetici' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          kullaniciHafizasi.panelDegistir('patron');
+                          setProfilMenuAcik(false);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-xs font-bold transition-all cursor-pointer border border-amber-500/50"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-amber-400" />
+                        <span>Patron Masası</span>
+                      </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        kullaniciHafizasi.panelDegistir('musteri');
+                        setProfilMenuAcik(false);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-[#2B0E33] text-gray-200 text-xs font-semibold transition-all cursor-pointer border border-transparent hover:border-purple-800/40"
+                    >
+                      <UserCircle className="w-4 h-4 text-blue-400" />
+                      <span>Siparişlerim & Hesabım</span>
+                    </button>
                   </div>
 
                   {/* Çıkış Butonu */}

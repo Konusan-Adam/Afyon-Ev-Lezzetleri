@@ -10,7 +10,7 @@ import {
 } from '@/src/MalzemeCekmeceleri/kullaniciIslemleri';
 import { mevcutUrlPaneliniBul, urlVeBasligiGuncelle } from '@/src/GirisKapisi/RotaYardimcisi';
 
-export type PanelTipi = 'vitrin' | 'patron' | 'musteri' | 'mutfak' | 'kurye' | 'sube';
+export type PanelTipi = 'vitrin' | 'patron' | 'musteri' | 'mutfak' | 'kurye';
 
 interface KullaniciHafizaTipi {
   aktifKullanici: Kullanici | null;
@@ -77,7 +77,6 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
       if (kayitliOturum) {
         const parsed = JSON.parse(kayitliOturum);
         if (parsed?.rol === 'yonetici') return 'patron';
-        if (parsed?.rol === 'sube_admin') return 'sube';
         if (parsed?.rol === 'asci' || parsed?.rol === 'ev_mutfagi') return 'mutfak';
         if (parsed?.rol === 'kurye') return 'kurye';
       }
@@ -104,9 +103,6 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     if (kullanici.rol === 'yonetici') {
       setGoruntulenenPanel('patron');
       urlVeBasligiGuncelle('patron');
-    } else if (kullanici.rol === 'sube_admin') {
-      setGoruntulenenPanel('sube');
-      urlVeBasligiGuncelle('sube');
     } else if (kullanici.rol === 'asci' || kullanici.rol === 'ev_mutfagi') {
       setGoruntulenenPanel('mutfak');
       urlVeBasligiGuncelle('mutfak');

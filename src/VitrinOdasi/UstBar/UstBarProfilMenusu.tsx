@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, ShieldCheck, UserCircle, ChefHat, Bike, ChevronDown, Store, Heart } from 'lucide-react';
+import { User, LogOut, UserCircle, Bike, ChevronDown, Heart } from 'lucide-react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
 import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
-import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 
 interface UstBarProfilMenusuProps {
   tema?: 'koyu' | 'acik';
@@ -125,74 +124,43 @@ export const UstBarProfilMenusu: React.FC<UstBarProfilMenusuProps> = ({ tema = '
             </div>
           </div>
 
-          {aktifKullanici.rol === 'sube_admin' ? (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  panelDegistir('sube');
-                  setAcik(false);
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold bg-[#6D237A] hover:bg-[#852C94] text-white shadow-sm border border-[#9633A7] cursor-pointer"
-              >
-                <Store className="w-4 h-4 text-[#DDAF53]" />
-                <span className="text-[#DDAF53]">Şube Yönetim Paneli</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  subeVitriniAc(aktifKullanici.sube_id);
-                  setAcik(false);
-                }}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer ${
-                  acikMi ? 'hover:bg-amber-100 text-amber-800' : 'hover:bg-[#2B0E33] text-[#DDAF53]'
-                }`}
-              >
-                <Store className="w-4 h-4 text-[#DDAF53]" />
-                <span>Şubemin Vitrinini Gör</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  panelDegistir('musteri');
-                  setAcik(false);
-                }}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
-                  acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
-                }`}
-              >
-                <UserCircle className="w-4 h-4 text-blue-400" />
-                <span>Siparişlerim & Profilim</span>
-              </button>
+          <button
+            type="button"
+            onClick={() => {
+              panelDegistir('musteri');
+              setAcik(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+              acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
+            }`}
+          >
+            <UserCircle className="w-4 h-4 text-blue-400" />
+            <span>Siparişlerim & Profilim</span>
+          </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
-                  }
-                  panelDegistir('musteri');
-                  setAcik(false);
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
-                  acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-                  <span>Favorilerim</span>
-                </div>
-                {toplamFavoriSayisi > 0 && (
-                  <span className="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-rose-500/30">
-                    {toplamFavoriSayisi}
-                  </span>
-                )}
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
+              }
+              panelDegistir('musteri');
+              setAcik(false);
+            }}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium cursor-pointer ${
+              acikMi ? 'hover:bg-amber-100 text-gray-800' : 'hover:bg-[#2B0E33] text-gray-200'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+              <span>Favorilerim</span>
+            </div>
+            {toplamFavoriSayisi > 0 && (
+              <span className="bg-rose-500/20 text-rose-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-rose-500/30">
+                {toplamFavoriSayisi}
+              </span>
+            )}
+          </button>
 
           <div className={`pt-1 border-t ${acikMi ? 'border-amber-200' : 'border-purple-900/40'}`}>
             <button

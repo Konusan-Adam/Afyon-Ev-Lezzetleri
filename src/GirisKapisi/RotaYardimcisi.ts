@@ -13,9 +13,6 @@ export function mevcutUrlPaneliniBul(): PanelTipi {
   if (yol.includes('musteri') || etiket.includes('musteri') || parametre === 'musteri') {
     return 'musteri';
   }
-  if (yol.includes('sube') || parametre === 'sube') {
-    return 'sube';
-  }
   return 'vitrin';
 }
 
@@ -25,7 +22,7 @@ export function mevcutUrlPaneliniBul(): PanelTipi {
 export function urlVeBasligiGuncelle(panel: PanelTipi): void {
   if (typeof window === 'undefined') return;
 
-  const hedefYol = panel === 'musteri' ? '/musteri' : panel === 'sube' ? '/sube' : '/';
+  const hedefYol = panel === 'musteri' ? '/musteri' : '/';
   if (window.location.pathname !== hedefYol && !window.location.hash) {
     window.history.pushState({ panel }, '', hedefYol);
   }
@@ -36,7 +33,6 @@ export function urlVeBasligiGuncelle(panel: PanelTipi): void {
     mutfak: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
     kurye: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
     patron: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
-    sube: 'Afyon Ev Lezzetleri — Şube Yönetim Paneli',
   };
 
   document.title = basliklar[panel] || 'Afyon Ev Lezzetleri';

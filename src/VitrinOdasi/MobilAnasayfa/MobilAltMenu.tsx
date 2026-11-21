@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Bike, Store, Building2, ChefHat, Heart } from 'lucide-react';
+import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Bike, Building2, ChefHat, Heart } from 'lucide-react';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
-import { subeVitriniAc } from '@/src/MalzemeCekmeceleri/Sube/subeVitrinYonlendirici';
 import { MobilKesfetPenceresi } from './MobilKesfetPenceresi';
 
 interface MobilAltMenuOzellikleri {
@@ -89,9 +88,7 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
 
   const paneleGit = () => {
     setHesapMenusuAcik(false);
-    if (aktifKullanici?.rol === 'sube_admin') {
-      panelDegistir('sube');
-    } else if (aktifKullanici?.rol === 'yonetici') {
+    if (aktifKullanici?.rol === 'yonetici') {
       panelDegistir('patron');
     } else if (aktifKullanici?.rol === 'asci' || aktifKullanici?.rol === 'ev_mutfagi') {
       panelDegistir('mutfak');
@@ -193,21 +190,12 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
           className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-3"
         >
           {aktifKullanici ? (
-            aktifKullanici.rol === 'sube_admin' ? (
-              <>
-                <Store className="w-5 h-5 text-[#DDAF53] stroke-[2.2]" />
-                <span className="text-[10px] font-bold text-[#DDAF53] tracking-wide truncate max-w-[65px]">
-                  Şube Paneli
-                </span>
-              </>
-            ) : (
-              <>
-                <UserCheck className="w-5 h-5 text-emerald-400 stroke-[2.2]" />
-                <span className="text-[10px] font-semibold text-emerald-400 tracking-wide truncate max-w-[65px]">
-                  {aktifKullanici.ad_soyad.split(' ')[0]}
-                </span>
-              </>
-            )
+            <>
+              <UserCheck className="w-5 h-5 text-emerald-400 stroke-[2.2]" />
+              <span className="text-[10px] font-semibold text-emerald-400 tracking-wide truncate max-w-[65px]">
+                {aktifKullanici.ad_soyad.split(' ')[0]}
+              </span>
+            </>
           ) : (
             <>
               <User className="w-5 h-5 stroke-[2] text-purple-200" />
@@ -224,21 +212,12 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
             <div className="flex items-center justify-between border-b border-purple-900/50 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-purple-800 flex items-center justify-center text-white shadow-md">
-                  {aktifKullanici.rol === 'sube_admin' ? (
-                    <Store className="w-5 h-5 text-amber-300" />
-                  ) : (
-                    <UserCheck className="w-5 h-5 text-emerald-300" />
-                  )}
+                  <UserCheck className="w-5 h-5 text-emerald-300" />
                 </div>
                 <div>
                   <h3 className="text-white font-bold text-sm leading-tight">{aktifKullanici.ad_soyad}</h3>
                   <div className="flex items-center gap-2 pt-0.5">
                     <span className="text-[11px] text-purple-300">{aktifKullanici.telefon}</span>
-                    {aktifKullanici.rol === 'sube_admin' && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-[#DDAF53] font-bold border border-amber-500/40">
-                        Şube Müdürü
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -252,65 +231,35 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
             </div>
 
             <div className="space-y-2 pt-1">
-              {aktifKullanici.rol === 'sube_admin' ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={paneleGit}
-                    className="w-full py-3 px-4 rounded-2xl bg-[#6D237A] hover:bg-[#852C94] text-white font-bold text-xs flex items-center justify-between border border-[#9633A7] shadow-lg cursor-pointer transition-all"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Store className="w-4 h-4 text-[#DDAF53]" />
-                      <span className="text-[#DDAF53]">Şube Yönetim Paneli</span>
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-purple-300" />
-                  </button>
+              <button
+                type="button"
+                onClick={paneleGit}
+                className="w-full py-3 px-4 rounded-2xl bg-[#6D237A] hover:bg-[#852C94] text-white font-bold text-xs flex items-center justify-between border border-[#9633A7] shadow-lg cursor-pointer transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <UserCheck className="w-4 h-4 text-emerald-300" />
+                  <span>Siparişlerim & Profilim</span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-purple-300" />
+              </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHesapMenusuAcik(false);
-                      subeVitriniAc(aktifKullanici?.sube_id);
-                    }}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-[#DDAF53] font-bold text-xs flex items-center justify-center gap-2 border border-amber-500/40 cursor-pointer transition-all"
-                  >
-                    <Store className="w-4 h-4 text-[#DDAF53]" />
-                    <span>Şubemin Vitrinini Gör (Müşteri Gözüyle)</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={paneleGit}
-                    className="w-full py-3 px-4 rounded-2xl bg-[#6D237A] hover:bg-[#852C94] text-white font-bold text-xs flex items-center justify-between border border-[#9633A7] shadow-lg cursor-pointer transition-all"
-                  >
-                    <span className="flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-emerald-300" />
-                      <span>Siparişlerim & Profilim</span>
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-purple-300" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHesapMenusuAcik(false);
-                      if (typeof window !== 'undefined') {
-                        localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
-                      }
-                      panelDegistir('musteri');
-                    }}
-                    className="w-full py-2.5 px-4 rounded-2xl bg-[#2A0E32] hover:bg-[#3D1448] text-white font-bold text-xs flex items-center justify-between border border-purple-800/60 shadow-md cursor-pointer transition-all"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-                      <span>Favori Lezzetlerim</span>
-                    </span>
-                    <ArrowRight className="w-4 h-4 text-purple-300" />
-                  </button>
-                </>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setHesapMenusuAcik(false);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('afyon_musteri_paneli_sekme', 'favoriler');
+                  }
+                  panelDegistir('musteri');
+                }}
+                className="w-full py-2.5 px-4 rounded-2xl bg-[#2A0E32] hover:bg-[#3D1448] text-white font-bold text-xs flex items-center justify-between border border-purple-800/60 shadow-md cursor-pointer transition-all"
+              >
+                <span className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                  <span>Favori Lezzetlerim</span>
+                </span>
+                <ArrowRight className="w-4 h-4 text-purple-300" />
+              </button>
 
               <button
                 type="button"

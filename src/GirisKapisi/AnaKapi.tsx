@@ -2,7 +2,6 @@ import React from 'react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { AnaSayfaVitrini } from '@/src/VitrinOdasi/AnaSayfaVitrini';
 import { MusteriPaneli } from '@/src/VitrinOdasi/MusteriPaneli/MusteriPaneli';
-import { SubeYoneticisiPaneli } from '@/src/VitrinOdasi/SubePaneli/SubeYoneticisiPaneli';
 import { PatronYoneticisiPaneli } from '@/src/VitrinOdasi/PatronPaneli/PatronYoneticisiPaneli';
 
 /**
@@ -13,10 +12,6 @@ export const AnaKapi: React.FC = () => {
 
   if (goruntulenenPanel === 'musteri') {
     return <MusteriPaneli />;
-  }
-
-  if (goruntulenenPanel === 'sube') {
-    return <SubeYoneticisiPaneli />;
   }
 
   if (goruntulenenPanel === 'patron') {

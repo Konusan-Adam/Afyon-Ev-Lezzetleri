@@ -6,11 +6,12 @@ import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 
 interface SubeUrunKartiProps {
   urun: SubeUrunu;
+  subeAdi?: string;
   onGelAlSecildi?: () => void;
   detayAc?: (urun: SubeUrunu) => void;
 }
 
-export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, onGelAlSecildi, detayAc }) => {
+export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onGelAlSecildi, detayAc }) => {
   const { sepeteEkle, yukleniyor } = sepetHafizasiKullan();
   const { teslimatTipiDegistir, gelAlSubesiniIdIleSec } = teslimatHafizasiKullan();
   const [eklendi, setEklendi] = React.useState(false);
@@ -56,6 +57,16 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, onGelAlSecil
               <span>{urun.marka}</span>
             </span>
           </div>
+
+          {/* Şube Adı Rozeti (Ana vitrinde hangi şubede hazır olduğunu gösterir) */}
+          {subeAdi && (
+            <div className="absolute top-2.5 right-2.5 max-w-[48%]">
+              <span className="px-2 py-1 rounded-lg bg-[#2A102E]/90 backdrop-blur-xs text-[10px] font-bold text-white border border-purple-500/40 shadow-md flex items-center gap-1 truncate">
+                <Store className="w-3 h-3 text-amber-400 shrink-0" />
+                <span className="truncate">{subeAdi}</span>
+              </span>
+            </div>
+          )}
 
           {/* Anlık Canlı Stok Rozeti */}
           <div className="absolute bottom-2.5 left-2.5">
