@@ -5,6 +5,8 @@ import { useSubeUrunleri } from '@/src/MalzemeCekmeceleri/Sube/useSubeUrunleri';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 import { SubeUrunKarti } from '../SubeVitrini/SubeUrunKarti';
 import { SubeUrunDetayModali } from '../SubeVitrini/SubeUrunDetayModali';
 
@@ -22,6 +24,20 @@ function subeKisaAdiGetir(ad?: string): string {
     .trim();
 }
 
+function kategoriEslesiyorMu(urunKat?: string, seciliKat?: string): boolean {
+  if (!seciliKat || seciliKat === 'Tümü') return true;
+  const u = (urunKat || '').toLocaleLowerCase('tr').trim();
+  const s = seciliKat.toLocaleLowerCase('tr').trim();
+  if (!u) return false;
+  if (u === s || u.includes(s) || s.includes(u)) return true;
+  if ((s.includes('bükme') || s.includes('hamur')) && (u.includes('bükme') || u.includes('hamur'))) return true;
+  if (s.includes('mantı') && u.includes('mantı')) return true;
+  if (s.includes('tatlı') && u.includes('tatlı')) return true;
+  if ((s.includes('sucuk') || s.includes('et')) && (u.includes('ev yemek') || u.includes('et') || u.includes('köfte'))) return true;
+  if (s.includes('keşkek') && u.includes('ev yemek')) return true;
+  return false;
+}
+
 export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
   enYakinSube,
   subeSecildi,
@@ -29,15 +45,10 @@ export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
   const { gelAlSubeleri } = teslimatHafizasiKullan();
   const { tumUrunler, yukleniyor } = useSubeUrunleri();
   const { sepetPaneliAc } = sepetHafizasiKullan();
-  const { aramaMetni } = aramaVeFiltreKullan();
+  const { aramaMetni, aktifFiltreler } = aramaVeFiltreKullan();
+  const anlikDakika = useCanliDakika();
 
-  const [seciliSubeId, setSeciliSubeId] = useState<string>('tumu');
   const [seciliDetayUrun, setSeciliDetayUrun] = useState<SubeUrunu | null>(null);
-
-  const aktifSubeler = useMemo(
-    () => gelAlSubeleri.filter((s) => s.acik_mi !== false),
-    [gelAlSubeleri]
-  );
 
   const subeHaritasi = useMemo(() => {
     const harita = new Map<string, GelAlSubesi>();
@@ -48,26 +59,54 @@ export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
     return harita;
   }, [gelAlSubeleri]);
 
+  const siraliSubeler = useMemo(() => {
+    return [...gelAlSubeleri].sort((a, b) => {
+      const aAcik = calismaSaatiDurumuHesapla(a, anlikDakika).acikMi ? 1 : 0;
+      const bAcik = calismaSaatiDurumuHesapla(b, anlikDakika).acikMi ? 1 : 0;
+      return bAcik - aAcik;
+    });
+  }, [gelAlSubeleri, anlikDakika]);
+
+  const seciliSubeId = aktifFiltreler?.subeId;
   const gosterilecekUrunler = useMemo(() => {
     const aranan = (aramaMetni || '').trim().toLocaleLowerCase('tr');
+    const seciliKategori = aktifFiltreler?.kategori;
+    const minFiyat = aktifFiltreler?.minFiyat;
+    const maxFiyat = aktifFiltreler?.maxFiyat ?? aktifFiltreler?.maksFiyat;
+    const siralama = aktifFiltreler?.siralama || 'varsayilan';
+
     return tumUrunler
       .filter((u) => {
-        const subeUygun = seciliSubeId === 'tumu' || u.sube_id === seciliSubeId;
+        const bagliSube = subeHaritasi.get(u.sube_id);
+        const subeUygun = !seciliSubeId || u.sube_id === seciliSubeId;
+        const kategoriUygun = kategoriEslesiyorMu(u.kategori, seciliKategori);
+        const minUygun = minFiyat === undefined || u.fiyat >= minFiyat;
+        const maxUygun = maxFiyat === undefined || u.fiyat <= maxFiyat;
         const aramaUygun =
           !aranan ||
           u.ad.toLocaleLowerCase('tr').includes(aranan) ||
           (u.aciklama && u.aciklama.toLocaleLowerCase('tr').includes(aranan)) ||
-          (u.kategori && u.kategori.toLocaleLowerCase('tr').includes(aranan));
-        return subeUygun && aramaUygun;
+          (u.kategori && u.kategori.toLocaleLowerCase('tr').includes(aranan)) ||
+          (bagliSube?.ad && bagliSube.ad.toLocaleLowerCase('tr').includes(aranan)) ||
+          (bagliSube?.mahalle && bagliSube.mahalle.toLocaleLowerCase('tr').includes(aranan));
+
+        return subeUygun && kategoriUygun && minUygun && maxUygun && aramaUygun;
       })
-      .sort((a, b) => (b.stok_adedi > 0 ? 1 : 0) - (a.stok_adedi > 0 ? 1 : 0));
-  }, [tumUrunler, seciliSubeId, aramaMetni]);
+      .sort((a, b) => {
+        const aAcik = calismaSaatiDurumuHesapla(subeHaritasi.get(a.sube_id), anlikDakika).acikMi ? 1 : 0;
+        const bAcik = calismaSaatiDurumuHesapla(subeHaritasi.get(b.sube_id), anlikDakika).acikMi ? 1 : 0;
+        if (bAcik !== aAcik) return bAcik - aAcik;
+        if (siralama === 'fiyat_artan') return a.fiyat - b.fiyat;
+        if (siralama === 'fiyat_azalan') return b.fiyat - a.fiyat;
+        return (b.stok_adedi > 0 ? 1 : 0) - (a.stok_adedi > 0 ? 1 : 0);
+      });
+  }, [tumUrunler, seciliSubeId, aktifFiltreler, aramaMetni, subeHaritasi, anlikDakika]);
 
   if (!yukleniyor && tumUrunler.length === 0) return null;
 
   const hedefSube =
-    (seciliSubeId !== 'tumu' ? subeHaritasi.get(seciliSubeId) : enYakinSube) ||
-    aktifSubeler[0];
+    (seciliSubeId ? subeHaritasi.get(seciliSubeId) : enYakinSube) ||
+    siraliSubeler[0];
 
   return (
     <section className="w-full py-3 px-4 lg:px-0 space-y-3.5">
@@ -95,48 +134,6 @@ export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
         )}
       </div>
 
-      {/* Şube Sekmeleri */}
-      {aktifSubeler.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-          <button
-            type="button"
-            onClick={() => setSeciliSubeId('tumu')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition-all cursor-pointer ${
-              seciliSubeId === 'tumu'
-                ? 'bg-[#6D237A] text-white border-[#9633A7] shadow-sm'
-                : 'bg-[#240E2A] text-purple-200 border-purple-900/50 hover:border-amber-400/50'
-            }`}
-          >
-            Tüm Şubeler ({tumUrunler.length})
-          </button>
-
-          {aktifSubeler.map((sube) => {
-            const subeKimlik = sube.id || sube.kimlik || '';
-            const secili = seciliSubeId === subeKimlik;
-            const enYakinMi = enYakinSube && (enYakinSube.id === subeKimlik || enYakinSube.kimlik === subeKimlik);
-            return (
-              <button
-                key={subeKimlik}
-                type="button"
-                onClick={() => setSeciliSubeId(subeKimlik)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap border transition-all cursor-pointer flex items-center gap-1.5 ${
-                  secili
-                    ? 'bg-[#6D237A] text-white border-[#9633A7] shadow-sm'
-                    : 'bg-[#240E2A] text-purple-200 border-purple-900/50 hover:border-amber-400/50'
-                }`}
-              >
-                <span className="truncate max-w-[160px]">{subeKisaAdiGetir(sube.ad)}</span>
-                {enYakinMi && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-400 text-[#180A1F] font-extrabold">
-                    Yakın
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* Ürün Izgarası */}
       {yukleniyor && tumUrunler.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -153,14 +150,13 @@ export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {gosterilecekUrunler.map((urun) => {
-            const subeAdi =
-              seciliSubeId === 'tumu'
-                ? subeKisaAdiGetir(subeHaritasi.get(urun.sube_id)?.ad)
-                : undefined;
+            const bagliSube = subeHaritasi.get(urun.sube_id);
+            const subeAdi = subeKisaAdiGetir(bagliSube?.ad);
             return (
               <SubeUrunKarti
                 key={urun.id}
                 urun={urun}
+                sube={bagliSube}
                 subeAdi={subeAdi}
                 onGelAlSecildi={sepetPaneliAc}
                 detayAc={(secilen) => setSeciliDetayUrun(secilen)}

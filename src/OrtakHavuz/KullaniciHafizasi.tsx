@@ -2,11 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Kullanici, KullaniciRolu } from '@/src/veritabani/VeriTipleri';
 import {
   veritabaninaKullaniciKaydet,
-  veritabanindanKullaniciGirisYaptir,
+  musteriGirisKontrolEt,
   googleIleOturumAc,
   googleKaydiniTamamla,
   type GoogleKullaniciTaslagi,
   type GoogleGirisSonucu,
+  type MusteriGirisYaniti,
 } from '@/src/MalzemeCekmeceleri/kullaniciIslemleri';
 import { mevcutUrlPaneliniBul, urlVeBasligiGuncelle } from '@/src/GirisKapisi/RotaYardimcisi';
 
@@ -25,6 +26,7 @@ interface KullaniciHafizaTipi {
   pencereAc: (baslangicSekmesi?: 'giris' | 'kayit' | any, baslangicRolu?: KullaniciRolu) => void;
   pencereKapat: () => void;
   girisYap: (telefon: string, sifre: string) => Promise<boolean>;
+  musteriGirisYap: (telefon: string, sifre: string) => Promise<MusteriGirisYaniti>;
   googleIleGirisYap: () => Promise<GoogleGirisSonucu>;
   googleKayitTamamla: (bilgiler: {
     uid: string;
@@ -59,7 +61,9 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
   const [aktifKullanici, setAktifKullanici] = useState<Kullanici | null>(() => {
     try {
       const kayitliOturum = localStorage.getItem('afyon_oturum_kullanici');
-      return kayitliOturum ? JSON.parse(kayitliOturum) : null;
+      if (!kayitliOturum) return null;
+      const parsed = JSON.parse(kayitliOturum) as Kullanici;
+      return parsed?.rol === 'musteri' ? parsed : null;
     } catch {
       return null;
     }
@@ -124,16 +128,20 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const girisYap = async (telefon: string, sifre: string): Promise<boolean> => {
+  const musteriGirisYap = async (telefon: string, sifre: string): Promise<MusteriGirisYaniti> => {
     setYukleniyor(true);
-    const kullanici = await veritabanindanKullaniciGirisYaptir(telefon, sifre);
+    const sonuc = await musteriGirisKontrolEt(telefon, sifre);
     setYukleniyor(false);
 
-    if (kullanici) {
-      oturumAcVeYonlendir(kullanici);
-      return true;
+    if (sonuc.basarili) {
+      oturumAcVeYonlendir(sonuc.kullanici);
     }
-    return false;
+    return sonuc;
+  };
+
+  const girisYap = async (telefon: string, sifre: string): Promise<boolean> => {
+    const sonuc = await musteriGirisYap(telefon, sifre);
+    return sonuc.basarili;
   };
 
   const googleIleGirisYap = async (): Promise<GoogleGirisSonucu> => {
@@ -220,6 +228,7 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
         },
         pencereKapat: () => setPencereAcik(false),
         girisYap,
+        musteriGirisYap,
         googleIleGirisYap,
         googleKayitTamamla,
         kayitOl,

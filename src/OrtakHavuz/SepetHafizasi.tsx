@@ -12,6 +12,7 @@ import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { sepetElemanlariniZenginlestir } from '@/src/MalzemeCekmeceleri/Sepet/sepetUrunEslestirici';
 import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
 import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
 
 interface SepetHafizasiTip {
   sepetPaneliAcik: boolean;
@@ -62,6 +63,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
   const [sepetPaneliAcik, setSepetPaneliAcik] = useState<boolean>(false);
   const [sepetElemanlari, setSepetElemanlari] = useState<SepetElemani[]>([]);
   const [mutfaklarState, setMutfaklarState] = useState<MutfakTipi[]>([]);
+  const [subelerState, setSubelerState] = useState<GelAlSubesi[]>([]);
   const [yemeklerState, setYemeklerState] = useState<YemekTipi[]>([]);
   const [sepetUyarisi, setSepetUyarisi] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState<boolean>(true);
@@ -134,6 +136,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
 
     abonelikCikarSube = koleksiyonuCanliDinle<GelAlSubesi>('gel_al_subeleri', (sListesi) => {
       mevcutSubeler = sListesi || [];
+      setSubelerState(mevcutSubeler);
       sepetiHaritalaVeGuncelle();
     });
 
@@ -163,6 +166,15 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
     if (molaBilgisi.siparisEngelliMi) {
       uyariGoster(molaBilgisi.uyariMetni);
       return;
+    }
+
+    const bagliSube = subelerState.find((s) => s.id === mutfakId || s.kimlik === mutfakId);
+    if (bagliSube) {
+      const subeDurumu = calismaSaatiDurumuHesapla(bagliSube);
+      if (!subeDurumu.acikMi) {
+        uyariGoster(subeDurumu.uyariMetni || `${bagliSube.ad} şu an kapalıdır.`);
+        return;
+      }
     }
 
     let eklenecekAdet = Math.max(1, Number(adet) || 1);
@@ -210,6 +222,15 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
       if (molaBilgisi.siparisEngelliMi && yeniAdet > mevcutEleman.adet) {
         uyariGoster(molaBilgisi.uyariMetni);
         return;
+      }
+
+      const bagliSube = subelerState.find((s) => s.id === hedefMutfakId || s.kimlik === hedefMutfakId);
+      if (bagliSube && yeniAdet > mevcutEleman.adet) {
+        const subeDurumu = calismaSaatiDurumuHesapla(bagliSube);
+        if (!subeDurumu.acikMi) {
+          uyariGoster(subeDurumu.uyariMetni || `${bagliSube.ad} şu an kapalıdır.`);
+          return;
+        }
       }
 
       if (!mevcutEleman.coklu_menu_mu && mevcutEleman.yemek_id) {

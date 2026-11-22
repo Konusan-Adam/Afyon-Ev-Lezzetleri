@@ -3,6 +3,7 @@ import { Star, Clock, Bike, MapPin, Coffee } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface DikeyMutfakKartiOzellikleri {
   mutfak: Mutfak;
@@ -14,7 +15,8 @@ export const MobilDikeyMutfakKarti: React.FC<DikeyMutfakKartiOzellikleri> = ({
   onSec,
 }) => {
   const { ayarlar } = useKuryeAyarlari();
-  const molaBilgisi = mutfakMolaDurumuGetir(mutfak);
+  const anlikDakika = useCanliDakika();
+  const molaBilgisi = mutfakMolaDurumuGetir(mutfak, anlikDakika);
 
   const teslimatMetniGetir = () => {
     const ucret = Number(ayarlar.taban_ucret) || 0;
@@ -62,8 +64,8 @@ export const MobilDikeyMutfakKarti: React.FC<DikeyMutfakKartiOzellikleri> = ({
                 Dinlenmede
               </span>
             ) : molaBilgisi.kapaliMi ? (
-              <span className="text-[10px] text-rose-400 font-semibold bg-rose-950/60 border border-rose-800/50 px-2 py-0.5 rounded-md shrink-0">
-                Kapalı
+              <span className="text-[10px] text-rose-300 font-semibold bg-rose-950/70 border border-rose-800/50 px-2 py-0.5 rounded-md shrink-0">
+                {molaBilgisi.kapaliEtiketi}
               </span>
             ) : (
               <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-md shrink-0">

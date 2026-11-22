@@ -15,6 +15,7 @@ import { AnaAfisBannerVitrini } from '../ReklamVeDuyuru/AnaAfisBannerVitrini';
 import { TeslimatZamaniBari } from '../Bilesenler/OnSiparisVePorsiyon/TeslimatZamaniBari';
 import { mahalleyeEnYakinSubeyiBul } from '@/src/MalzemeCekmeceleri/Sube/SubeMesafeVeMahalleEsleyici';
 import { Mutfak, Yemek, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
+import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
 import { PaytrGuvenlikRozeti } from '../MasaustuAltBilgi/PaytrGuvenlikRozeti';
 import { CokluMenulerVitrini } from '../Bilesenler/CokluMenu/CokluMenulerVitrini';
 import { SubeMenuleriVitrini } from './SubeMenuleriVitrini';
@@ -24,6 +25,7 @@ interface MobilAnaVitrinProps {
   mutfakSecildi?: (mutfak: Mutfak | null) => void;
   yemekSecildi?: (yemek: Yemek) => void;
   subeSecildi?: (sube: GelAlSubesi) => void;
+  subeUrunSecildi?: (urun: SubeUrunu) => void;
 }
 
 export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({ 
@@ -31,6 +33,7 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
   mutfakSecildi: disMutfakSecildi,
   yemekSecildi,
   subeSecildi,
+  subeUrunSecildi,
 }) => {
   const mutfakDegistir = (mutfak: Mutfak | null) => {
     if (disMutfakSecildi) {
@@ -92,6 +95,8 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
           filtreleTiklandi={filtrePaneliniAc}
           mutfakSecildi={mutfakDegistir}
           yemekSecildi={yemekSecildi}
+          subeSecildi={subeSecildi}
+          subeUrunSecildi={subeUrunSecildi}
           kategoriSecildi={(katAd) => {
             filtreleriUygula({ ...(aktifFiltreler || {}), kategori: katAd, altKategori: undefined });
           }}

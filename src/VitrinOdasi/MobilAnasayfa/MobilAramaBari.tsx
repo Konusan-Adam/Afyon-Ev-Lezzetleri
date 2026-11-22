@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { yemekArama } from '@/src/MalzemeCekmeceleri/yemekArama';
 import { AramaSonuclariKutusu } from '../AramaFiltre/AramaSonuclariKutusu';
-import { Yemek, Mutfak } from '@/src/veritabani/VeriTipleri';
+import { Yemek, Mutfak, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
+import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
 
 interface MobilAramaBariOzellikleri {
   aramaMetni: string;
@@ -10,6 +11,8 @@ interface MobilAramaBariOzellikleri {
   filtreleTiklandi: () => void;
   yemekSecildi?: (yemek: Yemek) => void;
   mutfakSecildi?: (mutfak: Mutfak) => void;
+  subeSecildi?: (sube: GelAlSubesi) => void;
+  subeUrunSecildi?: (urun: SubeUrunu) => void;
   kategoriSecildi?: (kategori: string) => void;
 }
 
@@ -19,11 +22,21 @@ export const MobilAramaBari: React.FC<MobilAramaBariOzellikleri> = ({
   filtreleTiklandi,
   yemekSecildi,
   mutfakSecildi,
+  subeSecildi,
+  subeUrunSecildi,
   kategoriSecildi,
 }) => {
   const [odaklandi, setOdaklandi] = useState<boolean>(false);
   const konteynerRef = useRef<HTMLDivElement>(null);
-  const { sonuclar, mutfakSonuclar, kategoriSonuclar, yukleniyor, hata } = yemekArama(aramaMetni);
+  const {
+    sonuclar,
+    mutfakSonuclar,
+    kategoriSonuclar,
+    subeSonuclar,
+    subeUrunSonuclar,
+    yukleniyor,
+    hata,
+  } = yemekArama(aramaMetni);
 
   useEffect(() => {
     function disinaTiklandi(event: MouseEvent) {
@@ -49,7 +62,7 @@ export const MobilAramaBari: React.FC<MobilAramaBariOzellikleri> = ({
             aramaMetniDegisti(e.target.value);
             setOdaklandi(true);
           }}
-          placeholder="Bugün ne yemek istersiniz...?"
+          placeholder="Yemek, mutfak veya şube arayın..."
           className="w-full bg-white text-gray-900 rounded-full py-2.5 pl-10 pr-24 text-xs focus:outline-none shadow-inner"
         />
         <button
@@ -68,6 +81,8 @@ export const MobilAramaBari: React.FC<MobilAramaBariOzellikleri> = ({
           sonuclar={sonuclar}
           mutfakSonuclar={mutfakSonuclar}
           kategoriSonuclar={kategoriSonuclar}
+          subeSonuclar={subeSonuclar}
+          subeUrunSonuclar={subeUrunSonuclar}
           yukleniyor={yukleniyor}
           hata={hata}
           secildi={(yemek: Yemek) => {
@@ -77,6 +92,15 @@ export const MobilAramaBari: React.FC<MobilAramaBariOzellikleri> = ({
           mutfakSecildi={(mutfak) => {
             if (mutfakSecildi) mutfakSecildi(mutfak as unknown as Mutfak);
             aramaMetniDegisti('');
+            setOdaklandi(false);
+          }}
+          subeSecildi={(sube) => {
+            if (subeSecildi) subeSecildi(sube);
+            aramaMetniDegisti('');
+            setOdaklandi(false);
+          }}
+          subeUrunSecildi={(urun) => {
+            if (subeUrunSecildi) subeUrunSecildi(urun);
             setOdaklandi(false);
           }}
           kategoriSecildi={(kat) => {

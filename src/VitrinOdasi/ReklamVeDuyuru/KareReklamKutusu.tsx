@@ -125,7 +125,7 @@ export const KareReklamKutusu: React.FC<KareReklamKutusuProps> = ({ aksiyonTikla
           <h4 className="font-black text-sm tracking-wide leading-tight line-clamp-1">
             {simdikiOge.baslik}
           </h4>
-          <p className="text-xs text-purple-200/70 dark:text-purple-300/70 line-clamp-2 mt-1 leading-relaxed">
+          <p className="text-xs text-purple-200/70 dark:text-purple-300/70 line-clamp-2 min-h-[2rem] mt-1 leading-relaxed">
             {simdikiOge.aciklama}
           </p>
         </div>

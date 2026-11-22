@@ -1,8 +1,10 @@
 import React from 'react';
-import { X, ShoppingBag, Store, Flame, Check, Sparkles } from 'lucide-react';
+import { X, ShoppingBag, Store, Flame, Check, Sparkles, Ban } from 'lucide-react';
 import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface SubeUrunDetayModaliProps {
   urun: SubeUrunu | null;
@@ -16,15 +18,21 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
   onGelAlSecildi,
 }) => {
   const { sepeteEkle, yukleniyor } = sepetHafizasiKullan();
-  const { teslimatTipiDegistir, gelAlSubesiniIdIleSec } = teslimatHafizasiKullan();
+  const { teslimatTipiDegistir, gelAlSubesiniIdIleSec, gelAlSubeleri } = teslimatHafizasiKullan();
   const [adet, setAdet] = React.useState<number>(1);
   const [eklendi, setEklendi] = React.useState<boolean>(false);
+  const anlikDakika = useCanliDakika();
 
   if (!urun) return null;
 
+  const bagliSube = gelAlSubeleri.find((s) => s.id === urun.sube_id || s.kimlik === urun.sube_id);
+  const subeDurumu = calismaSaatiDurumuHesapla(bagliSube, anlikDakika);
+  const subeKapaliMi = !subeDurumu.acikMi;
   const stokTukendi = urun.stok_adedi <= 0;
+  const eklemeEngelli = stokTukendi || subeKapaliMi || yukleniyor;
 
   const adreseSepeteAt = async () => {
+    if (eklemeEngelli) return;
     teslimatTipiDegistir('teslimat');
     await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
     setEklendi(true);
@@ -35,6 +43,7 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
   };
 
   const gelAlSepeteAt = async () => {
+    if (eklemeEngelli) return;
     gelAlSubesiniIdIleSec(urun.sube_id);
     teslimatTipiDegistir('gel_al');
     await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
@@ -78,6 +87,13 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
 
         {/* İçerik Gövdesi */}
         <div className="p-6 space-y-4 overflow-y-auto flex-1">
+          {subeKapaliMi && (
+            <div className="bg-rose-950/70 border border-rose-500/60 p-3 rounded-2xl flex items-center gap-2.5 text-rose-200 text-xs font-semibold">
+              <Ban className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{subeDurumu.uyariMetni || 'Bu şube şu an kapalıdır.'}</span>
+            </div>
+          )}
+
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-extrabold text-white">{urun.ad}</h2>
@@ -116,16 +132,18 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
             <div className="flex items-center gap-3 bg-[#230D2C] border border-purple-900/60 rounded-xl p-1">
               <button
                 type="button"
+                disabled={subeKapaliMi}
                 onClick={() => setAdet(Math.max(1, adet - 1))}
-                className="w-8 h-8 rounded-lg bg-purple-900/40 text-white font-bold hover:bg-purple-800 transition-colors cursor-pointer flex items-center justify-center"
+                className="w-8 h-8 rounded-lg bg-purple-900/40 text-white font-bold hover:bg-purple-800 transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 -
               </button>
               <span className="w-8 text-center font-extrabold text-amber-400 text-sm">{adet}</span>
               <button
                 type="button"
+                disabled={subeKapaliMi}
                 onClick={() => setAdet(Math.min(urun.stok_adedi || 10, adet + 1))}
-                className="w-8 h-8 rounded-lg bg-purple-900/40 text-white font-bold hover:bg-purple-800 transition-colors cursor-pointer flex items-center justify-center"
+                className="w-8 h-8 rounded-lg bg-purple-900/40 text-white font-bold hover:bg-purple-800 transition-colors cursor-pointer flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 +
               </button>
@@ -138,21 +156,27 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
           <button
             type="button"
             onClick={adreseSepeteAt}
-            disabled={stokTukendi || yukleniyor}
-            className="py-3 px-4 rounded-xl bg-[#2E0F36] hover:bg-[#43144F] border border-purple-700/60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 shadow-md active:scale-95"
+            disabled={eklemeEngelli}
+            className="py-3 px-4 rounded-xl bg-[#2E0F36] hover:bg-[#43144F] border border-purple-700/60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95"
           >
-            {eklendi ? <Check className="w-4 h-4 text-emerald-400" /> : <ShoppingBag className="w-4 h-4 text-amber-400" />}
-            <span>{eklendi ? 'Eklendi!' : 'Adrese Sepete Ekle'}</span>
+            {subeKapaliMi ? (
+              <Ban className="w-4 h-4 text-rose-400" />
+            ) : eklendi ? (
+              <Check className="w-4 h-4 text-emerald-400" />
+            ) : (
+              <ShoppingBag className="w-4 h-4 text-amber-400" />
+            )}
+            <span>{subeKapaliMi ? subeDurumu.kapaliEtiketi : eklendi ? 'Eklendi!' : 'Adrese Sepete Ekle'}</span>
           </button>
 
           <button
             type="button"
             onClick={gelAlSepeteAt}
-            disabled={stokTukendi || yukleniyor}
-            className="py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 shadow-lg active:scale-95"
+            disabled={eklemeEngelli}
+            className="py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-lg active:scale-95"
           >
-            <Store className="w-4 h-4 text-black" />
-            <span>Şubeden Gel-Al Al</span>
+            {subeKapaliMi ? <Ban className="w-4 h-4 text-black" /> : <Store className="w-4 h-4 text-black" />}
+            <span>{subeKapaliMi ? 'Şube Kapalı' : 'Şubeden Gel-Al Al'}</span>
           </button>
         </div>
 

@@ -14,6 +14,9 @@ import { CokluSepetVitrini } from '../Bilesenler/Sepet/CokluSepetVitrini';
 import { YuzenSepetBari } from '../Bilesenler/Sepet/YuzenSepetBari';
 import { KullaniciGirisPenceresi } from '../KullaniciGiris/KullaniciGirisPenceresi';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
+import { Ban } from 'lucide-react';
 
 interface SubeDetayVitriniProps {
   sube: GelAlSubesi;
@@ -39,6 +42,8 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
   const [canliYayinAcik, setCanliYayinAcik] = useState<boolean>(false);
 
   const { sepetPaneliAc } = sepetHafizasiKullan();
+  const anlikDakika = useCanliDakika();
+  const subeDurumu = calismaSaatiDurumuHesapla(sube, anlikDakika);
 
   const kategoriler = ['hepsi', ...Array.from(new Set(urunler.map((u) => u.kategori)))];
   
@@ -82,6 +87,13 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
               onKategoriSecildi={setSeciliKategori}
             />
 
+            {!subeDurumu.acikMi && (
+              <div className="bg-rose-950/70 border border-rose-500/60 p-3.5 rounded-2xl flex items-center gap-2.5 text-rose-200 text-xs font-semibold">
+                <Ban className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>{subeDurumu.uyariMetni || 'Bu şube şu an çalışma saatleri dışındadır.'}</span>
+              </div>
+            )}
+
             {/* 2. Şube Tezgah Ürün Listesi */}
             {yukleniyor ? (
               <div className="py-24 text-center text-amber-300 text-sm">Şube canlı stokları yükleniyor...</div>
@@ -92,10 +104,11 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filtrelenmisUrunler.map((urun) => (
-                  <SubeUrunKarti 
-                    key={urun.id} 
-                    urun={urun} 
-                    onGelAlSecildi={sepetPaneliAc} 
+                  <SubeUrunKarti
+                    key={urun.id}
+                    urun={urun}
+                    sube={sube}
+                    onGelAlSecildi={sepetPaneliAc}
                     detayAc={(u) => setSeciliDetayUrun(u)}
                   />
                 ))}

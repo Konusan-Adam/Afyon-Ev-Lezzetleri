@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Store, X, MapPin, Clock, ArrowRight, Search, CheckCircle2 } from 'lucide-react';
+import { Store, X, MapPin, Clock, ArrowRight, Search, CheckCircle2, Ban } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface SubelerModaliProps {
   acikMi: boolean;
@@ -16,17 +18,24 @@ export const SubelerModali: React.FC<SubelerModaliProps> = ({
 }) => {
   const { gelAlSubeleri, seciliGelAlSubesi } = teslimatHafizasiKullan();
   const [aramaMetni, setAramaMetni] = useState<string>('');
+  const anlikDakika = useCanliDakika();
 
   const filtrelenmisSubeler = useMemo(() => {
-    if (!aramaMetni.trim()) return gelAlSubeleri;
     const aranan = aramaMetni.toLocaleLowerCase('tr').trim();
-    return gelAlSubeleri.filter((s) => {
-      const adEslesir = (s.ad || '').toLocaleLowerCase('tr').includes(aranan);
-      const mahalleEslesir = (s.mahalle || '').toLocaleLowerCase('tr').includes(aranan);
-      const adresEslesir = (s.adres || '').toLocaleLowerCase('tr').includes(aranan);
-      return adEslesir || mahalleEslesir || adresEslesir;
+    const liste = !aranan
+      ? [...gelAlSubeleri]
+      : gelAlSubeleri.filter((s) => {
+          const adEslesir = (s.ad || '').toLocaleLowerCase('tr').includes(aranan);
+          const mahalleEslesir = (s.mahalle || '').toLocaleLowerCase('tr').includes(aranan);
+          const adresEslesir = (s.adres || '').toLocaleLowerCase('tr').includes(aranan);
+          return adEslesir || mahalleEslesir || adresEslesir;
+        });
+    return liste.sort((a, b) => {
+      const aAcik = calismaSaatiDurumuHesapla(a, anlikDakika).acikMi ? 1 : 0;
+      const bAcik = calismaSaatiDurumuHesapla(b, anlikDakika).acikMi ? 1 : 0;
+      return bAcik - aAcik;
     });
-  }, [gelAlSubeleri, aramaMetni]);
+  }, [gelAlSubeleri, aramaMetni, anlikDakika]);
 
   if (!acikMi) return null;
 
@@ -86,6 +95,7 @@ export const SubelerModali: React.FC<SubelerModaliProps> = ({
           ) : (
             filtrelenmisSubeler.map((sube) => {
               const seciliMi = seciliGelAlSubesi?.id === sube.id || seciliGelAlSubesi?.kimlik === sube.kimlik;
+              const subeDurumu = calismaSaatiDurumuHesapla(sube, anlikDakika);
               return (
                 <div
                   key={sube.id || sube.kimlik}
@@ -94,6 +104,8 @@ export const SubelerModali: React.FC<SubelerModaliProps> = ({
                     onKapat();
                   }}
                   className={`group p-4 rounded-2xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 ${
+                    !subeDurumu.acikMi ? 'opacity-80 ' : ''
+                  }${
                     seciliMi
                       ? 'bg-gradient-to-r from-[#32113D] to-[#250A2E] border-amber-400/80 shadow-lg shadow-amber-500/10 ring-1 ring-amber-400/50'
                       : 'bg-[#200A28] hover:bg-[#2B0E37] border-purple-900/60 hover:border-amber-400/50'
@@ -110,7 +122,7 @@ export const SubelerModali: React.FC<SubelerModaliProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-extrabold text-sm text-white group-hover:text-amber-300 transition-colors">
                           {sube.ad}
                         </h3>
@@ -126,15 +138,22 @@ export const SubelerModali: React.FC<SubelerModaliProps> = ({
                         <span>{sube.adres}</span>
                       </p>
 
-                      <div className="flex items-center gap-3 text-[11px] text-purple-300/70 pt-0.5">
+                      <div className="flex items-center gap-3 text-[11px] text-purple-300/70 pt-0.5 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3 text-purple-400" />
                           <span>{sube.calisma_saatleri || '09:00 - 22:00'}</span>
                         </span>
-                        <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span>Canlı Stok Hazır</span>
-                        </span>
+                        {subeDurumu.acikMi ? (
+                          <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                            <CheckCircle2 className="w-3 h-3" />
+                            <span>Açık • Canlı Stok Hazır</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-rose-300 font-semibold">
+                            <Ban className="w-3 h-3 text-rose-400" />
+                            <span>{subeDurumu.kapaliEtiketi}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

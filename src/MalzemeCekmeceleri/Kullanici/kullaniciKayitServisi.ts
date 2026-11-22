@@ -1,10 +1,14 @@
 import { Kullanici } from '@/src/veritabani/VeriTipleri';
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
-import { belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { belgeGetir, belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { testKullaniciEkle, TestKullaniciKaydi } from '@/src/veritabani/CanliVeriYardimcisi';
 import { telefonGecerliMi } from '@/src/MalzemeCekmeceleri/Dogrulama/telefonDogrulayici';
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
-import { telefonStandartCekirdek } from './telefonYardimcisi';
+import {
+  telefonStandartCekirdek,
+  telefonOnluFormat,
+  kullaniciBelgeIdOlustur,
+} from './telefonYardimcisi';
 
 export async function veritabaninaKullaniciKaydet(
   yeniKullanici: Omit<Kullanici, 'kimlik' | 'onayli_mi' | 'olusturma_tarihi'> & { sifre?: string }
@@ -13,17 +17,30 @@ export async function veritabaninaKullaniciKaydet(
   if (!dogrulama.gecerli) return null;
 
   const standartTelefon = telefonStandartCekirdek(yeniKullanici.telefon);
+  const hedefRol = yeniKullanici.rol || 'musteri';
+  const duzgunTelefon = telefonOnluFormat(yeniKullanici.telefon);
+  const kimlikId = kullaniciBelgeIdOlustur(duzgunTelefon, hedefRol);
+
   if (canliFirebaseAktifMi()) {
     try {
+      // 1. Hızlı tekil doküman kontrolü: 05551234567_musteri
+      const mevcutTekil = await belgeGetir<Kullanici>('kullanicilar', kimlikId);
+      if (mevcutTekil) {
+        return null;
+      }
+
+      // 2. Eski formatlı aynı (telefon + rol) kaydı varsa çakışmayı önle
       const mevcutlar = await koleksiyonGetir<Kullanici>('kullanicilar');
-      if (mevcutlar.some((k) => telefonStandartCekirdek(k.telefon || '') === standartTelefon)) {
+      if (
+        mevcutlar.some(
+          (k) => telefonStandartCekirdek(k.telefon || '') === standartTelefon && k.rol === hedefRol
+        )
+      ) {
         return null;
       }
     } catch {}
   }
 
-  const duzgunTelefon = standartTelefon.startsWith('0') ? standartTelefon : `0${standartTelefon}`;
-  const kimlikId = standartTelefon ? `tel_${duzgunTelefon}` : `usr_${Date.now()}`;
   const kullaniciKaydi: Kullanici & { id: string; sifre: string; onay_durumu: string; askida_mi: boolean } = {
     id: kimlikId,
     kimlik: kimlikId,

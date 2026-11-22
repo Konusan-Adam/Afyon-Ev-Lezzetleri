@@ -10,6 +10,7 @@ import { AramaKategoriPaneli } from './AramaKategoriPaneli';
 import { UstBarProfilMenusu } from './UstBarProfilMenusu';
 import { UstBarSubeMenusu } from './UstBarSubeMenusu';
 import { Yemek, Mutfak, GelAlSubesi } from '@/src/veritabani/VeriTipleri';
+import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
 
 export interface UstBarOzellikleri {
   aramaMetni: string;
@@ -20,6 +21,7 @@ export interface UstBarOzellikleri {
   yemekSecildi?: (yemek: Yemek) => void;
   mutfakSecildi?: (mutfak: Mutfak) => void;
   subeSecildi?: (sube: GelAlSubesi) => void;
+  subeUrunSecildi?: (urun: SubeUrunu) => void;
   sepetSayisi?: number;
 }
 
@@ -32,6 +34,7 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
   yemekSecildi,
   mutfakSecildi,
   subeSecildi,
+  subeUrunSecildi,
   sepetSayisi,
 }) => {
   const [odaklandi, setOdaklandi] = useState<boolean>(false);
@@ -41,7 +44,15 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
   const { tema, temaDegistir } = temaHafizasiKullan();
   const { filtreleriUygula, aktifFiltreler, aktifFiltreSayisi } = aramaVeFiltreKullan();
   const { toplamUrunSayisi, sepetPaneliAc } = sepetHafizasiKullan();
-  const { sonuclar, mutfakSonuclar, kategoriSonuclar, yukleniyor, hata } = yemekArama(aramaMetni);
+  const {
+    sonuclar,
+    mutfakSonuclar,
+    kategoriSonuclar,
+    subeSonuclar,
+    subeUrunSonuclar,
+    yukleniyor,
+    hata,
+  } = yemekArama(aramaMetni);
 
   const gorunenSepetSayisi = sepetSayisi !== undefined ? sepetSayisi : toplamUrunSayisi;
   const acikMi = tema === 'acik';
@@ -124,7 +135,7 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
                 aramaMetniniDegistir(e.target.value);
                 setOdaklandi(true);
               }}
-              placeholder="Yemek, mutfak veya lezzet arayın..."
+              placeholder="Yemek, mutfak, şube veya lezzet arayın..."
               className={`w-full bg-transparent text-xs focus:outline-none ${
                 acikMi ? 'text-gray-900 placeholder-gray-500' : 'text-white placeholder-purple-300/60'
               }`}
@@ -178,17 +189,23 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
                 aramaMetniniDegistir(metin);
                 setOdaklandi(false);
               }}
+              subeSec={(sube) => {
+                if (subeSecildi) subeSecildi(sube);
+                setOdaklandi(false);
+              }}
               tema={tema}
             />
           )}
 
-          {/* Arama Metni Varken Açılan Mutfak, Kategori ve Yemek Sonuçları */}
+          {/* Arama Metni Varken Açılan Şube, Mutfak, Kategori ve Yemek Sonuçları */}
           {odaklandi && aramaMetni.trim() && (
             <AramaSonuclariKutusu
               aramaMetni={aramaMetni}
               sonuclar={sonuclar}
               mutfakSonuclar={mutfakSonuclar}
               kategoriSonuclar={kategoriSonuclar}
+              subeSonuclar={subeSonuclar}
+              subeUrunSonuclar={subeUrunSonuclar}
               yukleniyor={yukleniyor}
               hata={hata}
               secildi={(yemek: Yemek) => {
@@ -198,6 +215,15 @@ export const UstBar: React.FC<UstBarOzellikleri> = ({
               mutfakSecildi={(mutfak) => {
                 if (mutfakSecildi) mutfakSecildi(mutfak as unknown as Mutfak);
                 aramaMetniniDegistir('');
+                setOdaklandi(false);
+              }}
+              subeSecildi={(sube) => {
+                if (subeSecildi) subeSecildi(sube);
+                aramaMetniniDegistir('');
+                setOdaklandi(false);
+              }}
+              subeUrunSecildi={(urun) => {
+                if (subeUrunSecildi) subeUrunSecildi(urun);
                 setOdaklandi(false);
               }}
               kategoriSecildi={(kat) => {

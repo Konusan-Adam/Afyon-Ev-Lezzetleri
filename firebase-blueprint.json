@@ -313,7 +313,38 @@
         "durum": { "type": "string", "maxLength": 50 },
         "tarih": { "type": "string", "maxLength": 50 }
       },
-      "required": ["id", "sube_id", "tedarikci_id", "toplam_hakedis", "durum"]
+      "required": [
+        "id",
+        "sube_id",
+        "sube_adi",
+        "tedarikci_id",
+        "tedarikci_adi",
+        "urun_id",
+        "urun_adi",
+        "teslim_adedi",
+        "satilan_adet",
+        "birim_alis_fiyati",
+        "toplam_hakedis",
+        "durum",
+        "tarih"
+      ]
+    },
+    "PatronBildirimi": {
+      "title": "PatronBildirimi",
+      "description": "Patron paneli canlı bildirim ve onay uyarı kaydı",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "tur": { "type": "string", "maxLength": 50 },
+        "baslik": { "type": "string", "maxLength": 200 },
+        "detay": { "type": "string", "maxLength": 1000 },
+        "tarihSaat": { "type": "string", "maxLength": 64 },
+        "okundu_mu": { "type": "boolean" },
+        "ilgiliKimlik": { "type": "string", "maxLength": 128 },
+        "hedefSekme": { "type": "string", "maxLength": 50 },
+        "subeId": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "tur", "baslik", "detay", "okundu_mu"]
     },
     "MusteriFavori": {
       "title": "MusteriFavori",
@@ -462,6 +493,10 @@
     "/tedarikci_hakedisleri/{hakedisId}": {
       "schema": "TedarikciHakedis",
       "description": "Şube tedarikçi hakedişleri ve patron onay havuzu"
+    },
+    "/patron_bildirimleri/{bildirimId}": {
+      "schema": "PatronBildirimi",
+      "description": "Patron paneli canlı bildirim ve onay uyarıları"
     },
     "/paytr_oturumlari/{oturumId}": {
       "schema": "PaytrOturum",

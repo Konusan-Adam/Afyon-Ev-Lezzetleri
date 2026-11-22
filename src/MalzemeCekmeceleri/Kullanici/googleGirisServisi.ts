@@ -4,6 +4,7 @@ import { auth, canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
 import { koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { telefonGecerliMi } from '@/src/MalzemeCekmeceleri/Dogrulama/telefonDogrulayici';
 import { veritabaninaKullaniciKaydet } from './kullaniciKayitServisi';
+import { PERSONEL_HESABI_UYARISI } from './kullaniciGirisServisi';
 
 export interface GoogleKullaniciTaslagi {
   uid: string;
@@ -33,14 +34,23 @@ export async function googleIleOturumAc(): Promise<GoogleGirisSonucu> {
 
     const epostaTemiz = user.email.trim().toLowerCase();
     const tumKullanicilar = await koleksiyonGetir<Kullanici>('kullanicilar');
-    const mevcutKullanici = tumKullanicilar.find(
+    const eslesenler = tumKullanicilar.filter(
       (k) =>
         (k.firebase_uid && k.firebase_uid === user.uid) ||
         (k.eposta && k.eposta.trim().toLowerCase() === epostaTemiz)
     );
 
-    if (mevcutKullanici && telefonGecerliMi(mevcutKullanici.telefon).gecerli) {
-      return { durum: 'giris_basarili', kullanici: mevcutKullanici };
+    const mevcutMusteri = eslesenler.find((k) => k.rol === 'musteri');
+    if (mevcutMusteri && telefonGecerliMi(mevcutMusteri.telefon).gecerli) {
+      return { durum: 'giris_basarili', kullanici: mevcutMusteri };
+    }
+
+    const personelKaydi = eslesenler.find((k) => k.rol && k.rol !== 'musteri');
+    if (!mevcutMusteri && personelKaydi) {
+      return {
+        durum: 'hata',
+        hataMesaji: PERSONEL_HESABI_UYARISI,
+      };
     }
 
     return {

@@ -14,6 +14,7 @@ export const KullaniciGirisPenceresi: React.FC = () => {
     pencereAcik,
     pencereKapat,
     girisYap,
+    musteriGirisYap,
     googleIleGirisYap,
     googleKayitTamamla,
     kayitOl,
@@ -73,9 +74,9 @@ export const KullaniciGirisPenceresi: React.FC = () => {
       setHataMesaji(telSonuc.hata || 'Lütfen geçerli bir cep telefonu numarası giriniz.');
       return;
     }
-    const basarili = await girisYap(telefon, sifre);
-    if (!basarili) {
-      setHataMesaji('Giriş başarısız. Telefon numaranızı veya şifrenizi kontrol ediniz.');
+    const sonuc = await musteriGirisYap(telefon, sifre);
+    if (!sonuc.basarili) {
+      setHataMesaji(sonuc.mesaj);
     }
   };
 
@@ -122,7 +123,7 @@ export const KullaniciGirisPenceresi: React.FC = () => {
     if (basarili) {
       hukukiOnaylariKaydet(telefon, adSoyad);
     } else {
-      setHataMesaji('Kayıt oluşturulamadı. Bu telefon numarası sistemde kayıtlı olabilir.');
+      setHataMesaji('Kayıt oluşturulamadı. Bu telefon numarasına ait bir müşteri hesabı zaten kayıtlı olabilir.');
     }
   };
 
@@ -137,7 +138,7 @@ export const KullaniciGirisPenceresi: React.FC = () => {
                 ? 'Google Hesabını Tamamla'
                 : sifreUnuttumModu
                 ? 'Şifre Yeniden Oluşturma'
-                : 'Afyon Ev Lezzetleri — Kullanıcı Girişi'}
+                : 'Afyon Ev Lezzetleri — Müşteri Girişi'}
             </h3>
           </div>
           <button
@@ -183,7 +184,7 @@ export const KullaniciGirisPenceresi: React.FC = () => {
                 if (ok) {
                   hukukiOnaylariKaydet(bilgiler.telefon, bilgiler.adSoyad);
                 } else {
-                  setHataMesaji('Kayıt tamamlanamadı. Bu telefon numarası başka bir hesaba ait olabilir.');
+                  setHataMesaji('Kayıt tamamlanamadı. Bu telefon numarasına ait bir müşteri hesabı zaten kayıtlı olabilir.');
                 }
               }}
             />

@@ -4,6 +4,7 @@ import { CokluMenuTipi } from '@/src/veritabani/VeriTipleri';
 import { CokluMenuKolajGorseli } from './CokluMenuKolajGorseli';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface CokluMenuKartiProps {
   menu: CokluMenuTipi;
@@ -14,10 +15,11 @@ export const CokluMenuKarti: React.FC<CokluMenuKartiProps> = ({ menu, onSec }) =
   const { mutfaklarListesi } = sepetHafizasiKullan();
   const [hover, setHover] = useState(false);
 
+  const anlikDakika = useCanliDakika();
   const bagliMutfak = mutfaklarListesi.find(
     (m) => m.id === menu.mutfak_id || m.kimlik === menu.mutfak_id
   );
-  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak, anlikDakika);
 
   const cesitSayisi = menu.kalemler?.length || 0;
   const hazirlanma = menu.hazirlanma_suresi?.trim() || '35-45 dk';
@@ -53,8 +55,9 @@ export const CokluMenuKarti: React.FC<CokluMenuKartiProps> = ({ menu, onSec }) =
           <div className="absolute bottom-2 inset-x-2 bg-amber-950/90 border border-amber-500/60 text-amber-200 text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-md">
             <Coffee className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="truncate">
-              {molaBilgisi.moladaMi ? 'Mutfak Dinlenmede / Molada' : 'Mutfak Kapalı'}
-              {molaBilgisi.molaBitisZamani ? ` • Açılış: ${molaBilgisi.molaBitisZamani}` : ''}
+              {molaBilgisi.moladaMi
+                ? `Mutfak Dinlenmede / Molada${molaBilgisi.molaBitisZamani ? ` • Açılış: ${molaBilgisi.molaBitisZamani}` : ''}`
+                : molaBilgisi.kapaliEtiketi}
             </span>
           </div>
         )}

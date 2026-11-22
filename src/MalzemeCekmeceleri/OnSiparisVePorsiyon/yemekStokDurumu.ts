@@ -1,10 +1,14 @@
 import { MutfakTipi, YemekTipi } from '@/src/veritabani/VeriTipleri';
+import { calismaSaatiDurumuHesapla } from './calismaSaatiKontrolu';
 
 export interface MutfakMolaDurumuBilgisi {
   moladaMi: boolean;
   kapaliMi: boolean;
+  saatDisiMi: boolean;
   siparisEngelliMi: boolean;
   molaBitisZamani?: string;
+  acilisSaati?: string;
+  kapaliEtiketi: string;
   uyariMetni: string;
 }
 
@@ -20,9 +24,13 @@ export interface YemekStokDurumBilgisi {
   minTutarUyariMetni: string | null;
 }
 
-export function mutfakMolaDurumuGetir(mutfak?: Partial<MutfakTipi> | null): MutfakMolaDurumuBilgisi {
+export function mutfakMolaDurumuGetir(
+  mutfak?: Partial<MutfakTipi> | null,
+  referansDakika?: number
+): MutfakMolaDurumuBilgisi {
   const moladaMi = mutfak?.mola_durumu === true;
-  const kapaliMi = mutfak?.acik_mi === false;
+  const saatDurumu = calismaSaatiDurumuHesapla(mutfak, referansDakika);
+  const kapaliMi = saatDurumu.kapaliMi;
   const molaBitisZamani = mutfak?.mola_bitis_zamani?.trim() || mutfak?.mola_bitis_saati?.trim() || undefined;
 
   let uyariMetni = '';
@@ -31,14 +39,19 @@ export function mutfakMolaDurumuGetir(mutfak?: Partial<MutfakTipi> | null): Mutf
       ? `Mutfak şu an dinlenmede, tahmini açılış: ${molaBitisZamani}`
       : 'Mutfak şu an dinlenmede / molada, geçici olarak sipariş alınamamaktadır.';
   } else if (kapaliMi) {
-    uyariMetni = 'Mutfak şu an kapalıdır.';
+    uyariMetni = saatDurumu.saatDisiMi && saatDurumu.acilisSaati
+      ? `Mutfak çalışma saatleri dışındadır (Açılış: ${saatDurumu.acilisSaati}).`
+      : 'Mutfak şu an kapalıdır.';
   }
 
   return {
     moladaMi,
     kapaliMi,
+    saatDisiMi: saatDurumu.saatDisiMi,
     siparisEngelliMi: moladaMi || kapaliMi,
     molaBitisZamani,
+    acilisSaati: saatDurumu.acilisSaati,
+    kapaliEtiketi: saatDurumu.kapaliEtiketi,
     uyariMetni,
   };
 }

@@ -1,6 +1,8 @@
 import React from 'react';
-import { Store, MapPin, Clock, Phone, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Store, MapPin, Clock, Phone, Sparkles, CheckCircle2, Ban } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface SubeBaslikKartiProps {
   sube: GelAlSubesi;
@@ -8,6 +10,9 @@ interface SubeBaslikKartiProps {
 }
 
 export const SubeBaslikKarti: React.FC<SubeBaslikKartiProps> = ({ sube, urunSayisi }) => {
+  const anlikDakika = useCanliDakika();
+  const subeDurumu = calismaSaatiDurumuHesapla(sube, anlikDakika);
+
   return (
     <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#200A26] via-[#2D0F34] to-[#18061F] border border-[#521E5C] p-4 sm:p-6 shadow-2xl text-white">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -20,9 +25,15 @@ export const SubeBaslikKarti: React.FC<SubeBaslikKartiProps> = ({ sube, urunSayi
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
                 Resmi Şube & Tezgah
               </span>
-              <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Canlı Stok Aktif
-              </span>
+              {subeDurumu.acikMi ? (
+                <span className="text-[10px] font-semibold text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Açık • Canlı Stok Aktif
+                </span>
+              ) : (
+                <span className="text-[10px] font-semibold text-rose-300 flex items-center gap-1">
+                  <Ban className="w-3 h-3 text-rose-400" /> {subeDurumu.kapaliEtiketi}
+                </span>
+              )}
             </div>
             <h2 className="text-lg sm:text-xl font-black text-white mt-1 leading-snug">
               {sube.ad}

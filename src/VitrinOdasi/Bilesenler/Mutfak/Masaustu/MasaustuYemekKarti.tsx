@@ -4,13 +4,15 @@ import { Yemek } from '@/src/veritabani/VeriTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
 import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 export const MasaustuYemekKarti: React.FC<{ yemek: Yemek }> = ({ yemek }) => {
   const { sepeteEkle, sepetElemanlari, adetGuncelle, mutfaklarListesi } = sepetHafizasiKullan();
   const [eklendi, setEklendi] = useState(false);
 
+  const anlikDakika = useCanliDakika();
   const bagliMutfak = mutfaklarListesi.find((m) => m.id === yemek.mutfak_id || m.kimlik === yemek.mutfak_id);
-  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak, anlikDakika);
   const stokBilgisi = yemekStokDurumuHesapla(yemek, bagliMutfak);
 
   const sepettekiToplamAdet = sepetElemanlari

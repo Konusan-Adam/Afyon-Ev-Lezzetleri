@@ -3,6 +3,7 @@ import { Star, Clock, Bike, Coffee } from 'lucide-react';
 import { Mutfak } from '@/src/veritabani/VeriTipleri';
 import { useKuryeAyarlari } from '@/src/MalzemeCekmeceleri/useKuryeAyarlari';
 import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface MutfakKartiOzellikleri {
   mutfak: Mutfak;
@@ -14,7 +15,8 @@ export const MobilMutfakKarti: React.FC<MutfakKartiOzellikleri> = ({
   onSec,
 }) => {
   const { ayarlar } = useKuryeAyarlari();
-  const molaBilgisi = mutfakMolaDurumuGetir(mutfak);
+  const anlikDakika = useCanliDakika();
+  const molaBilgisi = mutfakMolaDurumuGetir(mutfak, anlikDakika);
 
   const teslimatMetniGetir = () => {
     const ucret = Number(ayarlar.taban_ucret) || 0;
@@ -43,7 +45,7 @@ export const MobilMutfakKarti: React.FC<MutfakKartiOzellikleri> = ({
         {molaBilgisi.siparisEngelliMi && (
           <div className="absolute top-2.5 left-2.5 bg-amber-950/90 border border-amber-500/60 px-2 py-0.5 rounded-full flex items-center gap-1 text-amber-200 text-[10px] font-bold">
             <Coffee className="w-3 h-3 text-amber-400" />
-            <span>{molaBilgisi.moladaMi ? 'Molada' : 'Kapalı'}</span>
+            <span>{molaBilgisi.moladaMi ? 'Molada' : molaBilgisi.kapaliEtiketi}</span>
           </div>
         )}
 

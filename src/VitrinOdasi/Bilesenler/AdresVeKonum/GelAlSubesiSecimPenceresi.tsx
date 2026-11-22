@@ -1,7 +1,9 @@
-import React from 'react';
-import { X, Store, Clock, MapPin, Check, Phone } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { X, Store, Clock, MapPin, Check, Phone, Ban } from 'lucide-react';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { GelAlSubesi } from '@/src/veritabani/VeriTipleri';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 export const GelAlSubesiSecimPenceresi: React.FC = () => {
   const {
@@ -11,6 +13,15 @@ export const GelAlSubesiSecimPenceresi: React.FC = () => {
     seciliGelAlSubesi,
     gelAlSubesiSec,
   } = teslimatHafizasiKullan();
+  const anlikDakika = useCanliDakika();
+
+  const siraliSubeler = useMemo(() => {
+    return [...gelAlSubeleri].sort((a, b) => {
+      const aAcik = calismaSaatiDurumuHesapla(a, anlikDakika).acikMi ? 1 : 0;
+      const bAcik = calismaSaatiDurumuHesapla(b, anlikDakika).acikMi ? 1 : 0;
+      return bAcik - aAcik;
+    });
+  }, [gelAlSubeleri, anlikDakika]);
 
   if (!gelAlPenceresiAcik) return null;
 
@@ -37,18 +48,21 @@ export const GelAlSubesiSecimPenceresi: React.FC = () => {
 
         {/* Şube Listesi */}
         <div className="p-4 space-y-2.5 max-h-[60vh] overflow-y-auto">
-          {gelAlSubeleri.map((sube: GelAlSubesi, sira: number) => {
+          {siraliSubeler.map((sube: GelAlSubesi, sira: number) => {
             const subeKimligi = sube.id || sube.kimlik || `sube-${sira}`;
             const seciliMi = Boolean(
               (seciliGelAlSubesi?.id && (seciliGelAlSubesi.id === sube.id || seciliGelAlSubesi.id === sube.kimlik)) ||
               (seciliGelAlSubesi?.kimlik && (seciliGelAlSubesi.kimlik === sube.kimlik || seciliGelAlSubesi.kimlik === sube.id))
             );
+            const subeDurumu = calismaSaatiDurumuHesapla(sube, anlikDakika);
             return (
               <button
                 key={subeKimligi}
                 type="button"
                 onClick={() => gelAlSubesiSec(sube)}
                 className={`w-full text-left p-3.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-2 ${
+                  !subeDurumu.acikMi ? 'opacity-75 ' : ''
+                }${
                   seciliMi
                     ? 'border-[#DDAF53] bg-[#2E1235] ring-1 ring-[#DDAF53]'
                     : 'border-[#3E1646] bg-[#220B27]/70 hover:bg-[#2A102E] hover:border-purple-700/60'
@@ -59,11 +73,18 @@ export const GelAlSubesiSecimPenceresi: React.FC = () => {
                     <Store className={`w-4 h-4 ${seciliMi ? 'text-[#DDAF53]' : 'text-purple-400'}`} />
                     <span className="font-bold text-sm text-white">{sube.ad}</span>
                   </div>
-                  {seciliMi && (
-                    <span className="flex items-center gap-1 text-[11px] font-bold text-[#DDAF53] bg-amber-950/60 px-2 py-0.5 rounded-full border border-[#DDAF53]/40">
-                      <Check className="w-3 h-3" /> Seçili
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {!subeDurumu.acikMi && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-500/40">
+                        <Ban className="w-3 h-3" /> {subeDurumu.kapaliEtiketi}
+                      </span>
+                    )}
+                    {seciliMi && (
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-[#DDAF53] bg-amber-950/60 px-2 py-0.5 rounded-full border border-[#DDAF53]/40">
+                        <Check className="w-3 h-3" /> Seçili
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <p className="text-xs text-purple-200/80 flex items-start gap-1.5">

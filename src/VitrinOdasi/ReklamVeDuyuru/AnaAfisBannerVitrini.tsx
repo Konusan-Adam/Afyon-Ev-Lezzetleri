@@ -87,7 +87,7 @@ export const AnaAfisBannerVitrini: React.FC = () => {
     <div className="hidden lg:block w-full px-4 pt-1 pb-3">
       <div
         onClick={simdikiAfis.mutfak_id ? butonaTiklandi : undefined}
-        className={`relative w-full rounded-2xl overflow-hidden shadow-xl border border-amber-500/30 group bg-purple-950 ${
+        className={`relative w-full h-[250px] rounded-2xl overflow-hidden shadow-xl border border-amber-500/30 group bg-purple-950 ${
           simdikiAfis.mutfak_id ? 'cursor-pointer' : ''
         }`}
       >
@@ -124,34 +124,37 @@ export const AnaAfisBannerVitrini: React.FC = () => {
           </>
         )}
 
-        <div className={`relative z-10 p-8 md:p-12 flex ${gorselTipi === 'sag_taraf' ? 'flex-row items-center justify-between' : 'flex-col items-start max-w-xl'}`}>
-          <div className="flex flex-col items-start max-w-xl">
-            <div className="flex flex-wrap items-center gap-2 mb-2.5">
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-purple-950 font-black text-[11px] tracking-wider uppercase shadow-md">
-                <Sparkles className="w-3.5 h-3.5 fill-current" />
-                <span>{simdikiAfis.rozet || 'ÖZEL LEZZET'}</span>
-              </div>
-              {simdikiAfis.mutfak_adi && (
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-sm border border-purple-500/40 text-amber-200 font-bold text-[11px]">
-                  <Store className="w-3 h-3 text-amber-400" />
-                  <span>{simdikiAfis.mutfak_adi}</span>
+        <div className={`relative z-10 w-full h-full p-6 lg:px-10 lg:py-6 flex ${gorselTipi === 'sag_taraf' ? 'flex-row items-center justify-between' : 'flex-col justify-between items-start max-w-xl'}`}>
+          <div className="flex flex-col justify-between items-start h-full max-w-xl">
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-purple-950 font-black text-[11px] tracking-wider uppercase shadow-md">
+                  <Sparkles className="w-3.5 h-3.5 fill-current" />
+                  <span>{simdikiAfis.rozet || 'ÖZEL LEZZET'}</span>
                 </div>
-              )}
+                {simdikiAfis.mutfak_adi && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/50 backdrop-blur-sm border border-purple-500/40 text-amber-200 font-bold text-[11px]">
+                    <Store className="w-3 h-3 text-amber-400" />
+                    <span>{simdikiAfis.mutfak_adi}</span>
+                  </div>
+                )}
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-white leading-tight line-clamp-1 drop-shadow-md">
+                {simdikiAfis.baslik}
+              </h2>
+              <p className="text-xs sm:text-sm text-purple-100/90 leading-relaxed line-clamp-2 max-w-md drop-shadow">
+                {aciklamaMetni}
+              </p>
             </div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white leading-tight mb-2 drop-shadow-md">
-              {simdikiAfis.baslik}
-            </h2>
-            <p className="text-xs sm:text-sm text-purple-100/90 leading-relaxed mb-5 max-w-md drop-shadow">
-              {aciklamaMetni}
-            </p>
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-4 pt-1">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   butonaTiklandi();
                 }}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-[#F5D28A] text-purple-950 font-black text-xs sm:text-sm shadow-lg hover:brightness-110 active:scale-98 transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-[#F5D28A] text-purple-950 font-black text-xs sm:text-sm shadow-lg hover:brightness-110 active:scale-98 transition-all cursor-pointer"
               >
                 <span>{simdikiAfis.butonMetni || 'İncele'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -167,11 +170,11 @@ export const AnaAfisBannerVitrini: React.FC = () => {
           </div>
 
           {gorselTipi === 'sag_taraf' && (
-            <div className="hidden md:block w-1/3 p-4">
+            <div className="hidden md:flex items-center justify-center w-1/3 h-full p-2">
               <img
                 src={gorselUrl}
                 alt={simdikiAfis.baslik}
-                className="w-full h-auto object-contain rounded-2xl"
+                className="max-h-[160px] w-auto object-contain rounded-xl"
               />
             </div>
           )}

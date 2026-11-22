@@ -6,6 +6,7 @@ import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
 import { CokluMenuKalemSatiri } from './CokluMenuKalemSatiri';
 import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface CokluMenuDetayModaliProps {
   menu: CokluMenuTipi;
@@ -19,10 +20,11 @@ export const CokluMenuDetayModali: React.FC<CokluMenuDetayModaliProps> = ({ menu
   const [ekleniyor, setEkleniyor] = useState(false);
   const [eklendi, setEklendi] = useState(false);
 
+  const anlikDakika = useCanliDakika();
   const bagliMutfak = mutfaklarListesi.find(
     (m) => m.id === menu.mutfak_id || m.kimlik === menu.mutfak_id
   );
-  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak, anlikDakika);
 
   const siraliKalemler = useMemo(() => {
     return [...(menu.kalemler || [])].sort((a, b) => (a.sira ?? 0) - (b.sira ?? 0));

@@ -202,6 +202,8 @@ export interface FiltreKriterleri {
   aramaMetni?: string;
   kategori?: string;
   altKategori?: string;
+  subeId?: string;
+  subeAdi?: string;
   minPuan?: number;
   minFiyat?: number;
   maxFiyat?: number;

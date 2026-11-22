@@ -7,6 +7,7 @@ import { SecilenUrunKonfigurasyonu } from '@/src/MalzemeCekmeceleri/UrunSecenekl
 import { PorsiyonRozeti } from '../Bilesenler/OnSiparisVePorsiyon/PorsiyonRozeti';
 import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
 import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface YemekKartiOzellikleri {
   yemek: Yemek;
@@ -18,8 +19,9 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
   const [seceneklerAcik, setSeceneklerAcik] = useState<boolean>(false);
   const [eklendiAnimasyonu, setEklendiAnimasyonu] = useState<boolean>(false);
 
+  const anlikDakika = useCanliDakika();
   const bagliMutfak = mutfaklarListesi.find((m) => m.id === yemek.mutfak_id || m.kimlik === yemek.mutfak_id);
-  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
+  const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak, anlikDakika);
   const stokBilgisi = yemekStokDurumuHesapla(yemek, bagliMutfak);
 
   const sepettekiToplamAdet = sepetElemanlari
@@ -108,6 +110,13 @@ export const MobilYemekKarti: React.FC<YemekKartiOzellikleri> = ({ yemek, onSec 
             <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
             <span>{yemek.puan?.toFixed(1) || '4.9'}</span>
           </div>
+
+          {molaBilgisi.siparisEngelliMi && !stokBilgisi.tukendiMi && (
+            <div className="absolute bottom-2.5 left-2.5 bg-rose-950/90 border border-rose-500/60 px-2 py-0.5 rounded-full flex items-center gap-1 text-rose-200 text-[10px] font-bold shadow-md">
+              <Ban className="w-3 h-3 text-rose-400 shrink-0" />
+              <span>{molaBilgisi.moladaMi ? 'Mutfak Molada' : molaBilgisi.kapaliEtiketi}</span>
+            </div>
+          )}
         </div>
 
         <div className="p-3.5 flex flex-col flex-1 justify-between gap-3">

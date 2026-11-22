@@ -15,6 +15,7 @@ interface AramaVeFiltreHafizasiTip {
   filtreleriSifirla: () => void;
   kategoriFiltresiniTemizle: () => void;
   altKategoriFiltresiniTemizle: () => void;
+  subeFiltresiniTemizle: () => void;
   fiyatFiltresiniTemizle: () => void;
   puanFiltresiniTemizle: () => void;
   siralamaFiltresiniTemizle: () => void;
@@ -42,6 +43,7 @@ const AramaVeFiltreContext = createContext<AramaVeFiltreHafizasiTip>({
   filtreleriSifirla: () => {},
   kategoriFiltresiniTemizle: () => {},
   altKategoriFiltresiniTemizle: () => {},
+  subeFiltresiniTemizle: () => {},
   fiyatFiltresiniTemizle: () => {},
   puanFiltresiniTemizle: () => {},
   siralamaFiltresiniTemizle: () => {},
@@ -67,6 +69,7 @@ export const AramaVeFiltreSaglayici: React.FC<{ children: React.ReactNode }> = (
 
   let aktifFiltreSayisi = 0;
   if (aktifFiltreler?.kategori && aktifFiltreler.kategori !== 'Tümü') aktifFiltreSayisi++;
+  if (aktifFiltreler?.subeId) aktifFiltreSayisi++;
   if (aktifFiltreler?.minFiyat !== undefined || aktifFiltreler?.maxFiyat !== undefined) aktifFiltreSayisi++;
   if (aktifFiltreler?.minPuan !== undefined && (aktifFiltreler.minPuan || 0) > 0) aktifFiltreSayisi++;
   if (aktifFiltreler?.siralama && aktifFiltreler.siralama !== 'varsayilan') aktifFiltreSayisi++;
@@ -79,6 +82,15 @@ export const AramaVeFiltreSaglayici: React.FC<{ children: React.ReactNode }> = (
     setAktifFiltreler((onceki) => {
       const yeni = { ...(onceki || varsayilanFiltreler) };
       delete yeni.altKategori;
+      return yeni;
+    });
+  };
+
+  const subeFiltresiniTemizle = () => {
+    setAktifFiltreler((onceki) => {
+      const yeni = { ...(onceki || varsayilanFiltreler) };
+      delete yeni.subeId;
+      delete yeni.subeAdi;
       return yeni;
     });
   };
@@ -135,6 +147,7 @@ export const AramaVeFiltreSaglayici: React.FC<{ children: React.ReactNode }> = (
         filtreleriSifirla,
         kategoriFiltresiniTemizle,
         altKategoriFiltresiniTemizle,
+        subeFiltresiniTemizle,
         fiyatFiltresiniTemizle,
         puanFiltresiniTemizle,
         siralamaFiltresiniTemizle,
@@ -162,6 +175,8 @@ export const aramaVeFiltreKullan = () => {
     filtreleriGuncelle: () => {},
     filtreleriSifirla: () => {},
     kategoriFiltresiniTemizle: () => {},
+    altKategoriFiltresiniTemizle: () => {},
+    subeFiltresiniTemizle: () => {},
     fiyatFiltresiniTemizle: () => {},
     puanFiltresiniTemizle: () => {},
     siralamaFiltresiniTemizle: () => {},

@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronRight, TrendingUp } from 'lucide-react';
+import { ChevronRight, TrendingUp, Store } from 'lucide-react';
 import { kategorileriGetir, Kategori } from '@/src/MalzemeCekmeceleri/kategorileriGetir';
 import { gorselUrlGuvenliYap } from '@/src/MalzemeCekmeceleri/sunucuGorselYukleyici';
+import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
+import { GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 import { AramaAltKategoriMegaAlani } from './AramaAltKategoriMegaAlani';
 
 interface AramaKategoriPaneliProps {
@@ -11,6 +15,7 @@ interface AramaKategoriPaneliProps {
   seciliAltKategoriAd?: string;
   kategoriSec: (kategoriAdi: string, altKategoriAdi?: string) => void;
   aramaSec: (metin: string) => void;
+  subeSec?: (sube: GelAlSubesi) => void;
   tema?: 'koyu' | 'acik';
 }
 
@@ -35,9 +40,12 @@ export const AramaKategoriPaneli: React.FC<AramaKategoriPaneliProps> = ({
   seciliAltKategoriAd,
   kategoriSec,
   aramaSec,
+  subeSec,
   tema = 'koyu',
 }) => {
   const { kategoriler, altKategoriler } = kategorileriGetir();
+  const { gelAlSubeleri } = teslimatHafizasiKullan();
+  const anlikDakika = useCanliDakika();
   const listeRef = useRef<HTMLDivElement>(null);
   const kapatmaZamanlayiciRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -262,7 +270,63 @@ export const AramaKategoriPaneli: React.FC<AramaKategoriPaneliProps> = ({
         />
       </div>
 
-      {/* 3. Popüler Afyon Aramaları Çipleri */}
+      {/* 3. Gel-Al Şubeleri */}
+      {gelAlSubeleri.length > 0 && (
+        <div className={`pt-3 border-t space-y-2.5 ${acikMi ? 'border-amber-200' : 'border-purple-900/40'}`}>
+          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
+            <Store className="w-3.5 h-3.5 text-amber-500" />
+            <span>Gel-Al Şubeleri</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[...gelAlSubeleri]
+              .sort((a, b) => {
+                const aAcik = calismaSaatiDurumuHesapla(a, anlikDakika).acikMi ? 1 : 0;
+                const bAcik = calismaSaatiDurumuHesapla(b, anlikDakika).acikMi ? 1 : 0;
+                return bAcik - aAcik;
+              })
+              .map((sube) => {
+                const subeAcik = calismaSaatiDurumuHesapla(sube, anlikDakika).acikMi;
+                const kisaAd = sube.ad
+                  .replace(' Gel-Al & Dağıtım Noktası', '')
+                  .replace(' Gel-Al Teslimat Masası', '')
+                  .replace(' Gel-Al Noktası', '')
+                  .trim();
+                return (
+                  <button
+                    key={sube.id || sube.kimlik}
+                    type="button"
+                    onClick={() => {
+                      if (subeSec) {
+                        subeSec(sube);
+                      } else {
+                        aramaSec(kisaAd);
+                      }
+                      kapat();
+                    }}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-all flex items-center gap-1.5 ${
+                      acikMi
+                        ? 'bg-white hover:bg-amber-100 text-gray-700 hover:text-amber-900 border-amber-200 hover:border-amber-400'
+                        : 'bg-[#240C29] hover:bg-amber-500/20 text-gray-300 hover:text-amber-300 border-purple-900/40 hover:border-amber-400/40'
+                    }`}
+                  >
+                    <span>{kisaAd}</span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold ${
+                        subeAcik
+                          ? acikMi ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-950 text-emerald-300'
+                          : acikMi ? 'bg-rose-100 text-rose-700' : 'bg-rose-950 text-rose-300'
+                      }`}
+                    >
+                      {subeAcik ? 'Açık' : 'Kapalı'}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Popüler Afyon Aramaları Çipleri */}
       <div className={`pt-3 border-t space-y-2.5 ${acikMi ? 'border-amber-200' : 'border-purple-900/40'}`}>
         <div className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
           <TrendingUp className="w-3.5 h-3.5 text-amber-500" />

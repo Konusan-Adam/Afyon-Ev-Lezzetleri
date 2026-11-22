@@ -31,8 +31,9 @@ import { LezzetDanismaniVitrini } from './Bilesenler/YapayZekaDanismani/LezzetDa
 import { MutfaklarModali } from './Bilesenler/MutfaklarModali';
 import { SubelerModali } from './Bilesenler/SubelerModali';
 import { SubeDetayVitrini } from './SubeVitrini/SubeDetayVitrini';
+import { SubeUrunDetayModali } from './SubeVitrini/SubeUrunDetayModali';
 import { MutfakDetayVitrini } from './Bilesenler/Mutfak/MutfakDetayVitrini';
-import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
+import { GelAlSubesi, SubeUrunu } from '@/src/veritabani/SubeTipleri';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { useSubeUrunleri } from '@/src/MalzemeCekmeceleri/Sube/useSubeUrunleri';
 import { subeOnceliginiKontrolEt } from '@/src/MalzemeCekmeceleri/Sube/SubeOncelikAlgoritmasi';
@@ -42,6 +43,7 @@ export const AnaSayfaVitrini: React.FC = () => {
   const [aktifSozlesmeTuru, setAktifSozlesmeTuru] = React.useState<SozlesmeTuru | null>(null);
   const [seciliMutfak, setSeciliMutfak] = React.useState<Mutfak | null>(null);
   const [seciliYemekModal, setSeciliYemekModal] = React.useState<Yemek | null>(null);
+  const [seciliSubeUrunModal, setSeciliSubeUrunModal] = React.useState<SubeUrunu | null>(null);
   const [mutfaklarModaliAcik, setMutfaklarModaliAcik] = React.useState<boolean>(false);
   const [subelerModaliAcik, setSubelerModaliAcik] = React.useState<boolean>(false);
   const [seciliSube, setSeciliSube] = React.useState<GelAlSubesi | null>(null);
@@ -150,11 +152,26 @@ export const AnaSayfaVitrini: React.FC = () => {
     setSeciliYemekModal(yemek);
   };
 
+  const subeSecildiIslemi = (sube: GelAlSubesi) => {
+    sifirla();
+    setSeciliYemekModal(null);
+    setSeciliSubeUrunModal(null);
+    setSeciliMutfak(null);
+    setSeciliSube(sube);
+  };
+
+  const subeUrunSecildiIslemi = (urun: SubeUrunu) => {
+    sifirla();
+    setSeciliYemekModal(null);
+    setSeciliSubeUrunModal(urun);
+  };
+
   // Marka logosuna veya Keşfet butonuna tıklandığında tam anasayfaya dönüş
   const anasayfayaDonusYap = () => {
     sifirla(); // Arama metnini ve filtreleri sıfırlar
     setSeciliMutfak(null); // Açık dükkan / mutfak vitrini varsa kapatır, ana vitrine döndürür
     setSeciliYemekModal(null);
+    setSeciliSubeUrunModal(null);
     setMutfaklarModaliAcik(false);
     setSubelerModaliAcik(false);
     setSeciliSube(null);
@@ -280,7 +297,8 @@ export const AnaSayfaVitrini: React.FC = () => {
           sepetiAcTiklandi={sepetPaneliAc}
           mutfakSecildi={mutfakSecildiIslemi}
           yemekSecildi={yemekSecildiIslemi}
-          subeSecildi={(sube) => setSeciliSube(sube)}
+          subeSecildi={subeSecildiIslemi}
+          subeUrunSecildi={subeUrunSecildiIslemi}
         />
       </div>
 
@@ -292,7 +310,8 @@ export const AnaSayfaVitrini: React.FC = () => {
         anasayfayaGitTiklandi={anasayfayaDonusYap} 
         mutfakSecildi={mutfakSecildiIslemi}
         yemekSecildi={yemekSecildiIslemi}
-        subeSecildi={(sube) => setSeciliSube(sube)}
+        subeSecildi={subeSecildiIslemi}
+        subeUrunSecildi={subeUrunSecildiIslemi}
       />
 
       <MasaustuAltBilgi />
@@ -337,6 +356,14 @@ export const AnaSayfaVitrini: React.FC = () => {
             );
             setSeciliYemekModal(null);
           }}
+        />
+      )}
+
+      {seciliSubeUrunModal && (
+        <SubeUrunDetayModali
+          urun={seciliSubeUrunModal}
+          onKapat={() => setSeciliSubeUrunModal(null)}
+          onGelAlSecildi={sepetPaneliAc}
         />
       )}
 

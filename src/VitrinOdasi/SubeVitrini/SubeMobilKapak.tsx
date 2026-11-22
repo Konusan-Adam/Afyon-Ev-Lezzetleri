@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Info, Share2, Heart, Check, Sparkles, MapPin, CheckCircle2, ShoppingBag, Radio } from 'lucide-react';
+import { ArrowLeft, Share2, Heart, Check, Sparkles, MapPin, CheckCircle2, ShoppingBag, Radio, Ban } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { favoriHafizasiKullan } from '@/src/OrtakHavuz/FavoriHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface SubeMobilKapakProps {
   sube: GelAlSubesi;
@@ -21,6 +23,8 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
   const favoride = subeFavoriMi(sube.id || sube.kimlik || '');
   const [kopyalandi, setKopyalandi] = useState(false);
   const { toplamUrunSayisi, sepetPaneliAc } = sepetHafizasiKullan();
+  const anlikDakika = useCanliDakika();
+  const subeDurumu = calismaSaatiDurumuHesapla(sube, anlikDakika);
 
   const paylasTiklandi = async () => {
     try {
@@ -108,10 +112,17 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Resmi Şube & Tezgah</span>
             </span>
-            <span className="inline-flex items-center gap-1 bg-emerald-950/90 backdrop-blur-sm text-emerald-300 border border-emerald-500/50 px-2.5 py-0.5 rounded-full font-bold shadow-sm">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{urunSayisi} Taze Ürün Hazır</span>
-            </span>
+            {subeDurumu.acikMi ? (
+              <span className="inline-flex items-center gap-1 bg-emerald-950/90 backdrop-blur-sm text-emerald-300 border border-emerald-500/50 px-2.5 py-0.5 rounded-full font-bold shadow-sm">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Açık • {urunSayisi} Ürün Hazır</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 bg-rose-950/90 backdrop-blur-sm text-rose-200 border border-rose-500/50 px-2.5 py-0.5 rounded-full font-bold shadow-sm">
+                <Ban className="w-3.5 h-3.5 text-rose-400" />
+                <span>{subeDurumu.kapaliEtiketi}</span>
+              </span>
+            )}
           </div>
           <div className="pt-0.5 flex justify-center">
             <button
@@ -144,10 +155,17 @@ export const SubeMobilKapak: React.FC<SubeMobilKapakProps> = ({
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>Resmi Şube & Tezgah</span>
               </span>
-              <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/50 px-3 py-1.5 rounded-xl shadow-md">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{urunSayisi} Taze Ürün Hazır</span>
-              </span>
+              {subeDurumu.acikMi ? (
+                <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/50 px-3 py-1.5 rounded-xl shadow-md">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Açık • {urunSayisi} Ürün Hazır</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-xs font-bold bg-rose-950/90 backdrop-blur-md text-rose-200 border border-rose-500/50 px-3 py-1.5 rounded-xl shadow-md">
+                  <Ban className="w-3.5 h-3.5 text-rose-400" />
+                  <span>{subeDurumu.kapaliEtiketi}</span>
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">

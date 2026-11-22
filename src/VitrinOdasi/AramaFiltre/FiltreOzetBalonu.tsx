@@ -18,6 +18,7 @@ export const FiltreOzetBalonu: React.FC<FiltreOzetBalonuOzellikleri> = ({
     aktifFiltreler,
     aktifFiltreSayisi,
     kategoriFiltresiniTemizle,
+    subeFiltresiniTemizle,
     fiyatFiltresiniTemizle,
     puanFiltresiniTemizle,
     siralamaFiltresiniTemizle,
@@ -69,6 +70,23 @@ export const FiltreOzetBalonu: React.FC<FiltreOzetBalonuOzellikleri> = ({
         </div>
       ) : (
         <div className="space-y-2 mb-4">
+          {/* Şube */}
+          {aktifFiltreler?.subeId && (
+            <div className="flex items-center justify-between bg-[#2A102E] border border-[#521E5C] px-3 py-2 rounded-xl">
+              <span className="text-gray-300">
+                Şube: <strong className="text-[#F5D28A]">{aktifFiltreler.subeAdi || aktifFiltreler.subeId}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={subeFiltresiniTemizle}
+                className="text-[#DDAF53] hover:text-red-400 cursor-pointer p-0.5"
+                title="Şube Filtresini Kaldır"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Kategori */}
           {aktifFiltreler?.kategori && aktifFiltreler.kategori !== 'Tümü' && (
             <div className="flex items-center justify-between bg-[#2A102E] border border-[#521E5C] px-3 py-2 rounded-xl">

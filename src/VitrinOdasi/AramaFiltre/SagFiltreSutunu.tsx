@@ -7,14 +7,15 @@ import {
   ChevronDown, 
   ChevronUp, 
   Check, 
-  Zap,
-  Sparkles,
-  Utensils
+  Store
 } from 'lucide-react';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { temaHafizasiKullan } from '@/src/OrtakHavuz/TemaHafizasi';
+import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
 import { KareReklamKutusu } from '../ReklamVeDuyuru/KareReklamKutusu';
 import { kategorileriGetir } from '@/src/MalzemeCekmeceleri/kategorileriGetir';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 export const SagFiltreSutunu: React.FC = () => {
   const { 
@@ -25,6 +26,8 @@ export const SagFiltreSutunu: React.FC = () => {
   } = aramaVeFiltreKullan();
   
   const { kategoriler, altKategoriler } = kategorileriGetir();
+  const { gelAlSubeleri } = teslimatHafizasiKullan();
+  const anlikDakika = useCanliDakika();
   const { tema } = temaHafizasiKullan();
   const acikMi = tema === 'acik';
 
@@ -38,10 +41,36 @@ export const SagFiltreSutunu: React.FC = () => {
     return dahaFazlaGoster ? liste : liste.slice(0, 6);
   }, [kategoriler, aktifFiltreler.aramaMetni, dahaFazlaGoster]);
 
+  const gorunenSubeler = useMemo(() => {
+    let liste = [...gelAlSubeleri].sort((a, b) => {
+      const aAcik = calismaSaatiDurumuHesapla(a, anlikDakika).acikMi ? 1 : 0;
+      const bAcik = calismaSaatiDurumuHesapla(b, anlikDakika).acikMi ? 1 : 0;
+      return bAcik - aAcik;
+    });
+    if (aktifFiltreler.aramaMetni?.trim()) {
+      const aranan = aktifFiltreler.aramaMetni.toLocaleLowerCase('tr-TR');
+      liste = liste.filter(
+        (s) =>
+          s.ad.toLocaleLowerCase('tr-TR').includes(aranan) ||
+          (s.mahalle && s.mahalle.toLocaleLowerCase('tr-TR').includes(aranan))
+      );
+    }
+    return liste;
+  }, [gelAlSubeleri, aktifFiltreler.aramaMetni, anlikDakika]);
+
   const seciliKategori = aktifFiltreler.kategori || 'Tümü';
   const seciliAltKategori = aktifFiltreler.altKategori;
+  const seciliSubeId = aktifFiltreler.subeId;
   const seciliSiralama = aktifFiltreler.siralama || 'varsayilan';
   const seciliMinPuan = aktifFiltreler.minPuan;
+
+  const subeSec = (subeId?: string, subeAdi?: string) => {
+    if (!subeId || seciliSubeId === subeId) {
+      filtreleriGuncelle({ subeId: undefined, subeAdi: undefined });
+    } else {
+      filtreleriGuncelle({ subeId, subeAdi });
+    }
+  };
 
   const siralamaSec = (deger: 'varsayilan' | 'puan_azalan' | 'fiyat_artan' | 'fiyat_azalan') => {
     filtreleriGuncelle({ siralama: deger });
@@ -176,7 +205,82 @@ export const SagFiltreSutunu: React.FC = () => {
           </div>
         </div>
 
-        {/* 3. BÖLÜM: MUTFAK & KATEGORİ (Arama + Checkbox Listesi) */}
+        {/* 3. BÖLÜM: ŞUBELER (Gel-Al & Hazır Menü) */}
+        {gelAlSubeleri.length > 0 && (
+          <div className="space-y-2.5 mb-5">
+            <label className="text-xs font-black uppercase tracking-wider text-purple-300 dark:text-purple-300/80 flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-amber-400" />
+              <span>Şubeler (Gel-Al)</span>
+            </label>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => subeSec(undefined)}
+                className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left ${
+                  !seciliSubeId
+                    ? acikMi ? 'bg-amber-100 text-amber-950 font-black' : 'bg-purple-900/50 text-amber-300 font-black'
+                    : acikMi ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-purple-950/40 text-gray-300'
+                }`}
+              >
+                <span
+                  className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                    !seciliSubeId
+                      ? 'border-amber-500 bg-amber-500 text-purple-950'
+                      : acikMi ? 'border-gray-300 bg-white' : 'border-purple-800 bg-transparent'
+                  }`}
+                >
+                  {!seciliSubeId && <Check className="w-3 h-3 stroke-[3]" />}
+                </span>
+                <span>Tüm Şubeler</span>
+              </button>
+
+              {gorunenSubeler.map((sube) => {
+                const subeId = sube.id || sube.kimlik || '';
+                const kisaAd = sube.ad
+                  .replace(' Gel-Al & Dağıtım Noktası', '')
+                  .replace(' Gel-Al Teslimat Masası', '')
+                  .replace(' Gel-Al Noktası', '')
+                  .trim();
+                const secili = seciliSubeId === subeId;
+                const subeAcik = calismaSaatiDurumuHesapla(sube, anlikDakika).acikMi;
+                return (
+                  <button
+                    key={subeId}
+                    type="button"
+                    onClick={() => subeSec(subeId, kisaAd)}
+                    className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-xl text-xs font-semibold transition-all cursor-pointer text-left ${
+                      secili
+                        ? acikMi ? 'bg-amber-100 text-amber-950 font-black' : 'bg-purple-900/50 text-amber-300 font-black'
+                        : acikMi ? 'hover:bg-gray-100 text-gray-700' : 'hover:bg-purple-950/40 text-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition-all ${
+                        secili
+                          ? 'border-amber-500 bg-amber-500 text-purple-950'
+                          : acikMi ? 'border-gray-300 bg-white' : 'border-purple-800 bg-transparent'
+                      }`}
+                    >
+                      {secili && <Check className="w-3 h-3 stroke-[3]" />}
+                    </span>
+                    <span className="truncate flex-1">{kisaAd}</span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold shrink-0 ${
+                        subeAcik
+                          ? acikMi ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-950 text-emerald-300'
+                          : acikMi ? 'bg-rose-100 text-rose-700' : 'bg-rose-950 text-rose-300'
+                      }`}
+                    >
+                      {subeAcik ? 'Açık' : 'Kapalı'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 4. BÖLÜM: MUTFAK & KATEGORİ (Arama + Checkbox Listesi) */}
         <div className="space-y-2.5">
           <label className="text-xs font-black uppercase tracking-wider text-purple-300 dark:text-purple-300/80 block">
             Mutfak & Lezzet
@@ -195,7 +299,7 @@ export const SagFiltreSutunu: React.FC = () => {
               type="text"
               value={aktifFiltreler.aramaMetni || ''}
               onChange={(e) => filtreleriGuncelle({ aramaMetni: e.target.value })}
-              placeholder="Mutfak veya yemek arayın..."
+              placeholder="Mutfak, şube veya yemek arayın..."
               className="w-full bg-transparent text-xs focus:outline-none placeholder-purple-300/40"
             />
           </div>

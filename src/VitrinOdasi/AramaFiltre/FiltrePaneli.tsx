@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FiltreKriterleri } from '@/src/veritabani/VeriTipleri';
-import { X, SlidersHorizontal, RotateCcw, Check, Star } from 'lucide-react';
+import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
+import { X, SlidersHorizontal, RotateCcw, Check, Star, Store } from 'lucide-react';
 
 interface FiltrePaneliOzellikleri {
   acik: boolean;
@@ -18,12 +21,30 @@ export const FiltrePaneli: React.FC<FiltrePaneliOzellikleri> = ({
   uygula,
 }) => {
   const [geciciFiltreler, setGeciciFiltreler] = useState<FiltreKriterleri>(mevcutFiltreler);
+  const { gelAlSubeleri } = teslimatHafizasiKullan();
+  const anlikDakika = useCanliDakika();
+
+  useEffect(() => {
+    if (acik) {
+      setGeciciFiltreler(mevcutFiltreler || { kategori: 'Tümü', siralama: 'varsayilan' });
+    }
+  }, [acik, mevcutFiltreler]);
+
+  const siraliSubeler = useMemo(() => {
+    return [...gelAlSubeleri].sort((a, b) => {
+      const aAcik = calismaSaatiDurumuHesapla(a, anlikDakika).acikMi ? 1 : 0;
+      const bAcik = calismaSaatiDurumuHesapla(b, anlikDakika).acikMi ? 1 : 0;
+      return bAcik - aAcik;
+    });
+  }, [gelAlSubeleri, anlikDakika]);
 
   if (!acik) return null;
 
   const sifirla = () => {
     const bosFiltre: FiltreKriterleri = {
       kategori: 'Tümü',
+      subeId: undefined,
+      subeAdi: undefined,
       minFiyat: undefined,
       maxFiyat: undefined,
       minPuan: undefined,
@@ -60,6 +81,64 @@ export const FiltrePaneli: React.FC<FiltrePaneliOzellikleri> = ({
         {/* Panel Gövdesi */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           
+          {/* 0. Gel-Al Şubeleri */}
+          {siraliSubeler.length > 0 && (
+            <div>
+              <label className="text-xs font-semibold text-[#A872B5] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <Store className="w-3.5 h-3.5 text-[#DDAF53]" />
+                <span>Şube Seçimi</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGeciciFiltreler({ ...geciciFiltreler, subeId: undefined, subeAdi: undefined })}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
+                    !geciciFiltreler?.subeId
+                      ? 'bg-[#DDAF53] text-[#130713] border-[#DDAF53] font-bold shadow-md'
+                      : 'bg-[#2A102E] text-[#DDAF53]/90 border-[#521E5C] hover:border-[#DDAF53]/50'
+                  }`}
+                >
+                  Tüm Şubeler
+                </button>
+                {siraliSubeler.map((sube) => {
+                  const subeId = sube.id || sube.kimlik || '';
+                  const kisaAd = sube.ad
+                    .replace(' Gel-Al & Dağıtım Noktası', '')
+                    .replace(' Gel-Al Teslimat Masası', '')
+                    .replace(' Gel-Al Noktası', '')
+                    .trim();
+                  const secili = geciciFiltreler?.subeId === subeId;
+                  const subeAcik = calismaSaatiDurumuHesapla(sube, anlikDakika).acikMi;
+                  return (
+                    <button
+                      key={subeId}
+                      type="button"
+                      onClick={() =>
+                        setGeciciFiltreler(
+                          secili
+                            ? { ...geciciFiltreler, subeId: undefined, subeAdi: undefined }
+                            : { ...geciciFiltreler, subeId, subeAdi: kisaAd }
+                        )
+                      }
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        secili
+                          ? 'bg-[#DDAF53] text-[#130713] border-[#DDAF53] font-bold shadow-md'
+                          : 'bg-[#2A102E] text-[#DDAF53]/90 border-[#521E5C] hover:border-[#DDAF53]/50'
+                      }`}
+                    >
+                      <span>{kisaAd}</span>
+                      {!subeAcik && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-rose-950 text-rose-300 border border-rose-600/50 font-bold">
+                          Kapalı
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* 1. Kategoriler */}
           <div>
             <label className="block text-xs font-semibold text-[#A872B5] uppercase tracking-wider mb-3">

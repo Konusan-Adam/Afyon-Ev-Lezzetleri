@@ -1,23 +1,41 @@
 import React from 'react';
-import { ShoppingBag, Flame, Store, Check } from 'lucide-react';
-import { SubeUrunu } from '@/src/veritabani/SubeTipleri';
+import { ShoppingBag, Flame, Store, Check, Ban } from 'lucide-react';
+import { SubeUrunu, GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz/TeslimatHafizasi';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 
 interface SubeUrunKartiProps {
   urun: SubeUrunu;
+  sube?: GelAlSubesi | null;
   subeAdi?: string;
   onGelAlSecildi?: () => void;
   detayAc?: (urun: SubeUrunu) => void;
 }
 
-export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onGelAlSecildi, detayAc }) => {
+export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({
+  urun,
+  sube,
+  subeAdi,
+  onGelAlSecildi,
+  detayAc,
+}) => {
   const { sepeteEkle, yukleniyor } = sepetHafizasiKullan();
-  const { teslimatTipiDegistir, gelAlSubesiniIdIleSec } = teslimatHafizasiKullan();
+  const { teslimatTipiDegistir, gelAlSubesiniIdIleSec, gelAlSubeleri } = teslimatHafizasiKullan();
   const [eklendi, setEklendi] = React.useState(false);
+  const anlikDakika = useCanliDakika();
+
+  const bagliSube =
+    sube || gelAlSubeleri.find((s) => s.id === urun.sube_id || s.kimlik === urun.sube_id);
+  const subeDurumu = calismaSaatiDurumuHesapla(bagliSube, anlikDakika);
+  const subeKapaliMi = !subeDurumu.acikMi;
+  const stokTukendi = urun.stok_adedi <= 0;
+  const eklemeEngelli = stokTukendi || subeKapaliMi || yukleniyor;
 
   const adreseSepeteAt = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (eklemeEngelli) return;
     teslimatTipiDegistir('teslimat');
     await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
     setEklendi(true);
@@ -26,6 +44,7 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onG
 
   const gelAlSepeteAt = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (eklemeEngelli) return;
     gelAlSubesiniIdIleSec(urun.sube_id);
     teslimatTipiDegistir('gel_al');
     await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
@@ -34,12 +53,14 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onG
     setTimeout(() => setEklendi(false), 1500);
   };
 
-  const stokTukendi = urun.stok_adedi <= 0;
-
   return (
-    <div 
-      onClick={() => detayAc ? detayAc(urun) : null}
-      className="group rounded-2xl overflow-hidden bg-[#1E0926] border border-[#521E5C]/70 hover:border-amber-400/60 transition-all duration-200 flex flex-col justify-between shadow-lg hover:shadow-amber-500/10 cursor-pointer"
+    <div
+      onClick={() => (detayAc ? detayAc(urun) : null)}
+      className={`group rounded-2xl overflow-hidden bg-[#1E0926] border transition-all duration-200 flex flex-col justify-between shadow-lg cursor-pointer ${
+        subeKapaliMi || stokTukendi
+          ? 'opacity-75 border-rose-900/40 hover:border-rose-700/60'
+          : 'border-[#521E5C]/70 hover:border-amber-400/60 hover:shadow-amber-500/10'
+      }`}
     >
       <div>
         {/* Ürün Görseli & Rozetler */}
@@ -47,7 +68,9 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onG
           <img
             src={urun.gorsel_url || 'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?w=600&q=80'}
             alt={urun.ad}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover transition-transform duration-300 ${
+              subeKapaliMi || stokTukendi ? 'grayscale-[30%]' : 'group-hover:scale-105'
+            }`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
@@ -68,20 +91,27 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onG
             </div>
           )}
 
-          {/* Anlık Canlı Stok Rozeti */}
-          <div className="absolute bottom-2.5 left-2.5">
-            <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md ${
-                stokTukendi
-                  ? 'bg-rose-950 text-rose-300 border border-rose-600/60'
-                  : urun.stok_adedi < 5
-                  ? 'bg-amber-500 text-black font-black animate-pulse'
-                  : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/50'
-              }`}
-            >
-              <Flame className="w-3 h-3 fill-current" />
-              <span>{stokTukendi ? 'Tükendi' : `Son ${urun.stok_adedi} Adet Stokta`}</span>
-            </span>
+          {/* Anlık Canlı Stok / Kapalı Rozeti */}
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2">
+            {subeKapaliMi ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wide flex items-center gap-1 shadow-md bg-rose-950/95 text-rose-200 border border-rose-500/60">
+                <Ban className="w-3 h-3 text-rose-400 shrink-0" />
+                <span>{subeDurumu.kapaliEtiketi}</span>
+              </span>
+            ) : (
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md ${
+                  stokTukendi
+                    ? 'bg-rose-950 text-rose-300 border border-rose-600/60'
+                    : urun.stok_adedi < 5
+                    ? 'bg-amber-500 text-black font-black animate-pulse'
+                    : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/50'
+                }`}
+              >
+                <Flame className="w-3 h-3 fill-current" />
+                <span>{stokTukendi ? 'Tükendi' : `Son ${urun.stok_adedi} Adet Stokta`}</span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -110,24 +140,36 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({ urun, subeAdi, onG
           <button
             type="button"
             onClick={adreseSepeteAt}
-            disabled={stokTukendi || yukleniyor}
-            className="py-2.5 px-2 rounded-xl bg-[#2E0F36] hover:bg-[#43144F] border border-purple-700/60 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-            title="Adrese Kurye ile Sipariş"
+            disabled={eklemeEngelli}
+            className="py-2.5 px-2 rounded-xl bg-[#2E0F36] hover:bg-[#43144F] border border-purple-700/60 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed active:scale-95"
+            title={subeKapaliMi ? subeDurumu.uyariMetni : 'Adrese Kurye ile Sipariş'}
           >
-            {eklendi ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />}
-            <span className="truncate">{eklendi ? 'Eklendi' : 'Sepete Ekle'}</span>
+            {subeKapaliMi ? (
+              <Ban className="w-3.5 h-3.5 text-rose-400" />
+            ) : eklendi ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <ShoppingBag className="w-3.5 h-3.5 text-amber-400" />
+            )}
+            <span className="truncate">
+              {subeKapaliMi ? 'Kapalı' : eklendi ? 'Eklendi' : 'Sepete Ekle'}
+            </span>
           </button>
 
           {/* 2. Buton: Şubeden Gel-Al */}
           <button
             type="button"
             onClick={gelAlSepeteAt}
-            disabled={stokTukendi || yukleniyor}
-            className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md active:scale-95"
-            title="Şubeden Gel-Al Siparişi"
+            disabled={eklemeEngelli}
+            className="py-2.5 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed shadow-md active:scale-95"
+            title={subeKapaliMi ? subeDurumu.uyariMetni : 'Şubeden Gel-Al Siparişi'}
           >
-            <Store className="w-3.5 h-3.5 text-black" />
-            <span className="truncate">Gel-Al Al</span>
+            {subeKapaliMi ? (
+              <Ban className="w-3.5 h-3.5 text-black" />
+            ) : (
+              <Store className="w-3.5 h-3.5 text-black" />
+            )}
+            <span className="truncate">{subeKapaliMi ? 'Kapalı' : 'Gel-Al Al'}</span>
           </button>
         </div>
       </div>

@@ -46,11 +46,11 @@ export const SifremiUnuttumFormu: React.FC<SifremiUnuttumFormuOzellikleri> = ({
     const sonuc = await kullaniciGuvenlikSorusuGetir(telefon);
     setIslemde(false);
 
-    if (sonuc) {
+    if (sonuc.durum === 'bulundu') {
       setBulunanSoru(sonuc.soru);
       setAdim(2);
     } else {
-      onHata('Bu telefon numarasına ait aktif bir hesap veya güvenlik sorusu bulunamadı.');
+      onHata(sonuc.mesaj);
     }
   };
 

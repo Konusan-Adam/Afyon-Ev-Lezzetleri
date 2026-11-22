@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Flame, Sparkles } from 'lucide-react';
 import { filtreliYemekleriGetir } from '@/src/MalzemeCekmeceleri/filtreliYemekleriGetir';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
+import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
+import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { useCanliDakika } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/useCanliDakika';
 import { MobilYemekKarti } from './MobilYemekKarti';
 import { Yemek } from '@/src/veritabani/VeriTipleri';
 
@@ -13,8 +16,25 @@ export const MobilPopulerYemekler: React.FC<MobilPopulerYemeklerOzellikleri> = (
   yemekSecildi
 }) => {
   const { aramaMetni, aktifFiltreler, filtreler } = aramaVeFiltreKullan();
+  const { mutfaklarListesi } = sepetHafizasiKullan();
+  const anlikDakika = useCanliDakika();
   const seciliFiltreler = aktifFiltreler || filtreler || { kategori: 'Tümü' };
   const { yemekler, yukleniyor } = filtreliYemekleriGetir(aramaMetni, seciliFiltreler);
+
+  const siraliYemekler = useMemo(() => {
+    if (!yemekler || yemekler.length === 0) return [];
+    const mutfakHaritasi = new Map(
+      mutfaklarListesi.flatMap((m) => [
+        ...(m.id ? [[m.id, m] as const] : []),
+        ...(m.kimlik ? [[m.kimlik, m] as const] : []),
+      ])
+    );
+    return [...yemekler].sort((a, b) => {
+      const aAcik = !mutfakMolaDurumuGetir(mutfakHaritasi.get(a.mutfak_id), anlikDakika).siparisEngelliMi ? 1 : 0;
+      const bAcik = !mutfakMolaDurumuGetir(mutfakHaritasi.get(b.mutfak_id), anlikDakika).siparisEngelliMi ? 1 : 0;
+      return bAcik - aAcik;
+    });
+  }, [yemekler, mutfaklarListesi, anlikDakika]);
 
   if (yukleniyor && (!yemekler || yemekler.length === 0)) {
     return (
@@ -49,7 +69,7 @@ export const MobilPopulerYemekler: React.FC<MobilPopulerYemeklerOzellikleri> = (
       </div>
 
       {/* Responsive Izgara: Mobilde 1, Tablette 2, Masaüstünde 3 Sıra */}
-      {!yemekler || yemekler.length === 0 ? (
+      {siraliYemekler.length === 0 ? (
         <div className="bg-[#240E2A]/50 border border-purple-900/30 rounded-2xl p-6 text-center">
           <p className="text-xs text-purple-300/70">
             Aradığınız kriterlere uygun lezzet bulunamadı.
@@ -57,7 +77,7 @@ export const MobilPopulerYemekler: React.FC<MobilPopulerYemeklerOzellikleri> = (
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {yemekler.map((yemek) => (
+          {siraliYemekler.map((yemek) => (
             <MobilYemekKarti
               key={yemek.id}
               yemek={yemek}
