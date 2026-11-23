@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Bike, Building2, ChefHat, Heart } from 'lucide-react';
+import { Compass, ShoppingBag, User, UserCheck, LogOut, ArrowRight, X, Building2, ChefHat, Heart } from 'lucide-react';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { aramaVeFiltreKullan } from '@/src/OrtakHavuz/AramaVeFiltreHafizasi';
 import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { MobilKesfetPenceresi } from './MobilKesfetPenceresi';
+import { MobilAktifSiparisSeridi } from './MobilAktifSiparisSeridi';
 
 interface MobilAltMenuOzellikleri {
   anasayfayaDon?: () => void;
@@ -105,11 +106,22 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
     panelDegistir('vitrin');
   };
 
+  const aktifSiparisSeridiGoster =
+    aktifSiparisSayisi > 0 && (!aktifKullanici || aktifKullanici.rol === 'musteri');
+
   return (
     <>
+      {aktifSiparisSeridiGoster && (
+        <MobilAktifSiparisSeridi
+          aktifSiparisSayisi={aktifSiparisSayisi}
+          takipTiklandi={siparislerimTiklandi}
+          altMenuGorunur={gorunur}
+        />
+      )}
+
       <nav
         aria-label="Mobil Alt Gezinti Menüsü"
-        className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#180A1F]/95 backdrop-blur-md border-t border-purple-900/40 px-6 py-2 shadow-2xl flex items-center justify-around transition-transform duration-300 ease-in-out ${
+        className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden h-16 bg-[#180A1F]/95 backdrop-blur-md border-t border-purple-900/40 px-2 shadow-2xl grid grid-cols-5 items-center transition-transform duration-300 ease-in-out ${
           gorunur ? 'translate-y-0' : 'translate-y-full pointer-events-none'
         }`}
       >
@@ -117,43 +129,43 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
         <button
           type="button"
           onClick={kesfetTiklandi}
-          className={`flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-2.5 ${
+          className={`flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-1 min-w-0 ${
             aktifSekme === 'kesfet' ? 'text-amber-400 font-bold' : 'text-purple-200 hover:text-white'
           }`}
         >
           <Compass className="w-5 h-5 stroke-[2.2]" />
-          <span className="text-[10px] font-bold tracking-wide">Keşfet</span>
+          <span className="text-[10px] font-bold tracking-wide whitespace-nowrap">Keşfet</span>
         </button>
 
         {/* 2. Şubeler Butonu */}
         <button
           type="button"
           onClick={subelerSekmesiTiklandi}
-          className={`flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-2.5 ${
+          className={`flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-1 min-w-0 ${
             aktifSekme === 'subeler' ? 'text-amber-400 font-bold' : 'text-purple-200 hover:text-white'
           }`}
         >
           <Building2 className="w-5 h-5 stroke-[2.2]" />
-          <span className="text-[10px] font-bold tracking-wide">Şubeler</span>
+          <span className="text-[10px] font-bold tracking-wide whitespace-nowrap">Şubeler</span>
         </button>
 
         {/* 3. Mutfaklar Butonu */}
         <button
           type="button"
           onClick={mutfaklarSekmesiTiklandi}
-          className={`flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-2.5 ${
+          className={`flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-1 min-w-0 ${
             aktifSekme === 'mutfaklar' ? 'text-amber-400 font-bold' : 'text-purple-200 hover:text-white'
           }`}
         >
           <ChefHat className="w-5 h-5 stroke-[2.2]" />
-          <span className="text-[10px] font-bold tracking-wide">Mutfaklar</span>
+          <span className="text-[10px] font-bold tracking-wide whitespace-nowrap">Mutfaklar</span>
         </button>
 
-        {/* 3. Sepet Butonu */}
+        {/* 4. Sepet Butonu */}
         <button
           type="button"
           onClick={sepetPaneliAc}
-          className="relative flex flex-col items-center justify-center gap-1 text-purple-200 hover:text-white transition-colors cursor-pointer py-1 px-3"
+          className="relative flex flex-col items-center justify-center gap-1 text-purple-200 hover:text-white transition-colors cursor-pointer py-1 px-1 min-w-0"
         >
           <div className="relative">
             <ShoppingBag className="w-5 h-5 stroke-[2]" />
@@ -163,43 +175,26 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
               </span>
             )}
           </div>
-          <span className="text-[10px] font-semibold tracking-wide">Sepetim</span>
+          <span className="text-[10px] font-semibold tracking-wide whitespace-nowrap">Sepetim</span>
         </button>
 
-        {/* 3. Siparişlerim Butonu (Sadece misafirken ve aktif sipariş varsa görünür) */}
-        {!aktifKullanici && aktifSiparisSayisi > 0 && (
-          <button
-            type="button"
-            onClick={siparislerimTiklandi}
-            className="flex flex-col items-center justify-center gap-1 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer py-1 px-3"
-          >
-            <div className="relative">
-              <Bike className="w-5 h-5 stroke-[2.2] animate-bounce" />
-              <span className="absolute -top-1.5 -right-2 bg-amber-400 text-[#180A1F] text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-md">
-                {aktifSiparisSayisi}
-              </span>
-            </div>
-            <span className="text-[10px] font-bold tracking-wide">Siparişlerim</span>
-          </button>
-        )}
-
-        {/* 4. Kullanıcı / Şube Paneli Butonu */}
+        {/* 5. Kullanıcı / Giriş Butonu */}
         <button
           type="button"
           onClick={hesapTiklandi}
-          className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-3"
+          className="flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer py-1 px-1 min-w-0"
         >
           {aktifKullanici ? (
             <>
               <UserCheck className="w-5 h-5 text-emerald-400 stroke-[2.2]" />
-              <span className="text-[10px] font-semibold text-emerald-400 tracking-wide truncate max-w-[65px]">
+              <span className="text-[10px] font-semibold text-emerald-400 tracking-wide truncate max-w-full whitespace-nowrap">
                 {aktifKullanici.ad_soyad.split(' ')[0]}
               </span>
             </>
           ) : (
             <>
               <User className="w-5 h-5 stroke-[2] text-purple-200" />
-              <span className="text-[10px] font-semibold text-purple-200 tracking-wide">Giriş Yap</span>
+              <span className="text-[10px] font-semibold text-purple-200 tracking-wide whitespace-nowrap">Giriş Yap</span>
             </>
           )}
         </button>

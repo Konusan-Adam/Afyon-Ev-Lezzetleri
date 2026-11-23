@@ -58,21 +58,36 @@ export async function subeAdiniCoz(subeId: string, verilenAd?: string): Promise<
   return cozulmus && String(cozulmus).trim() ? String(cozulmus).trim() : 'Afyon Ev Lezzetleri Şubesi';
 }
 
-async function subeStoklariniAtomikDus(elemanlar: TestSiparisElemani[]): Promise<void> {
+export async function subeStoklariniAtomikDus(elemanlar: TestSiparisElemani[]): Promise<void> {
+  const talepHaritasi = new Map<string, number>();
+  for (const eleman of elemanlar) {
+    const urunId = eleman.yemek_id || eleman.id;
+    if (!urunId) continue;
+    talepHaritasi.set(urunId, (talepHaritasi.get(urunId) || 0) + Math.max(1, Number(eleman.adet) || 1));
+  }
+  if (talepHaritasi.size === 0) return;
+
   try {
     await runTransaction(firebaseVeritabani, async (islem) => {
       const guncellenecekler: { ref: ReturnType<typeof doc>; yeniStok: number; yeniSatilan: number }[] = [];
 
-      for (const eleman of elemanlar) {
-        const urunId = eleman.yemek_id || eleman.id;
-        if (!urunId) continue;
+      for (const [urunId, istenenAdet] of talepHaritasi.entries()) {
         const urunRef = doc(firebaseVeritabani, 'sube_stoklari', urunId);
         const snap = await islem.get(urunRef);
         if (!snap.exists()) continue;
 
         const veri = snap.data() as SubeUrunu;
-        const yeniStok = Math.max(0, Number(veri.stok_adedi || 0) - Number(eleman.adet || 1));
-        const yeniSatilan = Number(veri.satilan_adet || 0) + Number(eleman.adet || 1);
+        const mevcutStok = Math.max(0, Number(veri.stok_adedi || 0));
+        if (mevcutStok < istenenAdet) {
+          throw new Error(
+            mevcutStok <= 0
+              ? `"${veri.ad || 'Şube ürünü'}" tezgahta tükendi.`
+              : `"${veri.ad || 'Şube ürünü'}" için tezgahta sadece ${mevcutStok} adet kaldı (İstenen: ${istenenAdet} adet).`
+          );
+        }
+
+        const yeniStok = mevcutStok - istenenAdet;
+        const yeniSatilan = Math.max(0, Number(veri.satilan_adet || 0)) + istenenAdet;
         guncellenecekler.push({ ref: urunRef, yeniStok, yeniSatilan });
       }
 
@@ -92,7 +107,45 @@ async function subeStoklariniAtomikDus(elemanlar: TestSiparisElemani[]): Promise
   }
 }
 
-export async function subeSiparisiVeStokIsle(veri: SubeSiparisKayitVerisi): Promise<string> {
+export async function subeStoklariniGeriYukle(elemanlar: TestSiparisElemani[]): Promise<void> {
+  const iadeHaritasi = new Map<string, number>();
+  for (const eleman of elemanlar) {
+    const urunId = eleman.yemek_id || eleman.id;
+    if (!urunId) continue;
+    iadeHaritasi.set(urunId, (iadeHaritasi.get(urunId) || 0) + Math.max(1, Number(eleman.adet) || 1));
+  }
+  if (iadeHaritasi.size === 0) return;
+
+  try {
+    await runTransaction(firebaseVeritabani, async (islem) => {
+      const guncellenecekler: { ref: ReturnType<typeof doc>; yeniStok: number; yeniSatilan: number }[] = [];
+      for (const [urunId, iadeAdet] of iadeHaritasi.entries()) {
+        const urunRef = doc(firebaseVeritabani, 'sube_stoklari', urunId);
+        const snap = await islem.get(urunRef);
+        if (!snap.exists()) continue;
+
+        const veri = snap.data() as SubeUrunu;
+        const yeniStok = Math.max(0, Number(veri.stok_adedi || 0)) + iadeAdet;
+        const yeniSatilan = Math.max(0, Number(veri.satilan_adet || 0) - iadeAdet);
+        guncellenecekler.push({ ref: urunRef, yeniStok, yeniSatilan });
+      }
+
+      for (const g of guncellenecekler) {
+        islem.update(g.ref, {
+          stok_adedi: g.yeniStok,
+          satilan_adet: g.yeniSatilan,
+        });
+      }
+    });
+  } catch (hata) {
+    console.warn('Şube stok geri yükleme uyarısı:', hata);
+  }
+}
+
+export async function subeSiparisiVeStokIsle(
+  veri: SubeSiparisKayitVerisi,
+  stokDusumuAtla: boolean = false
+): Promise<string> {
   const gercekSubeAdi = await subeAdiniCoz(veri.subeId, veri.subeAdi);
 
   const subeSiparisKaydi: SubeSiparisi = {
@@ -121,11 +174,17 @@ export async function subeSiparisiVeStokIsle(veri: SubeSiparisKayitVerisi): Prom
     })),
   };
 
+  if (!stokDusumuAtla) {
+    await subeStoklariniAtomikDus(veri.elemanlar);
+  }
+
   const subeKayitBasarili = await subeSiparisiOlustur(subeSiparisKaydi);
   if (!subeKayitBasarili) {
+    if (!stokDusumuAtla) {
+      await subeStoklariniGeriYukle(veri.elemanlar);
+    }
     throw new Error('Şube siparişi veritabanına kaydedilemedi.');
   }
 
-  await subeStoklariniAtomikDus(veri.elemanlar);
   return gercekSubeAdi;
 }

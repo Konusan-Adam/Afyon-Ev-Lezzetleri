@@ -41,6 +41,7 @@ export const SiparisBasariliKutusu: React.FC<SiparisBasariliKutusuOzellikleri> =
   };
 
   const toplamOdeme = tumSiparisler.reduce((acc, s) => acc + s.toplam_tutar, 0);
+  const hepsiGelAlMi = tumSiparisler.length > 0 && tumSiparisler.every((s) => s.teslimat_tipi === 'gel_al');
 
   return (
     <div className="text-center py-2 px-1 sm:px-3 space-y-4 animate-fadeIn">
@@ -56,11 +57,13 @@ export const SiparisBasariliKutusu: React.FC<SiparisBasariliKutusuOzellikleri> =
       <div className="space-y-1.5">
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-950/90 border border-emerald-500/50 text-emerald-300 text-xs font-black shadow-inner">
           <Zap className="w-3.5 h-3.5 text-amber-400" />
-          <span>{tumSiparisler.length > 1 ? `${tumSiparisler.length} AYRI MUTFAĞA SİPARİŞ İLETİLDİ! 🎉` : 'SİPARİŞİNİZ MUTFAĞA İLETİLDİ! 🎉'}</span>
+          <span>{tumSiparisler.length > 1 ? `${tumSiparisler.length} AYRI NOKTAYA SİPARİŞ İLETİLDİ! 🎉` : 'SİPARİŞİNİZ İLETİLDİ! 🎉'}</span>
         </div>
         <h3 className="text-xl sm:text-2xl font-black text-[#F5D28A]">Afiyet Olsun!</h3>
         <p className="text-xs text-gray-300 max-w-md mx-auto leading-relaxed">
-          Tüm mutfaklara siparişleriniz ayrı ayrı iletildi. Aşçılarımız taze malzemelerle yemeğinizi hazırlamaya başladı.
+          {hepsiGelAlMi
+            ? 'Siparişiniz şubeye iletildi. Tezgahta hazırlanıyor, hazır olduğunda şubeden teslim alabilirsiniz.'
+            : 'Siparişiniz ilgili mutfağa / şubeye iletildi. Taze lezzetleriniz özenle hazırlanıyor.'}
         </p>
       </div>
 
@@ -74,7 +77,7 @@ export const SiparisBasariliKutusu: React.FC<SiparisBasariliKutusuOzellikleri> =
             <ChefHat className="w-3 h-3" /> 2. Hazırlanıyor
           </span>
           <span className="flex items-center gap-1">
-            <Bike className="w-3 h-3" /> 3. Yolda
+            {hepsiGelAlMi ? <Store className="w-3 h-3" /> : <Bike className="w-3 h-3" />} {hepsiGelAlMi ? '3. Şubede Hazır' : '3. Yolda'}
           </span>
           <span className="flex items-center gap-1">
             <Home className="w-3 h-3" /> 4. Teslim
@@ -89,12 +92,14 @@ export const SiparisBasariliKutusu: React.FC<SiparisBasariliKutusuOzellikleri> =
       <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
         {tumSiparisler.map((sip, idx) => (
           <div key={sip.id || idx} className="bg-[#1D0A20] border border-amber-500/40 rounded-2xl p-3 text-left space-y-2 shadow-inner">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Store className="w-4 h-4 text-amber-400" />
-                <span className="font-black text-white text-xs">Sipariş #{idx + 1}</span>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Store className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="font-black text-white text-xs truncate">
+                  {sip.sube_adi || sip.mutfak_adi || `Sipariş #${idx + 1}`}
+                </span>
               </div>
-              <span className="font-extrabold text-amber-400 text-xs">{sip.toplam_tutar} ₺</span>
+              <span className="font-extrabold text-amber-400 text-xs shrink-0">{sip.toplam_tutar} ₺</span>
             </div>
 
             <div className="flex items-center justify-between bg-black/40 px-2.5 py-1.5 rounded-xl border border-purple-900/40 text-xs">

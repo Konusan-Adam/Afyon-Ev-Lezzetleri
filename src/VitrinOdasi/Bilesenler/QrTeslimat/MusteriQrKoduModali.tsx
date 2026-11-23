@@ -32,20 +32,19 @@ export const MusteriQrKoduModali: React.FC<MusteriQrKoduModaliProps> = ({
       setCanliPin(gelenPinKodu);
     }
 
-    // 2. Canlı Firestore sipariş dinleyicisi
+    // 2. Canlı Firestore sipariş dinleyicisi (mutfak + şube)
     let abonelikDurdur: (() => void) | null = null;
+    let subeAbonelikDurdur: (() => void) | null = null;
 
     const siparisleriIncele = (siparisler: any[]) => {
-      const hedefSiparis = siparisler.find(
+      const hedefSiparis = (siparisler || []).find(
         (s) => s.siparisKodu === siparisKodu || s.siparis_kodu === siparisKodu || s.id === siparisKodu
       );
 
       if (hedefSiparis) {
-        // PIN güncelleme
         const pin = hedefSiparis.pinKodu || hedefSiparis.pin_kodu || hedefSiparis.teslimat_kodu;
         if (pin) setCanliPin(String(pin));
 
-        // Kurye teslim etti mi?
         const tamamlandi =
           hedefSiparis.asama === 'teslim_edildi' ||
           hedefSiparis.durum === 'teslim_edildi' ||
@@ -59,12 +58,14 @@ export const MusteriQrKoduModali: React.FC<MusteriQrKoduModaliProps> = ({
 
     if (canliFirebaseAktifMi()) {
       abonelikDurdur = koleksiyonuCanliDinle<any>('siparisler', siparisleriIncele);
+      subeAbonelikDurdur = koleksiyonuCanliDinle<any>('sube_siparisleri', siparisleriIncele);
     } else {
       koleksiyonGetir<any>('siparisler').then(siparisleriIncele);
     }
 
     return () => {
       if (abonelikDurdur) abonelikDurdur();
+      if (subeAbonelikDurdur) subeAbonelikDurdur();
     };
   }, [siparisKodu, gelenPinKodu]);
 

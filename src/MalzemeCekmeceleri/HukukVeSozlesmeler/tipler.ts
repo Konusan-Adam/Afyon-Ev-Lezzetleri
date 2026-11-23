@@ -13,6 +13,16 @@ export type SozlesmeTuru =
 
 export type SozlesmeKonumu = 'kayit' | 'siparis' | 'asci_basvuru' | 'kurye_basvuru' | 'genel';
 
+export type HukukiIslemTuru =
+  | 'kayit'
+  | 'siparis'
+  | 'cerez_onayi'
+  | 'teslimat'
+  | 'iptal'
+  | 'hakedis'
+  | 'sozlesme_guncelleme'
+  | 'ozel_onay';
+
 export interface HukukiSozlesme {
   tur: SozlesmeTuru;
   baslik: string;
@@ -32,11 +42,20 @@ export interface HukukiOnayLogu {
   kullaniciKimlik?: string;
   kullaniciTelefon?: string;
   kullaniciAdSoyad?: string;
-  islemTuru: 'kayit' | 'siparis' | 'cerez_onayi' | 'ozel_onay';
+  islemTuru: HukukiIslemTuru;
   tarihSaat: string;
+  sunucuUtc?: string;
   ipAdresi: string;
   cihazBilgisi: string;
   onaylandiMi: boolean;
+  ozetHash?: string;
+  sozlesmeMetinHash?: string;
+  tsaSaglayici?: string;
+  tsaTokenBase64?: string;
+  damgaDurumu?: 'rfc3161_onayli' | 'sunucu_muhurlu' | 'yerel_ozet';
+  sunucuImzasi?: string;
+  ilgiliKayitId?: string;
+  ekDetay?: Record<string, unknown>;
 }
 
 export interface CerezTercihleri {

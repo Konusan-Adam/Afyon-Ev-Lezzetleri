@@ -2,6 +2,7 @@ import { TedarikciHakedis, SubeUrunu, SubeSiparisi } from '@/src/veritabani/Sube
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
 import { belgeKaydet, koleksiyonGetir, koleksiyonuCanliDinle } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
+import { kritikOlayDamgala } from '@/src/MalzemeCekmeceleri/HukukVeSozlesmeler/hukukiDelilServisi';
 
 export async function tedarikciHakedisKaydet(hakedis: TedarikciHakedis): Promise<boolean> {
   if (canliFirebaseAktifMi()) {
@@ -12,6 +13,20 @@ export async function tedarikciHakedisKaydet(hakedis: TedarikciHakedis): Promise
         'Yeni Şube Tedarikçi Hak Edişi 💰',
         `${hakedis.tedarikci_adi} tedarikçisinin ${hakedis.toplam_hakedis} ₺ tutarındaki hak edişi patron onayına sunuldu.`
       );
+      void kritikOlayDamgala({
+        islemTuru: 'hakedis',
+        sozlesmeTuru: 'tedarikci_hakedis_mutabakati',
+        ilgiliKayitId: hakedis.id,
+        kullaniciKimlik: hakedis.tedarikci_id,
+        kullaniciAdSoyad: hakedis.tedarikci_adi,
+        ekDetay: {
+          subeId: hakedis.sube_id,
+          subeAdi: hakedis.sube_adi,
+          urunAdi: hakedis.urun_adi,
+          toplamHakedis: hakedis.toplam_hakedis,
+          aksiyon: 'talep_olusturuldu',
+        },
+      });
     }
     return basarili;
   }
@@ -47,7 +62,19 @@ export async function tedarikciHakedisDurumuGuncelle(
   yeniDurum: 'onaylandi' | 'odendi' | 'beklemede' | 'reddedildi'
 ): Promise<boolean> {
   if (canliFirebaseAktifMi()) {
-    return belgeKaydet('tedarikci_hakedisleri', hakedisId, { durum: yeniDurum });
+    const basarili = await belgeKaydet('tedarikci_hakedisleri', hakedisId, { durum: yeniDurum });
+    if (basarili) {
+      void kritikOlayDamgala({
+        islemTuru: 'hakedis',
+        sozlesmeTuru: 'tedarikci_hakedis_mutabakati',
+        ilgiliKayitId: hakedisId,
+        ekDetay: {
+          hakedisId,
+          yeniDurum,
+        },
+      });
+    }
+    return basarili;
   }
   return true;
 }

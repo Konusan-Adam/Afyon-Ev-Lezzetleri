@@ -8,16 +8,18 @@ import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { KuryeUcretBilgiKarti } from '@/src/VitrinOdasi/Bilesenler';
 import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
 
 export const CokluSepetVitrini: React.FC = () => {
   const {
     sepetPaneliAcik,
     sepetPaneliKapat,
     mutfakGruplari,
+    mutfaklarListesi,
+    subelerListesi,
     toplamUrunSayisi,
     toplamSepetTutari,
     toplamTeslimatUcreti,
-    genelToplamTutar,
   } = sepetHafizasiKullan();
 
   const { teslimatTipi, seciliAdres } = teslimatHafizasiKullan();
@@ -30,7 +32,15 @@ export const CokluSepetVitrini: React.FC = () => {
   const nihaiGenelToplam = toplamSepetTutari + gercekTeslimatUcreti;
 
   const tumMinTutarlarUygun = mutfakGruplari.every((g) => g.minTutarUlasildi);
-  const moladaMutfakVar = mutfakGruplari.some((g) => mutfakMolaDurumuGetir(g.mutfak).siparisEngelliMi);
+  const moladaMutfakVar = mutfakGruplari.some((g) => {
+    const subeGrubu = g.mutfakId.startsWith('sube') || g.mutfak?.tip === 'sube';
+    if (subeGrubu) {
+      const canliSube = subelerListesi.find((s) => (s.id || s.kimlik) === g.mutfakId);
+      return canliSube ? !calismaSaatiDurumuHesapla(canliSube).acikMi : !calismaSaatiDurumuHesapla(g.mutfak).acikMi;
+    }
+    const canliMutfak = mutfaklarListesi.find((m) => m.id === g.mutfakId || m.kimlik === g.mutfakId) || g.mutfak;
+    return mutfakMolaDurumuGetir(canliMutfak).siparisEngelliMi;
+  });
   const odemeEngelli = !tumMinTutarlarUygun || moladaMutfakVar;
 
   return (

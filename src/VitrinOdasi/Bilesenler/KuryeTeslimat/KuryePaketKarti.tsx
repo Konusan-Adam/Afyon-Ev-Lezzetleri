@@ -27,10 +27,16 @@ export const KuryePaketKarti: React.FC<Props> = ({
   const benimPaketim = paket.kurye_id === kuryeId;
   const paketKodu = String(paket.siparis_kodu || paket.siparisKodu || paket.id || 'SIP-001');
   const teslimAldiMi = Boolean(paket.kurye_teslim_aldi_mi);
-  const mutfakTeslimEttiMi = 
-    paket.durum === 'yolda' || 
-    paket.durum === 'teslim_edildi' || 
-    paket.asama === 'kuryede' || 
+  const subeSiparisiMi = paket.siparis_kaynagi === 'sube' || Boolean(paket.sube_id);
+  const mutfakTeslimEttiMi =
+    (subeSiparisiMi &&
+      (paket.durum === 'paketlendi' ||
+        paket.durum === 'teslime_hazir' ||
+        paket.asama === 'kurye_geliyor' ||
+        paket.asama === 'paketlendi')) ||
+    paket.durum === 'yolda' ||
+    paket.durum === 'teslim_edildi' ||
+    paket.asama === 'kuryede' ||
     paket.asama === 'teslim_edildi';
 
   const alisZamani = Number(paket.kurye_alis_zamani || Date.now());
@@ -113,9 +119,9 @@ export const KuryePaketKarti: React.FC<Props> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div className="p-2.5 rounded-xl bg-[#240E2A] border border-purple-800/40 space-y-1">
           <span className="text-amber-300 font-bold flex items-center gap-1">
-            <Store className="w-3.5 h-3.5" /> Mutfak
+            <Store className="w-3.5 h-3.5" /> {subeSiparisiMi ? 'Şube' : 'Mutfak'}
           </span>
-          <p className="text-gray-300 text-[11px]">{paket.mutfak_adi || paket.mutfakAdi || 'Afyon Ev Mutfağı'}</p>
+          <p className="text-gray-300 text-[11px]">{paket.sube_adi || paket.mutfak_adi || paket.mutfakAdi || 'Afyon Ev Mutfağı'}</p>
         </div>
 
         {/* 🔒 GÜVENLİK KİLİDİ: Teslim Alınana Kadar Adres Gizlidir */}

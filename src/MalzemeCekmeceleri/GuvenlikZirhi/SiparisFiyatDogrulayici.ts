@@ -27,7 +27,7 @@ export function siparisFiyatiniZirhlaDogrula(
   let gercekUrunlerToplami = 0;
   for (const eleman of elemanlar) {
     const adet = Number(eleman.adet) || 1;
-    const birimFiyat = Number(eleman.birimFiyat || eleman.fiyat) || 0;
+    const birimFiyat = Number(eleman.birimFiyat ?? eleman.birim_fiyat ?? eleman.fiyat) || 0;
 
     if (adet <= 0 || birimFiyat <= 0) {
       return {

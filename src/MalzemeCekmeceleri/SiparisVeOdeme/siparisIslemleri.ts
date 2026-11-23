@@ -11,8 +11,11 @@ import {
   subeAdiniCoz,
   subeSiparisiMiBelirle,
   subeSiparisiVeStokIsle,
+  subeStoklariniAtomikDus,
+  subeStoklariniGeriYukle,
 } from '@/src/MalzemeCekmeceleri/Sube/subeSiparisKayitServisi';
 import { mutfakAdiniCoz, siparisPatronBildirimiGonder } from './siparisBildirimYardimcisi';
+import { sunucuZamanDamgasiAl } from '@/src/MalzemeCekmeceleri/HukukVeSozlesmeler/zamanDamgasiIstemcisi';
 
 export interface YeniSiparisGirdisi {
   musteriId: string;
@@ -94,9 +97,12 @@ export async function veritabaninaSiparisOlustur(
     mutfak_adi: cozulenBirimAdi,
     siparis_kaynagi: subeSiparisiMi ? 'sube' : 'mutfak',
     ...(subeSiparisiMi ? { sube_id: girdi.mutfakId, sube_adi: cozulenBirimAdi } : {}),
-    durum: 'beklemede',
+    durum: subeSiparisiMi ? 'hazirlaniyor' : 'beklemede',
+    asama: subeSiparisiMi ? 'ocakta' : 'beklemede',
     durum_aciklamasi: subeSiparisiMi
-      ? 'Sipariş şubeye iletildi, hazırlanıyor.'
+      ? (girdi.teslimatTipi === 'gel_al'
+          ? 'Şube siparişiniz alındı, tezgahta hazırlanıyor.'
+          : 'Şube siparişiniz alındı, paketleniyor.')
       : 'Sipariş alındı, mutfağın onaylaması bekleniyor.',
     elemanlar: normalizedElemanlar,
     urunler: normalizedElemanlar,
@@ -116,33 +122,67 @@ export async function veritabaninaSiparisOlustur(
     tahmini_teslimat: girdi.tahminiTeslimat || '40-50 dk',
   };
 
-  // 1. Önce Canlı Firebase Veritabanına Yaz (Başarısız olursa sahte başarı dönme)
+  const siparisDamgasi = await sunucuZamanDamgasiAl('siparis_olusturma', {
+    siparisId,
+    siparisKodu,
+    musteriId: girdi.musteriId,
+    mutfakId: girdi.mutfakId,
+    toplamTutar: dogrulama.hesaplananToplam,
+    odemeYontemi: girdi.odemeYontemi,
+    teslimatTipi: girdi.teslimatTipi || 'teslimat',
+  });
+  (yeniSiparisKaydi as any).olusturma_tarihi = siparisDamgasi.sunucuUtc;
+  (yeniSiparisKaydi as any).hukuki_zaman_damgasi = {
+    sunucuUtc: siparisDamgasi.sunucuUtc,
+    ozetHash: siparisDamgasi.ozetHash,
+    damgaDurumu: siparisDamgasi.damgaDurumu,
+    tsaSaglayici: siparisDamgasi.tsaSaglayici,
+    ipAdresi: siparisDamgasi.ipAdresi,
+  };
+
+  // 1. Şube ürünüyse önce stok kontrolü ve atomik stok düşümü yap (Yetersiz stokta sahte sipariş oluşmaz)
   if (canliFirebaseAktifMi()) {
-    const genelKayitBasarili = await belgeKaydet('siparisler', yeniSiparisKaydi.id, yeniSiparisKaydi);
-    if (!genelKayitBasarili) {
-      throw new Error('Sipariş veritabanına kaydedilemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.');
+    let stokDusulduMu = false;
+    if (subeSiparisiMi) {
+      await subeStoklariniAtomikDus(girdi.elemanlar);
+      stokDusulduMu = true;
     }
 
-    if (subeSiparisiMi) {
-      await subeSiparisiVeStokIsle({
-        siparisId: yeniSiparisKaydi.id,
-        siparisKodu,
-        subeId: girdi.mutfakId,
-        subeAdi: cozulenBirimAdi,
-        musteriId: girdi.musteriId,
-        musteriAdi: girdi.musteriAdi || 'Müşteri',
-        musteriTelefon: girdi.musteriTelefon || '',
-        teslimatTipi: girdi.teslimatTipi || 'teslimat',
-        teslimatAdresiMetni: girdi.teslimatAdresiMetni || '',
-        adresNotu: girdi.adresNotu || '',
-        toplamTutar: dogrulama.hesaplananToplam,
-        odemeYontemi: girdi.odemeYontemi,
-        odemeDurumu,
-        paytrOid: girdi.paytrOid,
-        pinKodu,
-        olusturmaTarihi: yeniSiparisKaydi.olusturma_tarihi,
-        elemanlar: girdi.elemanlar,
-      });
+    try {
+      const genelKayitBasarili = await belgeKaydet('siparisler', yeniSiparisKaydi.id, yeniSiparisKaydi);
+      if (!genelKayitBasarili) {
+        throw new Error('Sipariş veritabanına kaydedilemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyiniz.');
+      }
+
+      if (subeSiparisiMi) {
+        await subeSiparisiVeStokIsle(
+          {
+            siparisId: yeniSiparisKaydi.id,
+            siparisKodu,
+            subeId: girdi.mutfakId,
+            subeAdi: cozulenBirimAdi,
+            musteriId: girdi.musteriId,
+            musteriAdi: girdi.musteriAdi || 'Müşteri',
+            musteriTelefon: girdi.musteriTelefon || '',
+            teslimatTipi: girdi.teslimatTipi || 'teslimat',
+            teslimatAdresiMetni: girdi.teslimatAdresiMetni || '',
+            adresNotu: girdi.adresNotu || '',
+            toplamTutar: dogrulama.hesaplananToplam,
+            odemeYontemi: girdi.odemeYontemi,
+            odemeDurumu,
+            paytrOid: girdi.paytrOid,
+            pinKodu,
+            olusturmaTarihi: yeniSiparisKaydi.olusturma_tarihi,
+            elemanlar: girdi.elemanlar,
+          },
+          true
+        );
+      }
+    } catch (kayitHatasi) {
+      if (stokDusulduMu) {
+        await subeStoklariniGeriYukle(girdi.elemanlar);
+      }
+      throw kayitHatasi;
     }
   }
 
@@ -172,7 +212,7 @@ export async function veritabaninaSiparisOlustur(
         detail: yeniSiparisKaydi,
       })
     );
-    window.dispatchEvent(new CustomEvent('afyon_siparis_durum_degisti', { detail: { siparisKimligi: yeniSiparisKaydi.id, durum: 'beklemede' } }));
+    window.dispatchEvent(new CustomEvent('afyon_siparis_durum_degisti', { detail: { siparisKimligi: yeniSiparisKaydi.id, durum: yeniSiparisKaydi.durum } }));
   }
 
   return yeniSiparisKaydi;

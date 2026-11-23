@@ -1,6 +1,7 @@
-import { HukukiSozlesme, HukukiOnayLogu, CerezTercihleri, SozlesmeTuru } from './tipler';
+import { HukukiSozlesme, HukukiOnayLogu, CerezTercihleri } from './tipler';
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
 import { koleksiyonGetir, belgeKaydet, belgeSil } from '@/src/veritabani/FirebaseKoleksiyonServisi';
+import { hukukiDelilMuhurle, kritikOlayDamgala } from './hukukiDelilServisi';
 
 const YEREL_SOZLESMELER_ANAHTARI = 'afyon_hukuki_sozlesmeler_v3';
 const YEREL_LOGLAR_ANAHTARI = 'afyon_hukuki_onay_loglari_v2';
@@ -113,6 +114,18 @@ ALICI'nın platform üzerinden siparişini verdiği ev yemeklerinin satışı ve
 MADDE 3 - CAYMA HAKKI İSTİSNASI
 6502 sayılı Kanun uyarınca; çabuk bozulabilen taze sıcak yemeklerde cayma hakkı bulunmamaktadır.`
   },
+  on_bilgilendirme: {
+    tur: 'on_bilgilendirme',
+    baslik: '6502 Sayılı Kanun Ön Bilgilendirme Formu',
+    kisaBaslik: 'Ön Bilgilendirme Formu',
+    versiyon: '1.0.0',
+    guncellenmeTarihi: '2026-10-19',
+    zorunluMu: true,
+    konum: 'siparis',
+    silinebilirMi: false,
+    icerik: `6502 SAYILI TÜKETİCİNİN KORUNMASI HAKKINDA KANUN VE MESAFELİ SÖZLEŞMELER YÖNETMELİĞİ GEREĞİNCE:
+Sipariş edilen ürünlerin cinsi, miktarı, vergiler dahil toplam satış bedeli, teslimat ücreti, ödeme yöntemi ve tahmini teslimat süresi ödeme onayı öncesinde müşteriye açıkça sunulmuştur. Taze ve çabuk bozulabilir gıda ürünlerinde cayma hakkı istisnası geçerlidir.`
+  },
   cerez_politikasi: {
     tur: 'cerez_politikasi',
     baslik: 'Çerez (Cookie) Politikası',
@@ -189,6 +202,15 @@ export const sozlesmeGuncelle = (sozlesme: HukukiSozlesme): boolean => {
     if (canliFirebaseAktifMi()) {
       belgeKaydet('sozlesmeler', sozlesme.tur, guncelSozlesme).catch(() => {});
     }
+    void kritikOlayDamgala({
+      islemTuru: 'sozlesme_guncelleme',
+      sozlesmeTuru: sozlesme.tur,
+      ilgiliKayitId: sozlesme.tur,
+      ekDetay: {
+        versiyon: guncelSozlesme.versiyon,
+        baslik: guncelSozlesme.baslik,
+      },
+    });
     return true;
   } catch (e) {
     console.error('Sözleşme güncellenemedi:', e);
@@ -219,6 +241,16 @@ export const yeniSozlesmeEkle = (sozlesme: Omit<HukukiSozlesme, 'guncellenmeTari
     if (canliFirebaseAktifMi()) {
       belgeKaydet('sozlesmeler', kod, yeni).catch(() => {});
     }
+    void kritikOlayDamgala({
+      islemTuru: 'sozlesme_guncelleme',
+      sozlesmeTuru: kod,
+      ilgiliKayitId: kod,
+      ekDetay: {
+        versiyon: yeni.versiyon,
+        baslik: yeni.baslik,
+        yeniEklendi: true,
+      },
+    });
     return true;
   } catch (e) {
     console.error('Yeni sözleşme eklenemedi:', e);
@@ -284,29 +316,32 @@ export const hukukiLoglariCanliGetir = async (): Promise<HukukiOnayLogu[]> => {
   return hukukiLoglariGetir();
 };
 
-export const hukukiLogKaydet = (logVerisi: Omit<HukukiOnayLogu, 'kimlik' | 'tarihSaat' | 'ipAdresi' | 'cihazBilgisi'>): HukukiOnayLogu => {
-  const yeniLog: HukukiOnayLogu = {
-    kimlik: 'log_' + Date.now().toString() + '_' + Math.random().toString(36).substring(2, 6),
+export const hukukiLogKaydet = (
+  logVerisi: Omit<HukukiOnayLogu, 'kimlik' | 'tarihSaat' | 'ipAdresi' | 'cihazBilgisi'>
+): HukukiOnayLogu => {
+  const kimlik = 'log_' + Date.now().toString() + '_' + Math.random().toString(36).substring(2, 6);
+  const sozlesme = hukukiSozlesmeleriGetir()[logVerisi.sozlesmeTuru];
+  const gecerliVersiyon = sozlesme?.versiyon || logVerisi.sozlesmeVersiyonu || '1.0.0';
+
+  const onizlemeLog: HukukiOnayLogu = {
+    kimlik,
     tarihSaat: new Date().toLocaleString('tr-TR'),
-    ipAdresi: '195.175.' + Math.floor(Math.random() * 200 + 10) + '.' + Math.floor(Math.random() * 200 + 10) + ' (Afyon/Merkez)',
-    cihazBilgisi: navigator.userAgent.substring(0, 70),
-    ...logVerisi
+    ipAdresi: 'damgalaniyor...',
+    cihazBilgisi: typeof navigator !== 'undefined' ? navigator.userAgent.substring(0, 120) : 'Sunucu',
+    ...logVerisi,
+    sozlesmeVersiyonu: gecerliVersiyon,
   };
 
-  try {
-    const mevcut = hukukiLoglariGetir();
-    mevcut.unshift(yeniLog); // En yeni log en başta
-    if (mevcut.length > 500) mevcut.pop();
-    localStorage.setItem(YEREL_LOGLAR_ANAHTARI, JSON.stringify(mevcut));
+  void hukukiDelilMuhurle(
+    {
+      ...logVerisi,
+      sozlesmeVersiyonu: gecerliVersiyon,
+      sozlesmeIcerik: sozlesme?.icerik,
+    },
+    kimlik
+  );
 
-    if (canliFirebaseAktifMi()) {
-      belgeKaydet('hukuki_onay_loglari', yeniLog.kimlik, yeniLog).catch(() => {});
-    }
-  } catch (e) {
-    console.error('Hukuki log yazılamadı:', e);
-  }
-
-  return yeniLog;
+  return onizlemeLog;
 };
 
 export const cerezTercihleriniGetir = (): CerezTercihleri | null => {
@@ -328,7 +363,12 @@ export const cerezTercihleriniKaydet = (tercihler: CerezTercihleri): void => {
       sozlesmeTuru: 'cerez_politikasi',
       sozlesmeVersiyonu: '1.0.0',
       islemTuru: 'cerez_onayi',
-      onaylandiMi: tercihler.onaylandi
+      onaylandiMi: tercihler.onaylandi,
+      ekDetay: {
+        zorunlu: tercihler.zorunlu,
+        analitik: tercihler.analitik,
+        pazarlama: tercihler.pazarlama,
+      },
     });
   } catch (e) {
     console.error('Çerez tercihleri kaydedilemedi:', e);

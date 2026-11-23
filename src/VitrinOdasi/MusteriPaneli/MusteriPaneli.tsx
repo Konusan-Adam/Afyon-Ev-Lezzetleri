@@ -21,7 +21,7 @@ import { MutfakIptalBildirimModal } from './MutfakIptalBildirimModal';
 export const MusteriPaneli: React.FC = () => {
   const { aktifKullanici, panelDegistir, cikisYap } = kullaniciHafizasiKullan();
   const { mutfaklar } = useMutfaklar();
-  const { sepeteEkle, sepetPaneliAc } = sepetHafizasiKullan();
+  const { sepeteEkle, sepetPaneliAc, subelerListesi } = sepetHafizasiKullan();
   const { toplamFavoriSayisi } = favoriHafizasiKullan();
 
   const [aktifSekme, setAktifSekme] = useState<'siparisler' | 'adresler' | 'favoriler'>(() => {
@@ -158,19 +158,38 @@ export const MusteriPaneli: React.FC = () => {
                 </p>
               </div>
             ) : (
-              gosterilenSiparisler.map((sip) => (
-                <MusteriSiparisKarti
-                  key={sip.id}
-                  siparis={sip}
-                  mutfak={mutfaklar.find((m) => m.id === sip.mutfak_id)}
-                  sepeteEkle={sepeteEkle}
-                  sepetPaneliAc={sepetPaneliAc}
-                  onTakipEt={setTakipEdilecekSiparisKodu}
-                  onQrAc={setQrGosterilecekSiparisKodu}
-                  onIptalEt={setIptalEdilecekSiparis}
-                  onDegerlendir={setDegerlendirilecekSiparis}
-                />
-              ))
+              gosterilenSiparisler.map((sip) => {
+                const eslesenMutfak = mutfaklar.find((m) => m.id === sip.mutfak_id || m.kimlik === sip.mutfak_id);
+                const eslesenSube = !eslesenMutfak
+                  ? subelerListesi.find((s) => (s.id || s.kimlik) === (sip.sube_id || sip.mutfak_id))
+                  : undefined;
+                const birimMutfak =
+                  eslesenMutfak ||
+                  (eslesenSube
+                    ? {
+                        id: eslesenSube.id || eslesenSube.kimlik || '',
+                        ad: eslesenSube.ad,
+                        min_siparis_tutari: 0,
+                        teslimat_ucreti: 0,
+                        puan: eslesenSube.puan || 5,
+                        tip: 'sube' as const,
+                      }
+                    : undefined);
+
+                return (
+                  <MusteriSiparisKarti
+                    key={sip.id}
+                    siparis={sip}
+                    mutfak={birimMutfak}
+                    sepeteEkle={sepeteEkle}
+                    sepetPaneliAc={sepetPaneliAc}
+                    onTakipEt={setTakipEdilecekSiparisKodu}
+                    onQrAc={setQrGosterilecekSiparisKodu}
+                    onIptalEt={setIptalEdilecekSiparis}
+                    onDegerlendir={setDegerlendirilecekSiparis}
+                  />
+                );
+              })
             )}
           </div>
         )}

@@ -50,6 +50,37 @@ service cloud.firestore {
         data.tarih is string && data.tarih.size() > 0 && data.tarih.size() <= 64;
     }
 
+    function isValidHukukiOnayLogu(data, logId) {
+      return data.keys().hasAll([
+          'kimlik', 'sozlesmeTuru', 'sozlesmeVersiyonu', 'islemTuru',
+          'tarihSaat', 'ipAdresi', 'cihazBilgisi', 'onaylandiMi', 'sunucuKayitZamani'
+        ]) &&
+        data.keys().hasOnly([
+          'kimlik', 'sozlesmeTuru', 'sozlesmeVersiyonu', 'kullaniciKimlik',
+          'kullaniciTelefon', 'kullaniciAdSoyad', 'islemTuru', 'tarihSaat',
+          'sunucuUtc', 'ipAdresi', 'cihazBilgisi', 'onaylandiMi',
+          'ozetHash', 'sozlesmeMetinHash', 'tsaSaglayici', 'tsaTokenBase64',
+          'damgaDurumu', 'sunucuImzasi', 'ilgiliKayitId', 'ekDetay', 'sunucuKayitZamani'
+        ]) &&
+        data.kimlik == logId &&
+        data.sozlesmeTuru is string && data.sozlesmeTuru.size() > 0 && data.sozlesmeTuru.size() <= 100 &&
+        data.sozlesmeVersiyonu is string && data.sozlesmeVersiyonu.size() > 0 && data.sozlesmeVersiyonu.size() <= 30 &&
+        data.islemTuru in ['kayit', 'siparis', 'cerez_onayi', 'teslimat', 'iptal', 'hakedis', 'sozlesme_guncelleme', 'ozel_onay'] &&
+        data.tarihSaat is string && data.tarihSaat.size() > 0 && data.tarihSaat.size() <= 64 &&
+        data.ipAdresi is string && data.ipAdresi.size() > 0 && data.ipAdresi.size() <= 100 &&
+        data.cihazBilgisi is string && data.cihazBilgisi.size() <= 250 &&
+        data.onaylandiMi is bool &&
+        data.sunucuKayitZamani == request.time &&
+        (!('sunucuUtc' in data) || (data.sunucuUtc is string && data.sunucuUtc.size() <= 64)) &&
+        (!('ozetHash' in data) || (data.ozetHash is string && data.ozetHash.size() <= 128)) &&
+        (!('sozlesmeMetinHash' in data) || (data.sozlesmeMetinHash is string && data.sozlesmeMetinHash.size() <= 128)) &&
+        (!('tsaSaglayici' in data) || (data.tsaSaglayici is string && data.tsaSaglayici.size() <= 120)) &&
+        (!('tsaTokenBase64' in data) || (data.tsaTokenBase64 is string && data.tsaTokenBase64.size() <= 20000)) &&
+        (!('damgaDurumu' in data) || (data.damgaDurumu in ['rfc3161_onayli', 'sunucu_muhurlu', 'yerel_ozet'])) &&
+        (!('sunucuImzasi' in data) || (data.sunucuImzasi is string && data.sunucuImzasi.size() <= 128)) &&
+        (!('ilgiliKayitId' in data) || (data.ilgiliKayitId is string && data.ilgiliKayitId.size() <= 128));
+    }
+
     // 2. Bağlantı Sağlık Kontrolü
     match /test/{docId} {
       allow read: if true;
@@ -226,7 +257,8 @@ service cloud.firestore {
 
     match /hukuki_onay_loglari/{logId} {
       allow read: if true;
-      allow write: if isValidId(logId);
+      allow create: if isValidId(logId) && isValidHukukiOnayLogu(incoming(), logId);
+      allow update, delete: if false;
     }
 
     match /faturalar/{faturaId} {

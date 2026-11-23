@@ -15,12 +15,15 @@ export const SiparisDurumCubugu: React.FC<SiparisDurumCubuguOzellikleri> = ({
 }) => {
   const iptal = siparisIptalMi(durum);
   const tamamlandi = siparisTamamlandiMi(durum);
-  const yolda = durum === 'yolda';
+  const yolda = durum === 'yolda' || durum === 'kapida';
+  const hazirVeyaPaketlendi =
+    durum === 'hazir' ||
+    durum === 'teslime_hazir' ||
+    durum === 'paketlendi';
   const hazirlaniyor =
     durum === 'beklemede' ||
     durum === 'onaylandi' ||
-    durum === 'hazirlaniyor' ||
-    durum === 'hazir';
+    durum === 'hazirlaniyor';
 
   return (
     <div className="pt-2 border-t border-purple-900/40">
@@ -41,8 +44,8 @@ export const SiparisDurumCubugu: React.FC<SiparisDurumCubuguOzellikleri> = ({
 
       {!iptal ? (
         <div className="grid grid-cols-3 gap-1.5 pt-1">
-          <div className={`h-1.5 rounded-full ${hazirlaniyor || yolda || tamamlandi ? 'bg-amber-400' : 'bg-purple-950'}`} />
-          <div className={`h-1.5 rounded-full ${yolda || tamamlandi ? 'bg-blue-400' : 'bg-purple-950'}`} />
+          <div className={`h-1.5 rounded-full ${hazirlaniyor || hazirVeyaPaketlendi || yolda || tamamlandi ? 'bg-amber-400' : 'bg-purple-950'}`} />
+          <div className={`h-1.5 rounded-full ${hazirVeyaPaketlendi || yolda || tamamlandi ? 'bg-blue-400' : 'bg-purple-950'}`} />
           <div className={`h-1.5 rounded-full ${tamamlandi ? 'bg-emerald-400' : 'bg-purple-950'}`} />
         </div>
       ) : (

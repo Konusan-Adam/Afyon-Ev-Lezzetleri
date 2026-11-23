@@ -2,6 +2,9 @@ import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
 import { belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
 import { yerelSiparisDurumGuncelle } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/yerelSiparisDeposu';
+import { SubeSiparisi } from '@/src/veritabani/SubeTipleri';
+import { subeStoklariniGeriYukle } from '@/src/MalzemeCekmeceleri/Sube/subeSiparisKayitServisi';
+import { kritikOlayDamgala } from '@/src/MalzemeCekmeceleri/HukukVeSozlesmeler/hukukiDelilServisi';
 
 export async function siparisIptalEt(
   siparisKimligi: string,
@@ -15,19 +18,37 @@ export async function siparisIptalEt(
       ? `Sipariş İptal Edildi: ${gerekceBaslik} (${detayNot.trim()})`
       : `Sipariş İptal Edildi: ${gerekceBaslik}`;
 
+  const iptalDamgasi = await kritikOlayDamgala({
+    islemTuru: 'iptal',
+    sozlesmeTuru: 'iptal_iade_kosullari',
+    ilgiliKayitId: siparisKodu || siparisKimligi,
+    ekDetay: {
+      siparisKimligi,
+      siparisKodu: siparisKodu || '',
+      iptalKaynagi,
+      gerekceBaslik,
+      detayNot: detayNot?.trim() || '',
+    },
+  });
+
   const guncellenecekAlanlar = {
     durum: 'iptal',
     asama: 'iptal',
     durum_aciklamasi: aciklamaMetni,
     durumAciklamasi: aciklamaMetni,
     iptal_kaynagi: iptalKaynagi,
-    iptal_tarihi: new Date().toISOString(),
+    iptal_tarihi: iptalDamgasi.sunucuUtc,
+    iptal_zaman_damgasi: iptalDamgasi,
     sonGuncelleme: new Date().toLocaleTimeString('tr-TR'),
   };
 
   if (canliFirebaseAktifMi()) {
     try {
-      const tumSiparisler = await koleksiyonGetir<any>('siparisler');
+      const [tumSiparisler, tumSubeSiparisleri] = await Promise.all([
+        koleksiyonGetir<any>('siparisler'),
+        koleksiyonGetir<SubeSiparisi>('sube_siparisleri'),
+      ]);
+
       const eslesenBelgeler = (tumSiparisler || []).filter((fbDoc) => {
         const kod = fbDoc.siparis_kodu || fbDoc.siparisKodu;
         return (
@@ -45,6 +66,30 @@ export async function siparisIptalEt(
       } else {
         const basarili = await belgeKaydet('siparisler', siparisKimligi, guncellenecekAlanlar);
         if (!basarili) return false;
+      }
+
+      const eslesenSubeSiparisleri = (tumSubeSiparisleri || []).filter((sDoc) => {
+        return (
+          sDoc.id === siparisKimligi ||
+          sDoc.siparis_kodu === siparisKimligi ||
+          (siparisKodu && (sDoc.id === siparisKodu || sDoc.siparis_kodu === siparisKodu))
+        );
+      });
+
+      for (const subeSip of eslesenSubeSiparisleri) {
+        const oncekiDurum = (subeSip.durum || '').toLowerCase();
+        await belgeKaydet('sube_siparisleri', subeSip.id, { durum: 'iptal' });
+        if (oncekiDurum !== 'iptal' && oncekiDurum !== 'teslim_edildi' && Array.isArray(subeSip.urunler)) {
+          await subeStoklariniGeriYukle(
+            subeSip.urunler.map((u) => ({
+              id: u.urun_id,
+              yemek_id: u.urun_id,
+              baslik: u.ad,
+              fiyat: u.fiyat,
+              adet: u.adet,
+            }))
+          );
+        }
       }
     } catch (hata) {
       console.warn('Firebase sipariş iptal güncelleme hatası:', hata);

@@ -24,13 +24,14 @@ export function sepetiMutfaklaraGöreGrupla(
     const mutfakId = item.mutfak_id || 'varsayilan_mutfak';
     
     // Mutfak veya Şube bilgisi
-    const subeMi = mutfakId.startsWith('sube');
+    const subeMi = mutfakId.startsWith('sube') || item.mutfak?.tip === 'sube';
     const mutfakBilgisi: Mutfak = item.mutfak || {
       id: mutfakId,
       ad: subeMi ? 'Afyon Ev Lezzetleri (Şube Tezgahı)' : 'Afyon Yöresel Ev Mutfakları',
       min_siparis_tutari: subeMi ? 0 : 100,
       teslimat_ucreti: bazUcret,
       puan: 5.0,
+      ...(subeMi ? { tip: 'sube' } : {}),
     };
 
     if (!gruplar[mutfakId]) {
@@ -57,15 +58,15 @@ export function sepetiMutfaklaraGöreGrupla(
   // Akıllı Kurye Rota Motoru ile nihai toplam teslimat ücretini Patron Masası ayarlarından hesapla:
   const kuryeSonuc = akilliKuryeUcretiHesapla(mutfakSayisi, bazUcret, toplamSepetTutari);
 
-  // Mutfak sayısına göre teslimat ücretini mutfaklara adil paylaştır
+  // Mutfak / Şube sayısına göre teslimat ücretini noktalara adil paylaştır (Gel-Al'da arayüz 0 ₺ uygular)
   const tabanPay = mutfakSayisi > 0 ? Math.floor(kuryeSonuc.nihaiTeslimatUcreti / mutfakSayisi) : 0;
   const kalanArtik = mutfakSayisi > 0 ? kuryeSonuc.nihaiTeslimatUcreti % mutfakSayisi : 0;
 
   return grupListesi.map((g, index) => {
-    const subeGrup = g.mutfakId.startsWith('sube');
+    const subeGrup = g.mutfakId.startsWith('sube') || g.mutfak?.tip === 'sube';
     const minTutar = subeGrup ? 0 : (typeof g.mutfak.min_siparis_tutari === 'number' ? g.mutfak.min_siparis_tutari : 100);
     const kalan = Math.max(0, minTutar - g.araToplam);
-    const kuryePayi = subeGrup ? 0 : (g.araToplam > 0 ? (tabanPay + (index < kalanArtik ? 1 : 0)) : 0);
+    const kuryePayi = g.araToplam > 0 ? (tabanPay + (index < kalanArtik ? 1 : 0)) : 0;
 
     return {
       ...g,

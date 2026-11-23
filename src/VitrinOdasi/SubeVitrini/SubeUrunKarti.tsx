@@ -37,7 +37,8 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({
     e.stopPropagation();
     if (eklemeEngelli) return;
     teslimatTipiDegistir('teslimat');
-    await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
+    const basarili = await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
+    if (!basarili) return;
     setEklendi(true);
     setTimeout(() => setEklendi(false), 1500);
   };
@@ -47,7 +48,8 @@ export const SubeUrunKarti: React.FC<SubeUrunKartiProps> = ({
     if (eklemeEngelli) return;
     gelAlSubesiniIdIleSec(urun.sube_id);
     teslimatTipiDegistir('gel_al');
-    await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
+    const basarili = await sepeteEkle(urun.sube_id, urun.id, 1, urun.fiyat);
+    if (!basarili) return;
     if (onGelAlSecildi) onGelAlSecildi();
     setEklendi(true);
     setTimeout(() => setEklendi(false), 1500);

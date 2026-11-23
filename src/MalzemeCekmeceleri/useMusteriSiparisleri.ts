@@ -13,6 +13,8 @@ import {
   firestoreSiparisiniDonustur,
   musteriSiparisleriniSuz,
 } from './SiparisVeOdeme/siparisFiltreVeDonusturucu';
+import { SubeSiparisi } from '@/src/veritabani/SubeTipleri';
+import { subeSiparisleriniHaritayaBirlestir } from './Sube/subeSiparisSenkronYardimcisi';
 import { siparisAktifMi } from './SiparisVeOdeme/siparisDurumYardimcisi';
 
 export {
@@ -46,8 +48,9 @@ export function useMusteriSiparisleri(musteriId?: string, musteriTelefon?: strin
   const [hata, setHata] = useState<string | null>(null);
 
   const listeyiIsleVeAyarla = useCallback(
-    (canliKayitlar: any[]) => {
-      const donusturulmus = canliKayitlar.map(firestoreSiparisiniDonustur);
+    (canliKayitlar: any[], subeKayitlari: SubeSiparisi[] = []) => {
+      const birlesikHam = subeSiparisleriniHaritayaBirlestir(canliKayitlar, subeKayitlari);
+      const donusturulmus = birlesikHam.map(firestoreSiparisiniDonustur);
       yerelSiparisSenkronizeEt(donusturulmus);
 
       const tekilHarita = new Map<string, TestSiparis>();
@@ -82,8 +85,11 @@ export function useMusteriSiparisleri(musteriId?: string, musteriTelefon?: strin
 
     if (canliFirebaseAktifMi()) {
       try {
-        const fbSiparisler = await koleksiyonGetir<any>('siparisler');
-        listeyiIsleVeAyarla(fbSiparisler || []);
+        const [fbSiparisler, fbSubeSiparisler] = await Promise.all([
+          koleksiyonGetir<any>('siparisler'),
+          koleksiyonGetir<SubeSiparisi>('sube_siparisleri'),
+        ]);
+        listeyiIsleVeAyarla(fbSiparisler || [], fbSubeSiparisler || []);
         return;
       } catch (err: any) {
         console.warn('Firebase siparişler okunurken hata:', err);
@@ -101,9 +107,18 @@ export function useMusteriSiparisleri(musteriId?: string, musteriTelefon?: strin
   useEffect(() => {
     siparisleriYukle();
     let abonelikDurdur = () => {};
+    let subeAbonelikDurdur = () => {};
+    let sonGenelVeriler: any[] = [];
+    let sonSubeVeriler: SubeSiparisi[] = [];
+
     if (canliFirebaseAktifMi()) {
       abonelikDurdur = koleksiyonuCanliDinle<any>('siparisler', (veriler) => {
-        listeyiIsleVeAyarla(veriler || []);
+        sonGenelVeriler = veriler || [];
+        listeyiIsleVeAyarla(sonGenelVeriler, sonSubeVeriler);
+      });
+      subeAbonelikDurdur = koleksiyonuCanliDinle<SubeSiparisi>('sube_siparisleri', (veriler) => {
+        sonSubeVeriler = veriler || [];
+        listeyiIsleVeAyarla(sonGenelVeriler, sonSubeVeriler);
       });
     }
     const olayDinle = () => siparisleriYukle();
@@ -111,6 +126,7 @@ export function useMusteriSiparisleri(musteriId?: string, musteriTelefon?: strin
     window.addEventListener('afyon_siparis_eklendi', olayDinle);
     return () => {
       abonelikDurdur();
+      subeAbonelikDurdur();
       window.removeEventListener('afyon_siparis_durum_degisti', olayDinle);
       window.removeEventListener('afyon_siparis_eklendi', olayDinle);
     };

@@ -34,7 +34,8 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
   const adreseSepeteAt = async () => {
     if (eklemeEngelli) return;
     teslimatTipiDegistir('teslimat');
-    await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
+    const basarili = await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
+    if (!basarili) return;
     setEklendi(true);
     setTimeout(() => {
       setEklendi(false);
@@ -46,7 +47,8 @@ export const SubeUrunDetayModali: React.FC<SubeUrunDetayModaliProps> = ({
     if (eklemeEngelli) return;
     gelAlSubesiniIdIleSec(urun.sube_id);
     teslimatTipiDegistir('gel_al');
-    await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
+    const basarili = await sepeteEkle(urun.sube_id, urun.id, adet, urun.fiyat);
+    if (!basarili) return;
     if (onGelAlSecildi) onGelAlSecildi();
     setEklendi(true);
     setTimeout(() => {

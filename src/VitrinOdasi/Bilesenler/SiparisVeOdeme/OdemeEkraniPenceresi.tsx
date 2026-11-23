@@ -18,6 +18,8 @@ import { useKuponHesaplayici } from '@/src/MalzemeCekmeceleri/useKuponHesaplayic
 import { useOdemeSecenekleri } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/useOdemeSecenekleri';
 import { PaytrOdemePenceresi } from './PaytrOdemePenceresi';
 import { mutfakMolaDurumuGetir } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
+import { GelAlSubesi } from '@/src/veritabani/VeriTipleri';
 
 interface OdemeEkraniPenceresiOzellikleri {
   grup?: MutfakSepetGrubu;
@@ -31,7 +33,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
   onKapat,
 }) => {
   const { aktifKullanici } = kullaniciHafizasiKullan();
-  const { mutfakSepetiniTemizle, sepetiTamamenTemizle, sepetPaneliKapat, mutfaklarListesi } = sepetHafizasiKullan();
+  const { mutfakSepetiniTemizle, sepetiTamamenTemizle, sepetPaneliKapat, mutfaklarListesi, subelerListesi } = sepetHafizasiKullan();
   const {
     teslimatTipi,
     seciliAdres,
@@ -43,11 +45,31 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // İşlenecek mutfak grupları
+  // İşlenecek mutfak/şube grupları
   const aktifGruplar: MutfakSepetGrubu[] =
     gruplar.length > 0 ? gruplar : grup ? [grup] : [];
 
   const gelAlMi = teslimatTipi === 'gel_al';
+
+  const gruptanSubeCoz = (g: MutfakSepetGrubu): GelAlSubesi | null => {
+    const subeGrubuMu = g.mutfakId.startsWith('sube') || g.mutfak?.tip === 'sube';
+    if (!subeGrubuMu) return null;
+    const canliSube = subelerListesi.find((s) => (s.id || s.kimlik) === g.mutfakId);
+    if (canliSube) return canliSube;
+    return {
+      id: g.mutfakId,
+      kimlik: g.mutfakId,
+      ad: g.mutfak?.ad || 'Afyon Ev Lezzetleri Şubesi',
+      adres: g.mutfak?.adres || 'Afyonkarahisar Şube',
+      hazirlanma_suresi: g.mutfak?.hazirlanma_suresi || '15-20 dk',
+      acik_mi: g.mutfak?.acik_mi,
+      calisma_saatleri: g.mutfak?.calisma_saatleri,
+    };
+  };
+
+  const tekSubeGrubuSubesi =
+    aktifGruplar.length === 1 ? gruptanSubeCoz(aktifGruplar[0]) : null;
+  const gosterilecekGelAlSubesi = tekSubeGrubuSubesi || seciliGelAlSubesi;
 
   // İsim & Telefon
   const [adSoyad, setAdSoyad] = useState(aktifKullanici?.ad_soyad || '');
@@ -199,10 +221,27 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
     }
 
     for (const g of aktifGruplar) {
-      const canliMutfak = mutfaklarListesi.find((m) => m.id === g.mutfakId || m.kimlik === g.mutfakId) || g.mutfak;
-      const molaBilgisi = mutfakMolaDurumuGetir(canliMutfak);
-      if (molaBilgisi.siparisEngelliMi) {
-        setHataMesaji(`${canliMutfak.ad}: ${molaBilgisi.uyariMetni}`);
+      const grupSubesi = gruptanSubeCoz(g);
+      if (grupSubesi) {
+        const subeDurumu = calismaSaatiDurumuHesapla(grupSubesi);
+        if (!subeDurumu.acikMi) {
+          setHataMesaji(`${grupSubesi.ad}: ${subeDurumu.uyariMetni || 'Şube şu an kapalıdır.'}`);
+          return;
+        }
+      } else {
+        const canliMutfak = mutfaklarListesi.find((m) => m.id === g.mutfakId || m.kimlik === g.mutfakId) || g.mutfak;
+        const molaBilgisi = mutfakMolaDurumuGetir(canliMutfak);
+        if (molaBilgisi.siparisEngelliMi) {
+          setHataMesaji(`${canliMutfak.ad}: ${molaBilgisi.uyariMetni}`);
+          return;
+        }
+      }
+    }
+
+    if (gelAlMi && !tekSubeGrubuSubesi && seciliGelAlSubesi) {
+      const gelAlDurum = calismaSaatiDurumuHesapla(seciliGelAlSubesi);
+      if (!gelAlDurum.acikMi) {
+        setHataMesaji(`${seciliGelAlSubesi.ad}: ${gelAlDurum.uyariMetni || 'Seçili Gel-Al şubesi şu an kapalıdır.'}`);
         return;
       }
     }
@@ -245,7 +284,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
 
     let adresMetni = '';
     if (gelAlMi) {
-      adresMetni = `[GEL AL ŞUBESİ: ${seciliGelAlSubesi?.ad || 'Merkez Şube'}]`;
+      adresMetni = `[GEL AL ŞUBESİ: ${gosterilecekGelAlSubesi?.ad || 'Merkez Şube'}]`;
     } else if (aktifKullanici) {
       if (!seciliAdres) {
         setHataMesaji('Lütfen teslimat için adres seçiniz.');
@@ -301,15 +340,24 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
         kalanIndirim -= buGrupIndirimi;
         const gercekToplamTutar = Math.round((tabanTutar - buGrupIndirimi) * 100) / 100;
 
+        const grupSubesi = gruptanSubeCoz(tekGrup);
+        const hedefGelAlSubesi = grupSubesi || seciliGelAlSubesi;
+        const grupAdresMetni = gelAlMi
+          ? `[GEL AL ŞUBESİ: ${hedefGelAlSubesi?.ad || 'Merkez Şube'}]`
+          : adresMetni;
+        const grupAdresNotu = gelAlMi
+          ? `[GEL AL: ${hedefGelAlSubesi?.ad || 'Merkez Şube'}] ${adresNotu}`.trim()
+          : adresNotu;
+
         const sonuc = await veritabaninaSiparisOlustur({
           musteriId: aktifKullanici?.kimlik || `misafir-${Date.now()}`,
           musteriAdi: musteriIsmi,
           musteriTelefon: telefonuStandartlastir(musteriTel),
           misafirMi: !aktifKullanici,
           teslimatTipi: gelAlMi ? 'gel_al' : 'teslimat',
-          teslimatAdresiMetni: adresMetni,
+          teslimatAdresiMetni: grupAdresMetni,
           mutfakId: tekGrup.mutfakId,
-          subeAdi: tekGrup.mutfak?.ad || (gelAlMi ? seciliGelAlSubesi?.ad : undefined),
+          subeAdi: grupSubesi?.ad || tekGrup.mutfak?.ad || (gelAlMi ? hedefGelAlSubesi?.ad : undefined),
           elemanlar: siparisElemanlari,
           toplamTutar: gercekToplamTutar,
           teslimatUcreti,
@@ -321,10 +369,10 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
           tahminiTeslimat:
             tercih.tip === 'hemen'
               ? gelAlMi
-                ? seciliGelAlSubesi?.hazirlanma_suresi || '15-20 dk'
+                ? hedefGelAlSubesi?.hazirlanma_suresi || '15-20 dk'
                 : '35-45 dk'
               : `${tercih.tarihEtiketi} ${tercih.saatAraligi}`,
-          adresNotu: gelAlMi ? `[GEL AL: ${seciliGelAlSubesi?.ad}] ${adresNotu}` : adresNotu,
+          adresNotu: grupAdresNotu,
         });
 
         if (sonuc) {
@@ -344,15 +392,28 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
               localStorage.setItem('afyon_son_misafir_ad', musteriIsmi);
             } catch {}
           }
-          // Hukuki Mesafeli Satış ve Ön Bilgilendirme Onay Logu Kaydet
-          hukukiLogKaydet({
-            sozlesmeTuru: 'mesafeli_satis',
-            sozlesmeVersiyonu: '1.0.0',
-            kullaniciKimlik: aktifKullanici?.kimlik,
-            kullaniciAdSoyad: musteriIsmi,
-            kullaniciTelefon: musteriTel,
-            islemTuru: 'siparis',
-            onaylandiMi: true,
+          // Hukuki Mesafeli Satış ve 6502 Ön Bilgilendirme Onay Loglarını Gerçek Zaman Damgasıyla Mühürle
+          const siparisDelilDetayi = {
+            siparisId: sonuc.id,
+            siparisKodu: sonuc.siparis_kodu,
+            toplamTutar: sonuc.toplam_tutar,
+            teslimatUcreti: sonuc.teslimat_ucreti,
+            odemeYontemi: sonuc.odeme_yontemi,
+            teslimatTipi: sonuc.teslimat_tipi,
+            misafirMi: !aktifKullanici,
+          };
+          (['mesafeli_satis', 'on_bilgilendirme'] as const).forEach((sozlesmeTuru) => {
+            hukukiLogKaydet({
+              sozlesmeTuru,
+              sozlesmeVersiyonu: '1.0.0',
+              kullaniciKimlik: aktifKullanici?.kimlik,
+              kullaniciAdSoyad: musteriIsmi,
+              kullaniciTelefon: musteriTel,
+              islemTuru: 'siparis',
+              ilgiliKayitId: sonuc.siparis_kodu || sonuc.id,
+              ekDetay: siparisDelilDetayi,
+              onaylandiMi: true,
+            });
           });
         }
       }
@@ -442,8 +503,8 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
                   binaDaireNo={binaDaireNo}
                   onBinaDaireNoDegis={setBinaDaireNo}
                   gelAlMi={gelAlMi}
-                  seciliGelAlSubesi={seciliGelAlSubesi}
-                  onGelAlSubesiDegistir={gelAlPenceresiAc}
+                  seciliGelAlSubesi={gosterilecekGelAlSubesi}
+                  onGelAlSubesiDegistir={tekSubeGrubuSubesi ? undefined : gelAlPenceresiAc}
                   taninanMisafir={taninanMisafir}
                   seciliAdres={seciliAdres}
                   onHaritaAdresSecimAc={adresSecimPenceresiAc}
@@ -452,8 +513,8 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
                 <AdresSecimKarti
                   seciliAdres={seciliAdres}
                   gelAlMi={gelAlMi}
-                  seciliGelAlSubesi={seciliGelAlSubesi}
-                  onAdresDegistir={gelAlMi ? gelAlPenceresiAc : adresSecimPenceresiAc}
+                  seciliGelAlSubesi={gosterilecekGelAlSubesi}
+                  onAdresDegistir={gelAlMi ? (tekSubeGrubuSubesi ? undefined : gelAlPenceresiAc) : adresSecimPenceresiAc}
                 />
               )}
 

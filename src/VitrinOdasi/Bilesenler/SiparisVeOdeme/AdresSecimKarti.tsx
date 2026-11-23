@@ -6,7 +6,7 @@ interface AdresSecimKartiOzellikleri {
   seciliAdres: MusteriAdresi | null;
   gelAlMi?: boolean;
   seciliGelAlSubesi?: GelAlSubesi | null;
-  onAdresDegistir: () => void;
+  onAdresDegistir?: () => void;
 }
 
 export const AdresSecimKarti: React.FC<AdresSecimKartiOzellikleri> = ({
@@ -23,14 +23,16 @@ export const AdresSecimKarti: React.FC<AdresSecimKartiOzellikleri> = ({
           {gelAlMi ? <Store className="w-4 h-4 text-[#CFA353]" /> : <MapPin className="w-4 h-4 text-[#CFA353]" />}
           <span>{gelAlMi ? 'Gel-Al Teslimat Şubesi' : 'Teslimat Adresi'}</span>
         </div>
-        <button
-          type="button"
-          onClick={onAdresDegistir}
-          className="text-xs font-bold text-[#DDAF53] hover:text-[#f3cd78] hover:underline flex items-center gap-1 cursor-pointer bg-purple-950/60 px-3 py-1.5 rounded-xl border border-purple-900/60 transition-colors"
-        >
-          <span>{gelAlMi ? 'Şubeyi Değiştir' : 'Adresi Değiştir'}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
+        {onAdresDegistir && (
+          <button
+            type="button"
+            onClick={onAdresDegistir}
+            className="text-xs font-bold text-[#DDAF53] hover:text-[#f3cd78] hover:underline flex items-center gap-1 cursor-pointer bg-purple-950/60 px-3 py-1.5 rounded-xl border border-purple-900/60 transition-colors"
+          >
+            <span>{gelAlMi ? 'Şubeyi Değiştir' : 'Adresi Değiştir'}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Adres Bilgisi */}

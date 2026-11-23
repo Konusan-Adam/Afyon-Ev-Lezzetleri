@@ -11,7 +11,7 @@ import { siparisIptalMi, siparisTamamlandiMi } from '@/src/MalzemeCekmeceleri/Si
 interface MusteriSiparisKartiOzellikleri {
   siparis: TestSiparis;
   mutfak?: MutfakTipi;
-  sepeteEkle: (mutfakId: string, yemekId: string, adet: number, fiyat: number) => Promise<void>;
+  sepeteEkle: (mutfakId: string, yemekId: string, adet: number, fiyat: number) => Promise<boolean | void>;
   sepetPaneliAc: () => void;
   onTakipEt: (kod: string) => void;
   onQrAc: (kod: string) => void;
@@ -31,10 +31,12 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
 }) => {
   const iptalEdilebilir = sip.durum === 'beklemede' || sip.durum === 'hazirlaniyor';
   const yolda = sip.durum === 'yolda';
+  const gelAlMi = sip.teslimat_tipi === 'gel_al';
   const tamamlandi = siparisTamamlandiMi(sip.durum);
   const iptal = siparisIptalMi(sip.durum);
   const aktifSiparisMi = !tamamlandi && !iptal;
   const puanlandi = siparisDegerlendirildiMi(sip.id);
+  const birimAdi = mutfak?.ad || sip.sube_adi || sip.mutfak_adi || 'Afyon Ev Mutfağı';
 
   const whatsappLink = `https://wa.me/905423334455?text=${encodeURIComponent(
     `Merhaba, #${sip.siparis_kodu} kodlu siparişim ile ilgili bilgi ve destek almak istiyorum.`
@@ -72,9 +74,14 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
 
       <div className="text-xs space-y-1">
         <div className="flex items-center justify-between">
-          <div className="font-bold text-white flex items-center gap-1.5">
+          <div className="font-bold text-white flex items-center gap-1.5 flex-wrap">
             <Store className="w-3.5 h-3.5 text-amber-400" />
-            <span>{mutfak?.ad || 'Afyon Ev Mutfağı'}</span>
+            <span>{birimAdi}</span>
+            {gelAlMi && (
+              <span className="text-[10px] font-bold text-emerald-300 bg-emerald-950/70 border border-emerald-700/60 px-2 py-0.5 rounded-full">
+                Gel-Al
+              </span>
+            )}
           </div>
           {aktifSiparisMi && (
             <a
@@ -107,7 +114,7 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
 
       <div className="pt-2 border-t border-purple-900/40 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          {yolda && (
+          {yolda && !gelAlMi && (
             <button
               type="button"
               onClick={() => onTakipEt(sip.siparis_kodu || sip.id)}
@@ -124,7 +131,7 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
               className="text-xs font-bold text-white bg-[#2A102E] hover:bg-[#3E1646] border border-purple-700/60 px-3 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-md active:scale-95 transition-all"
             >
               <QrCode className="w-4 h-4 text-amber-400" />
-              <span>Teslimat QR Kodum 📱</span>
+              <span>{gelAlMi ? 'Gel-Al QR / PIN Kodum 📱' : 'Teslimat QR Kodum 📱'}</span>
             </button>
           )}
         </div>
@@ -162,7 +169,7 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
                 siparisKimligi: sip.id,
                 siparisKodu: sip.siparis_kodu || sip.siparisKodu || sip.id,
                 mutfakId: sip.mutfak_id || '',
-                mutfakAdi: mutfak?.ad || 'Afyon Ev Mutfağı',
+                mutfakAdi: birimAdi,
                 yemekler: (sip.elemanlar || []).map((e: { yemek_baslik?: string; baslik?: string }) => e.yemek_baslik || e.baslik || ''),
               })}
               className="bg-amber-500 hover:bg-amber-400 text-[#130713] text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md cursor-pointer transition-transform active:scale-95"

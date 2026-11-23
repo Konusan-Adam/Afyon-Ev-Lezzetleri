@@ -2,6 +2,8 @@ import React from 'react';
 import { ShoppingBag, ChevronRight, Store, Bike } from 'lucide-react';
 import { sepetHafizasiKullan } from '@/src/OrtakHavuz/SepetHafizasi';
 import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
+import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
+import { useAktifSiparisSayisi } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 
 export const YuzenSepetBari: React.FC = () => {
   const { 
@@ -10,6 +12,16 @@ export const YuzenSepetBari: React.FC = () => {
     sepetPaneliAc 
   } = sepetHafizasiKullan();
   const { teslimatTipi } = teslimatHafizasiKullan();
+  const { aktifKullanici } = kullaniciHafizasiKullan();
+
+  const sonMisafirTelefon =
+    typeof window !== 'undefined' ? localStorage.getItem('afyon_son_misafir_telefon') || '' : '';
+  const aktifSiparisSayisi = useAktifSiparisSayisi(
+    aktifKullanici?.kimlik,
+    aktifKullanici?.telefon || sonMisafirTelefon
+  );
+  const aktifSiparisSeridiAcik =
+    aktifSiparisSayisi > 0 && (!aktifKullanici || aktifKullanici.rol === 'musteri');
 
   if (toplamUrunSayisi === 0) return null;
 
@@ -19,7 +31,9 @@ export const YuzenSepetBari: React.FC = () => {
   return (
     <aside 
       aria-label="Yüzen Sepet Çubuğu"
-      className="fixed bottom-16 lg:hidden inset-x-0 z-30 max-w-md mx-auto px-4 pointer-events-none"
+      className={`fixed lg:hidden inset-x-0 z-30 max-w-md mx-auto px-4 pointer-events-none transition-all duration-300 ${
+        aktifSiparisSeridiAcik ? 'bottom-[120px]' : 'bottom-16'
+      }`}
     >
       <div 
         onClick={sepetPaneliAc}

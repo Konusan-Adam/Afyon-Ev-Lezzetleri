@@ -3,6 +3,8 @@ import { TakipVerisiTipi, SiparisAsamaTipi } from '@/src/MalzemeCekmeceleri';
 import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
 import { koleksiyonuCanliDinle } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { musteriTeslimZiliCal } from '@/src/MalzemeCekmeceleri/MusteriTeslimZili';
+import { SubeSiparisi } from '@/src/veritabani/SubeTipleri';
+import { subeSiparisKaydiniBirlestir } from '@/src/MalzemeCekmeceleri/Sube/subeSiparisSenkronYardimcisi';
 
 const YEREL_SIPARIS_ANAHTARI = 'afyon_son_aktif_siparis';
 
@@ -48,50 +50,81 @@ export const useSiparisTakipKancasi = () => {
     };
   }, []);
 
-  // Firebase Firestore üzerinden sipariş durumunu canlı dinle
+  // Firebase Firestore üzerinden sipariş durumunu (mutfak + şube) canlı dinle
   useEffect(() => {
     if (!aktifSiparis?.siparisKodu) return;
 
     let dinlemeDurdur = () => {};
+    let subeDinlemeDurdur = () => {};
+    let sonSiparisler: any[] = [];
+    let sonSubeSiparisler: SubeSiparisi[] = [];
+
+    const birlestirVeGuncelle = () => {
+      const genelEslesen = sonSiparisler.find(
+        (s) => s.id === aktifSiparis.siparisKodu || s.siparis_kodu === aktifSiparis.siparisKodu || s.siparisKodu === aktifSiparis.siparisKodu
+      );
+      const subeEslesen = sonSubeSiparisler.find(
+        (s) => s.id === aktifSiparis.siparisKodu || s.siparis_kodu === aktifSiparis.siparisKodu
+      );
+
+      const eslesen = genelEslesen
+        ? subeSiparisKaydiniBirlestir(genelEslesen, subeEslesen)
+        : subeEslesen
+        ? subeSiparisKaydiniBirlestir(
+            {
+              id: subeEslesen.id,
+              siparis_kodu: subeEslesen.siparis_kodu,
+              teslimat_tipi: subeEslesen.teslimat_tipi,
+              durum: subeEslesen.durum,
+            },
+            subeEslesen
+          )
+        : null;
+
+      if (eslesen) {
+        const yeniAsama: SiparisAsamaTipi =
+          eslesen.durum === 'teslim_edildi' || eslesen.asama === 'teslim_edildi'
+            ? 'teslim_edildi'
+            : eslesen.durum === 'yolda' || eslesen.asama === 'kuryede'
+            ? 'kuryede'
+            : eslesen.durum === 'kapida'
+            ? 'kapida'
+            : 'ocakta';
+
+        if (yeniAsama === 'teslim_edildi' && aktifSiparis.asama !== 'teslim_edildi' && !teslimZiliCalindiRef.current) {
+          teslimZiliCalindiRef.current = true;
+          musteriTeslimZiliCal(aktifSiparis.siparisKodu);
+        }
+
+        const guncel: TakipVerisiTipi = {
+          ...aktifSiparis,
+          asama: yeniAsama,
+          kuryeAdi: eslesen.kurye_adi || eslesen.kuryeAdi || aktifSiparis.kuryeAdi,
+          tahminiDakika: yeniAsama === 'teslim_edildi' ? 0 : (eslesen.hazirlanmaSuresiDakika || aktifSiparis.tahminiDakika || 30),
+          sonGuncelleme: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+        };
+
+        setAktifSiparis(guncel);
+        try {
+          localStorage.setItem(YEREL_SIPARIS_ANAHTARI, JSON.stringify(guncel));
+        } catch {}
+      }
+    };
+
     if (canliFirebaseAktifMi()) {
       dinlemeDurdur = koleksiyonuCanliDinle<any>('siparisler', (siparisler) => {
-        const eslesen = siparisler.find(
-          (s) => s.id === aktifSiparis.siparisKodu || s.siparis_kodu === aktifSiparis.siparisKodu || s.siparisKodu === aktifSiparis.siparisKodu
-        );
-
-        if (eslesen) {
-          const yeniAsama: SiparisAsamaTipi = 
-            eslesen.durum === 'teslim_edildi' || eslesen.asama === 'teslim_edildi'
-              ? 'teslim_edildi'
-              : eslesen.durum === 'yolda' || eslesen.asama === 'kuryede'
-              ? 'kuryede'
-              : eslesen.durum === 'kapida'
-              ? 'kapida'
-              : 'ocakta';
-
-          if (yeniAsama === 'teslim_edildi' && aktifSiparis.asama !== 'teslim_edildi' && !teslimZiliCalindiRef.current) {
-            teslimZiliCalindiRef.current = true;
-            musteriTeslimZiliCal(aktifSiparis.siparisKodu);
-          }
-
-          const guncel: TakipVerisiTipi = {
-            ...aktifSiparis,
-            asama: yeniAsama,
-            kuryeAdi: eslesen.kurye_adi || eslesen.kuryeAdi || aktifSiparis.kuryeAdi,
-            tahminiDakika: yeniAsama === 'teslim_edildi' ? 0 : (eslesen.hazirlanmaSuresiDakika || aktifSiparis.tahminiDakika || 30),
-            sonGuncelleme: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
-          };
-
-          setAktifSiparis(guncel);
-          try {
-            localStorage.setItem(YEREL_SIPARIS_ANAHTARI, JSON.stringify(guncel));
-          } catch {}
-        }
+        sonSiparisler = siparisler || [];
+        birlestirVeGuncelle();
+      });
+      subeDinlemeDurdur = koleksiyonuCanliDinle<SubeSiparisi>('sube_siparisleri', (subeListesi) => {
+        sonSubeSiparisler = subeListesi || [];
+        birlestirVeGuncelle();
       });
     }
 
     return () => {
       dinlemeDurdur();
+      subeDinlemeDurdur();
     };
   }, [aktifSiparis?.siparisKodu, aktifSiparis?.asama]);
 

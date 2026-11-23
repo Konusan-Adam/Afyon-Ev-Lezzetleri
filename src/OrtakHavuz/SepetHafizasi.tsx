@@ -21,6 +21,7 @@ interface SepetHafizasiTip {
   sepetElemanlari: SepetElemani[];
   mutfakGruplari: MutfakSepetGrubu[];
   mutfaklarListesi: MutfakTipi[];
+  subelerListesi: GelAlSubesi[];
   yemeklerListesi: YemekTipi[];
   sepetUyarisi: string | null;
   sepetUyarisiTemizle: () => void;
@@ -29,7 +30,7 @@ interface SepetHafizasiTip {
   toplamTeslimatUcreti: number;
   genelToplamTutar: number;
   yukleniyor: boolean;
-  sepeteEkle: (mutfakId: string, yemekId: string, adet: number, birimFiyat: number, ekBilgiler?: SepetEkBilgileri) => Promise<void>;
+  sepeteEkle: (mutfakId: string, yemekId: string, adet: number, birimFiyat: number, ekBilgiler?: SepetEkBilgileri) => Promise<boolean>;
   adetGuncelle: (sepetId: string, yeniAdet: number) => Promise<void>;
   sepettenSil: (sepetId: string) => Promise<void>;
   mutfakSepetiniTemizle: (mutfakId: string) => Promise<void>;
@@ -43,6 +44,7 @@ const SepetContext = createContext<SepetHafizasiTip>({
   sepetElemanlari: [],
   mutfakGruplari: [],
   mutfaklarListesi: [],
+  subelerListesi: [],
   yemeklerListesi: [],
   sepetUyarisi: null,
   sepetUyarisiTemizle: () => {},
@@ -51,7 +53,7 @@ const SepetContext = createContext<SepetHafizasiTip>({
   toplamTeslimatUcreti: 0,
   genelToplamTutar: 0,
   yukleniyor: false,
-  sepeteEkle: async () => {},
+  sepeteEkle: async () => false,
   adetGuncelle: async () => {},
   sepettenSil: async () => {},
   mutfakSepetiniTemizle: async () => {},
@@ -64,6 +66,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
   const [sepetElemanlari, setSepetElemanlari] = useState<SepetElemani[]>([]);
   const [mutfaklarState, setMutfaklarState] = useState<MutfakTipi[]>([]);
   const [subelerState, setSubelerState] = useState<GelAlSubesi[]>([]);
+  const [subeUrunleriState, setSubeUrunleriState] = useState<SubeUrunu[]>([]);
   const [yemeklerState, setYemeklerState] = useState<YemekTipi[]>([]);
   const [sepetUyarisi, setSepetUyarisi] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState<boolean>(true);
@@ -131,6 +134,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
 
     abonelikCikarSubeUrun = koleksiyonuCanliDinle<SubeUrunu>('sube_stoklari', (uListesi) => {
       mevcutSubeUrunleri = uListesi || [];
+      setSubeUrunleriState(mevcutSubeUrunleri);
       sepetiHaritalaVeGuncelle();
     });
 
@@ -160,12 +164,12 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
     adet: number,
     birimFiyat: number,
     ekBilgiler?: SepetEkBilgileri
-  ) => {
+  ): Promise<boolean> => {
     const bagliMutfak = mutfaklarState.find((m) => m.id === mutfakId || m.kimlik === mutfakId);
     const molaBilgisi = mutfakMolaDurumuGetir(bagliMutfak);
     if (molaBilgisi.siparisEngelliMi) {
       uyariGoster(molaBilgisi.uyariMetni);
-      return;
+      return false;
     }
 
     const bagliSube = subelerState.find((s) => s.id === mutfakId || s.kimlik === mutfakId);
@@ -173,7 +177,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
       const subeDurumu = calismaSaatiDurumuHesapla(bagliSube);
       if (!subeDurumu.acikMi) {
         uyariGoster(subeDurumu.uyariMetni || `${bagliSube.ad} şu an kapalıdır.`);
-        return;
+        return false;
       }
     }
 
@@ -185,7 +189,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
         const stokBilgisi = yemekStokDurumuHesapla(canliYemek, bagliMutfak);
         if (stokBilgisi.tukendiMi) {
           uyariGoster(`${canliYemek.baslik} şu an tükendi.`);
-          return;
+          return false;
         }
         if (stokBilgisi.stokTakibiVarMi && stokBilgisi.kalanStok !== undefined) {
           const sepettekiToplam = sepetElemanlari
@@ -194,17 +198,39 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
           const kalanHak = Math.max(0, stokBilgisi.kalanStok - sepettekiToplam);
           if (kalanHak <= 0) {
             uyariGoster(`Stok sınırı: Bu üründen en fazla ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ekleyebilirsiniz.`);
-            return;
+            return false;
           }
           if (eklenecekAdet > kalanHak) {
             eklenecekAdet = kalanHak;
             uyariGoster(`Stok sınırı nedeniyle sepetteki toplam adet ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ile sınırlandı.`);
           }
         }
+      } else {
+        const canliSubeUrun = subeUrunleriState.find((u) => u.id === yemekId);
+        if (canliSubeUrun) {
+          const stokAdedi = Math.max(0, Number(canliSubeUrun.stok_adedi) || 0);
+          if (stokAdedi <= 0) {
+            uyariGoster(`${canliSubeUrun.ad} şu an tükendi.`);
+            return false;
+          }
+          const sepettekiToplam = sepetElemanlari
+            .filter((e) => e.yemek_id === yemekId)
+            .reduce((t, e) => t + e.adet, 0);
+          const kalanHak = Math.max(0, stokAdedi - sepettekiToplam);
+          if (kalanHak <= 0) {
+            uyariGoster(`Stok sınırı: Bu şube ürününden tezgahta sadece ${stokAdedi} adet kaldı.`);
+            return false;
+          }
+          if (eklenecekAdet > kalanHak) {
+            eklenecekAdet = kalanHak;
+            uyariGoster(`Stok sınırı nedeniyle sepetteki toplam adet ${stokAdedi} adet ile sınırlandı.`);
+          }
+        }
       }
     }
 
     await veritabaninaSepeteEkle(musteriId, mutfakId, yemekId, eklenecekAdet, birimFiyat, ekBilgiler);
+    return true;
   };
 
   const adetGuncelle = async (sepetId: string, yeniAdet: number) => {
@@ -234,20 +260,40 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       if (!mevcutEleman.coklu_menu_mu && mevcutEleman.yemek_id) {
-        const canliYemek = yemeklerState.find((y) => y.id === mevcutEleman.yemek_id) || mevcutEleman.yemek;
-        if (canliYemek) {
-          const stokBilgisi = yemekStokDurumuHesapla(canliYemek, bagliMutfak);
-          if (stokBilgisi.stokTakibiVarMi && stokBilgisi.kalanStok !== undefined) {
-            const digerSatirlarToplami = sepetElemanlari
-              .filter((e) => e.yemek_id === mevcutEleman.yemek_id && e.id !== sepetId)
-              .reduce((t, e) => t + e.adet, 0);
-            const buSatirMaks = Math.max(0, stokBilgisi.kalanStok - digerSatirlarToplami);
-            if (yeniAdet > buSatirMaks) {
-              uyariGoster(`Stok sınırı: Bu üründen en fazla ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ekleyebilirsiniz.`);
-              if (mevcutEleman.adet !== buSatirMaks && buSatirMaks > 0) {
-                await veritabanindaSepetAdetiGuncelle(sepetId, buSatirMaks);
+        const canliYemek = yemeklerState.find((y) => y.id === mevcutEleman.yemek_id);
+        const canliSubeUrun = !canliYemek
+          ? subeUrunleriState.find((u) => u.id === mevcutEleman.yemek_id)
+          : undefined;
+
+        if (canliSubeUrun) {
+          const stokAdedi = Math.max(0, Number(canliSubeUrun.stok_adedi) || 0);
+          const digerSatirlarToplami = sepetElemanlari
+            .filter((e) => e.yemek_id === mevcutEleman.yemek_id && e.id !== sepetId)
+            .reduce((t, e) => t + e.adet, 0);
+          const buSatirMaks = Math.max(0, stokAdedi - digerSatirlarToplami);
+          if (yeniAdet > buSatirMaks) {
+            uyariGoster(`Stok sınırı: Bu şube ürününden tezgahta en fazla ${stokAdedi} adet bulunuyor.`);
+            if (mevcutEleman.adet !== buSatirMaks && buSatirMaks > 0) {
+              await veritabanindaSepetAdetiGuncelle(sepetId, buSatirMaks);
+            }
+            return;
+          }
+        } else {
+          const hedefYemek = canliYemek || mevcutEleman.yemek;
+          if (hedefYemek) {
+            const stokBilgisi = yemekStokDurumuHesapla(hedefYemek, bagliMutfak);
+            if (stokBilgisi.stokTakibiVarMi && stokBilgisi.kalanStok !== undefined) {
+              const digerSatirlarToplami = sepetElemanlari
+                .filter((e) => e.yemek_id === mevcutEleman.yemek_id && e.id !== sepetId)
+                .reduce((t, e) => t + e.adet, 0);
+              const buSatirMaks = Math.max(0, stokBilgisi.kalanStok - digerSatirlarToplami);
+              if (yeniAdet > buSatirMaks) {
+                uyariGoster(`Stok sınırı: Bu üründen en fazla ${stokBilgisi.kalanStok} ${stokBilgisi.birim} ekleyebilirsiniz.`);
+                if (mevcutEleman.adet !== buSatirMaks && buSatirMaks > 0) {
+                  await veritabanindaSepetAdetiGuncelle(sepetId, buSatirMaks);
+                }
+                return;
               }
-              return;
             }
           }
         }
@@ -294,6 +340,7 @@ export const SepetSaglayici: React.FC<{ children: React.ReactNode }> = ({ childr
         sepetElemanlari,
         mutfakGruplari,
         mutfaklarListesi: mutfaklarState,
+        subelerListesi: subelerState,
         yemeklerListesi: yemeklerState,
         sepetUyarisi,
         sepetUyarisiTemizle: () => setSepetUyarisi(null),

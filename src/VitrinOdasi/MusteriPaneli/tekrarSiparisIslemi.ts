@@ -9,7 +9,7 @@ export interface TekrarSiparisParametreleri {
     yemekId: string,
     adet: number,
     birimFiyat: number
-  ) => Promise<void>;
+  ) => Promise<boolean | void>;
   sepetPaneliAc: () => void;
 }
 
@@ -20,16 +20,22 @@ export async function siparisiTekrarSepeteEkle({
   sepetPaneliAc
 }: TekrarSiparisParametreleri): Promise<boolean> {
   try {
+    let enAzBirBasarili = false;
     for (const eleman of elemanlar) {
-      await sepeteEkleFonksiyonu(
+      const sonuc = await sepeteEkleFonksiyonu(
         mutfakId,
         eleman.yemek_id,
         eleman.adet || 1,
         eleman.birim_fiyat || eleman.fiyat || 0
       );
+      if (sonuc !== false) {
+        enAzBirBasarili = true;
+      }
     }
-    sepetPaneliAc();
-    return true;
+    if (enAzBirBasarili) {
+      sepetPaneliAc();
+    }
+    return enAzBirBasarili;
   } catch (hata) {
     console.error('Tekrar sipariş sepete eklenirken hata oluştu:', hata);
     return false;

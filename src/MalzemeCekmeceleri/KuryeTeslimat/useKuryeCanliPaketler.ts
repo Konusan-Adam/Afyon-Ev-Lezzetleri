@@ -3,6 +3,8 @@ import { canliFirebaseAktifMi } from '@/src/veritabani/FirebaseIstemcisi';
 import { koleksiyonuCanliDinle, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyonServisi';
 import { yerelSiparisleriGetir } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { kuryePaketiUzerineAl, kuryePaketiTeslimAldi, kuryePinDogrulaVeTeslimEt, kuryeZamanAsimiKontrolEt } from './KuryePinServisi';
+import { SubeSiparisi } from '@/src/veritabani/SubeTipleri';
+import { subeSiparisleriniHaritayaBirlestir } from '@/src/MalzemeCekmeceleri/Sube/subeSiparisSenkronYardimcisi';
 
 export const useKuryeCanliPaketler = (kuryeId: string, kuryeAdi: string) => {
   const [paketler, setPaketler] = useState<any[]>([]);
@@ -21,19 +23,21 @@ export const useKuryeCanliPaketler = (kuryeId: string, kuryeAdi: string) => {
       if (kod) harita.set(kod, s);
     });
 
-    // 2. Canlı Firebase aktifse verileri üstüne merge et
+    // 2. Canlı Firebase aktifse verileri (siparisler + sube_siparisleri) üstüne merge et
     if (canliFirebaseAktifMi()) {
       try {
-        const tum = await koleksiyonGetir<any>('siparisler');
-        if (tum && Array.isArray(tum)) {
-          tum.forEach((fbSip) => {
-            const kod = fbSip.siparis_kodu || fbSip.siparisKodu || fbSip.id;
-            if (kod) {
-              const onceki = harita.get(kod) || {};
-              harita.set(kod, { ...onceki, ...fbSip });
-            }
-          });
-        }
+        const [tum, tumSube] = await Promise.all([
+          koleksiyonGetir<any>('siparisler'),
+          koleksiyonGetir<SubeSiparisi>('sube_siparisleri'),
+        ]);
+        const birlesik = subeSiparisleriniHaritayaBirlestir(tum || [], tumSube || []);
+        birlesik.forEach((fbSip) => {
+          const kod = fbSip.siparis_kodu || fbSip.siparisKodu || fbSip.id;
+          if (kod) {
+            const onceki = harita.get(kod) || {};
+            harita.set(kod, { ...onceki, ...fbSip });
+          }
+        });
       } catch (err) {
         console.warn('Kurye paketleri çekilirken hata:', err);
       }
@@ -52,8 +56,12 @@ export const useKuryeCanliPaketler = (kuryeId: string, kuryeAdi: string) => {
     }, 30000);
 
     let abonelikBitir = () => {};
+    let subeAbonelikBitir = () => {};
     if (canliFirebaseAktifMi()) {
       abonelikBitir = koleksiyonuCanliDinle<any>('siparisler', () => {
+        yenile();
+      });
+      subeAbonelikBitir = koleksiyonuCanliDinle<SubeSiparisi>('sube_siparisleri', () => {
         yenile();
       });
     }
@@ -68,6 +76,7 @@ export const useKuryeCanliPaketler = (kuryeId: string, kuryeAdi: string) => {
     return () => {
       clearInterval(zamanAsimiInterval);
       abonelikBitir();
+      subeAbonelikBitir();
       window.removeEventListener('afyon_siparis_durum_degisti', durumDinle);
       window.removeEventListener('afyon_siparis_eklendi', durumDinle);
     };
@@ -91,8 +100,10 @@ export const useKuryeCanliPaketler = (kuryeId: string, kuryeAdi: string) => {
     return sonuc;
   };
 
-  // 1. Mutfakta paketlenmiş VEYA kuryenin üzerine aldığı aktif paketler
+  // 1. Mutfakta/şubede paketlenmiş VEYA kuryenin üzerine aldığı adrese teslimat paketleri (Gel-Al hariç)
   const aktifPaketler = paketler.filter((p) => {
+    if (p.teslimat_tipi === 'gel_al') return false;
+
     const durum = (p.durum || '').toLowerCase();
     const asama = (p.asama || '').toLowerCase();
 

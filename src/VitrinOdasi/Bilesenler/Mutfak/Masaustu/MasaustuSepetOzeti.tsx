@@ -16,6 +16,7 @@ export const MasaustuSepetOzeti: React.FC<SepetOzetiOzellikleri> = ({
 }) => {
   const { teslimatTipi, seciliGelAlSubesi, gelAlPenceresiAc } = teslimatHafizasiKullan();
   const gelAlMi = teslimatTipi === 'gel_al';
+  const subeGrubuMu = grup.mutfakId.startsWith('sube') || grup.mutfak?.tip === 'sube';
   const teslimatTutari = gelAlMi ? 0 : grup.teslimatUcreti;
   const nihaiToplam = grup.araToplam + teslimatTutari;
 
@@ -25,17 +26,27 @@ export const MasaustuSepetOzeti: React.FC<SepetOzetiOzellikleri> = ({
       <TeslimatTipiSecici kompaktMi />
 
       {gelAlMi && (
-        <button
-          type="button"
-          onClick={gelAlPenceresiAc}
-          className="w-full text-left bg-purple-900/40 hover:bg-purple-900/60 p-2 rounded-lg border border-purple-700/50 flex items-center justify-between text-[11px] text-amber-300 transition-colors"
-        >
-          <span className="flex items-center gap-1.5 truncate">
-            <Store className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{seciliGelAlSubesi?.ad || 'Şube Seçin'}</span>
-          </span>
-          <span className="text-[10px] text-purple-300 underline shrink-0">Değiştir</span>
-        </button>
+        subeGrubuMu ? (
+          <div className="w-full text-left bg-purple-900/40 p-2 rounded-lg border border-purple-700/50 flex items-center justify-between text-[11px] text-amber-300">
+            <span className="flex items-center gap-1.5 truncate">
+              <Store className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{grup.mutfak.ad}</span>
+            </span>
+            <span className="text-[10px] text-emerald-300 font-semibold shrink-0">Şube Tezgahı</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={gelAlPenceresiAc}
+            className="w-full text-left bg-purple-900/40 hover:bg-purple-900/60 p-2 rounded-lg border border-purple-700/50 flex items-center justify-between text-[11px] text-amber-300 transition-colors cursor-pointer"
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              <Store className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate">{seciliGelAlSubesi?.ad || 'Şube Seçin'}</span>
+            </span>
+            <span className="text-[10px] text-purple-300 underline shrink-0">Değiştir</span>
+          </button>
+        )
       )}
 
       <div className="border-t border-purple-900/40 pt-2 space-y-1.5 text-xs">

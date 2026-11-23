@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Ban } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
 import { sepetHafizasiKullan, teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { MasaustuSepetSatiri } from '../Bilesenler/Mutfak/Masaustu/MasaustuSepetSatiri';
 import { MasaustuSepetOzeti } from '../Bilesenler/Mutfak/Masaustu/MasaustuSepetOzeti';
 import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
 
 interface SubeSabitSepetProps {
   sube: GelAlSubesi;
@@ -16,11 +17,12 @@ export const SubeSabitSepet: React.FC<SubeSabitSepetProps> = ({ sube }) => {
   const [odemeAcik, setOdemeAcik] = useState(false);
 
   const subeId = sube.id || sube.kimlik || 'sube-1';
-  // Bu şubenin sepet grubunu bul
   const grup = mutfakGruplari.find((g) => g.mutfakId === subeId);
   const urunSayisi = grup ? grup.elemanlar.reduce((t, e) => t + e.adet, 0) : 0;
+  const subeDurumu = calismaSaatiDurumuHesapla(sube);
 
   const odemePenceresiAc = () => {
+    if (!subeDurumu.acikMi) return;
     gelAlSubesiniIdIleSec(subeId);
     setOdemeAcik(true);
   };
@@ -36,6 +38,13 @@ export const SubeSabitSepet: React.FC<SubeSabitSepetProps> = ({ sube }) => {
           {urunSayisi} Ürün
         </span>
       </div>
+
+      {!subeDurumu.acikMi && (
+        <div className="bg-amber-950/70 border border-amber-500/60 p-2.5 rounded-xl flex items-start gap-2 text-amber-200 text-[11px] font-semibold">
+          <Ban className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <span>{subeDurumu.uyariMetni || `${sube.ad} şu an kapalıdır.`}</span>
+        </div>
+      )}
 
       {!grup || grup.elemanlar.length === 0 ? (
         <div className="py-12 text-center text-purple-300/60 text-xs">
@@ -53,7 +62,7 @@ export const SubeSabitSepet: React.FC<SubeSabitSepetProps> = ({ sube }) => {
 
           <MasaustuSepetOzeti 
             grup={grup} 
-            minUlasildi={true} 
+            minUlasildi={subeDurumu.acikMi} 
             odemeTiklandi={odemePenceresiAc} 
           />
         </>

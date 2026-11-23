@@ -7,13 +7,14 @@ import { teslimatHafizasiKullan } from '@/src/OrtakHavuz';
 import { OdemeEkraniPenceresi } from '@/src/VitrinOdasi/Bilesenler';
 import { SepetElemani } from '@/src/veritabani/VeriTipleri';
 import { mutfakMolaDurumuGetir, yemekStokDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/yemekStokDurumu';
+import { calismaSaatiDurumuHesapla } from '@/src/MalzemeCekmeceleri/OnSiparisVePorsiyon/calismaSaatiKontrolu';
 
 interface MutfakSepetKartiOzellikleri {
   grup: MutfakSepetGrubu;
 }
 
 export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }) => {
-  const { mutfakSepetiniTemizle, mutfakGruplari } = sepetHafizasiKullan();
+  const { mutfakSepetiniTemizle, mutfakGruplari, subelerListesi } = sepetHafizasiKullan();
   const {
     teslimatTipi,
     teslimatTipiDegistir,
@@ -22,8 +23,19 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
   } = teslimatHafizasiKullan();
   const [odemeAcik, setOdemeAcik] = useState(false);
 
+  const subeGrubuMu = grup.mutfakId.startsWith('sube') || grup.mutfak?.tip === 'sube';
+  const bagliSube = subeGrubuMu
+    ? subelerListesi.find((s) => (s.id || s.kimlik) === grup.mutfakId)
+    : undefined;
+  const subeDurumu = bagliSube ? calismaSaatiDurumuHesapla(bagliSube) : null;
   const molaBilgisi = mutfakMolaDurumuGetir(grup.mutfak);
-  const minTutar = typeof grup.mutfak.min_siparis_tutari === 'number' ? grup.mutfak.min_siparis_tutari : 100;
+  const kapaliVeyaMolada = molaBilgisi.siparisEngelliMi || Boolean(subeDurumu && !subeDurumu.acikMi);
+  const engelUyariMetni =
+    subeDurumu && !subeDurumu.acikMi
+      ? subeDurumu.uyariMetni || `${bagliSube?.ad || grup.mutfak.ad} şu an kapalıdır.`
+      : molaBilgisi.uyariMetni;
+
+  const minTutar = subeGrubuMu ? 0 : (typeof grup.mutfak.min_siparis_tutari === 'number' ? grup.mutfak.min_siparis_tutari : 100);
   const minTutarTamamlamayanUrunVar = Boolean(
     !grup.minTutarUlasildi &&
       grup.elemanlar.some(
@@ -37,7 +49,7 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
   const gelAlMi = teslimatTipi === 'gel_al';
   const teslimatUcreti = gelAlMi ? 0 : grup.teslimatUcreti;
   const nihaiToplam = grup.araToplam + teslimatUcreti;
-  const siparisVerilebilir = grup.minTutarUlasildi && !molaBilgisi.siparisEngelliMi;
+  const siparisVerilebilir = grup.minTutarUlasildi && !kapaliVeyaMolada;
 
   return (
     <div className="bg-[#1D0A20] border border-[#521E5C] rounded-2xl p-4 text-xs text-white space-y-3 shadow-lg select-none">
@@ -51,6 +63,8 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
             <span className="text-[10px] text-[#A872B5]">
               {gelAlMi
                 ? 'Teslimat: Şubeden Gel Al (0 ₺)'
+                : subeGrubuMu
+                ? `Şubeden Teslimat | Kurye: ${grup.teslimatUcreti} ₺`
                 : `Min. Sipariş: ${minTutar} ₺ | Kurye: ${grup.teslimatUcreti} ₺`}
             </span>
           </div>
@@ -66,10 +80,10 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
         </button>
       </div>
 
-      {molaBilgisi.siparisEngelliMi && (
+      {kapaliVeyaMolada && (
         <div className="flex items-start gap-2 bg-amber-950/70 border border-amber-500/60 text-amber-200 px-3 py-2 rounded-xl font-semibold">
           <Ban className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <span>{molaBilgisi.uyariMetni}</span>
+          <span>{engelUyariMetni}</span>
         </div>
       )}
 
@@ -82,9 +96,11 @@ export const MutfakSepetKarti: React.FC<MutfakSepetKartiOzellikleri> = ({ grup }
           )}
           <div className="min-w-0">
             <span className="font-bold text-white text-[11px] block truncate">
-              {gelAlMi ? (seciliGelAlSubesi?.ad || 'Gel Al Şubesi') : 'Kurye ile Adrese Teslimat'}
+              {gelAlMi
+                ? (subeGrubuMu ? grup.mutfak.ad : (seciliGelAlSubesi?.ad || 'Gel Al Şubesi'))
+                : 'Kurye ile Adrese Teslimat'}
             </span>
-            {gelAlMi && (
+            {gelAlMi && !subeGrubuMu && (
               <button
                 type="button"
                 onClick={gelAlPenceresiAc}

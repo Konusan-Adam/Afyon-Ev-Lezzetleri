@@ -11,7 +11,7 @@ interface TekrarSiparisButonuProps {
     yemekId: string,
     adet: number,
     birimFiyat: number
-  ) => Promise<void>;
+  ) => Promise<boolean | void>;
   sepetPaneliAc: () => void;
 }
 

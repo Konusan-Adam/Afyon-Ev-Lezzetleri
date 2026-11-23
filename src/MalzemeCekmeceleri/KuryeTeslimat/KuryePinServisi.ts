@@ -2,6 +2,9 @@ import { belgeKaydet, koleksiyonGetir } from '@/src/veritabani/FirebaseKoleksiyo
 import { patronBildirimiEkle } from '@/src/MalzemeCekmeceleri/PatronBildirimServisi';
 import { yerelSiparisDurumGuncelle, yerelSiparisleriGetir } from '@/src/MalzemeCekmeceleri/useMusteriSiparisleri';
 import { kuryeTeslimZiliCal } from '@/src/MalzemeCekmeceleri/KuryeTeslimZili';
+import { SubeSiparisi } from '@/src/veritabani/SubeTipleri';
+import { subeSiparisKaydiniBirlestir } from '@/src/MalzemeCekmeceleri/Sube/subeSiparisSenkronYardimcisi';
+import { kritikOlayDamgala } from '@/src/MalzemeCekmeceleri/HukukVeSozlesmeler/hukukiDelilServisi';
 
 export async function kuryePaketiUzerineAl(
   siparisId: string,
@@ -16,9 +19,16 @@ export async function kuryePaketiUzerineAl(
       return { basarili: false, mesaj: 'Hesabınız henüz patron tarafından onaylanmadı. Onaysız kuryeler paket teslim alamaz!' };
     }
 
-    const tum = await koleksiyonGetir<any>('siparisler');
-    const siparis = tum.find((s) => s.id === siparisId || s.siparisKodu === siparisId || s.siparis_kodu === siparisId);
-    if (!siparis) return { basarili: false, mesaj: 'Sipariş bulunamadı.' };
+    const [tum, tumSube] = await Promise.all([
+      koleksiyonGetir<any>('siparisler'),
+      koleksiyonGetir<SubeSiparisi>('sube_siparisleri'),
+    ]);
+    const hamSiparis = tum.find((s) => s.id === siparisId || s.siparisKodu === siparisId || s.siparis_kodu === siparisId);
+    const eslesenSube = tumSube.find((s) => s.id === siparisId || s.siparis_kodu === siparisId || (hamSiparis && (s.id === hamSiparis.id || s.siparis_kodu === hamSiparis.siparis_kodu)));
+    if (!hamSiparis && !eslesenSube) return { basarili: false, mesaj: 'Sipariş bulunamadı.' };
+    const siparis = hamSiparis
+      ? subeSiparisKaydiniBirlestir(hamSiparis, eslesenSube)
+      : subeSiparisKaydiniBirlestir({ id: eslesenSube!.id, siparis_kodu: eslesenSube!.siparis_kodu, durum: eslesenSube!.durum, teslimat_tipi: eslesenSube!.teslimat_tipi }, eslesenSube);
 
     const durum = (siparis.durum || '').toLowerCase();
     const asama = (siparis.asama || '').toLowerCase();
@@ -87,14 +97,28 @@ export async function kuryePaketiTeslimAldi(
   kuryeId: string
 ): Promise<{ basarili: boolean; mesaj: string }> {
   try {
-    const tum = await koleksiyonGetir<any>('siparisler');
-    const siparis = tum.find((s) => s.id === siparisId || s.siparisKodu === siparisId || s.siparis_kodu === siparisId);
-    if (!siparis) return { basarili: false, mesaj: 'Sipariş bulunamadı.' };
+    const [tum, tumSube] = await Promise.all([
+      koleksiyonGetir<any>('siparisler'),
+      koleksiyonGetir<SubeSiparisi>('sube_siparisleri'),
+    ]);
+    const hamSiparis = tum.find((s) => s.id === siparisId || s.siparisKodu === siparisId || s.siparis_kodu === siparisId);
+    const eslesenSube = tumSube.find((s) => s.id === siparisId || s.siparis_kodu === siparisId || (hamSiparis && (s.id === hamSiparis.id || s.siparis_kodu === hamSiparis.siparis_kodu)));
+    if (!hamSiparis) return { basarili: false, mesaj: 'Sipariş bulunamadı.' };
+    const siparis = subeSiparisKaydiniBirlestir(hamSiparis, eslesenSube);
 
-    const mutfakTeslimEttiMi = 
-      siparis.durum === 'yolda' || 
-      siparis.durum === 'teslim_edildi' || 
-      siparis.asama === 'kuryede' || 
+    const subeSiparisiMi = siparis.siparis_kaynagi === 'sube' || Boolean(siparis.sube_id) || Boolean(eslesenSube);
+    const subePaketiHazirMi =
+      subeSiparisiMi &&
+      (siparis.durum === 'paketlendi' ||
+        siparis.durum === 'teslime_hazir' ||
+        siparis.asama === 'paketlendi' ||
+        siparis.asama === 'kurye_geliyor');
+
+    const mutfakTeslimEttiMi =
+      subePaketiHazirMi ||
+      siparis.durum === 'yolda' ||
+      siparis.durum === 'teslim_edildi' ||
+      siparis.asama === 'kuryede' ||
       siparis.asama === 'teslim_edildi';
 
     if (!mutfakTeslimEttiMi) {
@@ -231,12 +255,28 @@ export async function kuryePinDogrulaVeTeslimEt(
       return { basarili: false, mesaj: 'Hatalı PIN kodu! Lütfen müşterinin ekranındaki 4 haneli PIN kodunu kontrol ediniz.' };
     }
 
+    const teslimatDamgasi = await kritikOlayDamgala({
+      islemTuru: 'teslimat',
+      sozlesmeTuru: 'teslimat_pin_qr_onayi',
+      ilgiliKayitId: siparis.siparis_kodu || siparis.id || siparisKodu,
+      kullaniciKimlik: siparis.musteri_id,
+      kullaniciTelefon: siparis.musteri_telefon,
+      kullaniciAdSoyad: siparis.musteri_adi,
+      ekDetay: {
+        dogrulamaYontemi: pinGecerli ? 'pin' : 'qr',
+        kuryeId: siparis.kurye_id || '',
+        kuryeAdi: siparis.kurye_adi || '',
+        toplamTutar: siparis.toplam_tutar || 0,
+      },
+    });
+
     const guncelVeri = {
       asama: 'teslim_edildi',
       durum: 'teslim_edildi',
       durum_aciklamasi: 'Sipariş başarıyla teslim edildi. Afiyet olsun!',
       durumAciklamasi: 'Sipariş başarıyla teslim edildi. Afiyet olsun!',
-      teslimTarihi: new Date().toISOString(),
+      teslimTarihi: teslimatDamgasi.sunucuUtc,
+      teslimat_zaman_damgasi: teslimatDamgasi,
       sonGuncelleme: new Date().toLocaleTimeString('tr-TR')
     };
 
@@ -249,6 +289,14 @@ export async function kuryePinDogrulaVeTeslimEt(
       }
     } else {
       await belgeKaydet('siparisler', siparisKodu, guncelVeri);
+    }
+
+    const tumSubeSiparisleri = await koleksiyonGetir<SubeSiparisi>('sube_siparisleri');
+    const eslesenSubeSiparisleri = (tumSubeSiparisleri || []).filter(
+      (s) => s.id === siparis.id || s.id === siparisKodu || s.siparis_kodu === siparisKodu || s.siparis_kodu === siparis.siparis_kodu
+    );
+    for (const subeSip of eslesenSubeSiparisleri) {
+      await belgeKaydet('sube_siparisleri', subeSip.id, { durum: 'teslim_edildi' });
     }
 
     yerelSiparisDurumGuncelle(siparis.id || siparisKodu, 'teslim_edildi', guncelVeri.durum_aciklamasi);

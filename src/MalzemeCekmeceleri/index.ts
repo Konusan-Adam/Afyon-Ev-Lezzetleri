@@ -67,6 +67,8 @@ export * from "./GuvenlikZirhi/ZirhTipleri";
 
 // Hukuk ve Sözleşmeler Logic
 export * from "./HukukVeSozlesmeler/hukukDeposu";
+export * from "./HukukVeSozlesmeler/hukukiDelilServisi";
+export * from "./HukukVeSozlesmeler/zamanDamgasiIstemcisi";
 export * from "./HukukVeSozlesmeler/tipler";
 
 // Kurye Teslimat Logic

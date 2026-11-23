@@ -423,6 +423,50 @@
         "onayli_mi": { "type": "boolean" }
       },
       "required": ["id", "mutfak_id", "baslik", "fiyat", "kalemler"]
+    },
+    "Sozlesme": {
+      "title": "Sozlesme",
+      "description": "Platform hukuki sözleşme metinleri ve versiyonları",
+      "type": "object",
+      "properties": {
+        "tur": { "type": "string", "maxLength": 100 },
+        "baslik": { "type": "string", "maxLength": 200 },
+        "kisaBaslik": { "type": "string", "maxLength": 100 },
+        "versiyon": { "type": "string", "maxLength": 30 },
+        "guncellenmeTarihi": { "type": "string", "maxLength": 30 },
+        "icerik": { "type": "string", "maxLength": 20000 },
+        "zorunluMu": { "type": "boolean" },
+        "konum": { "type": "string", "maxLength": 50 },
+        "silinebilirMi": { "type": "boolean" }
+      },
+      "required": ["tur", "baslik", "versiyon", "icerik"]
+    },
+    "HukukiOnayLogu": {
+      "title": "HukukiOnayLogu",
+      "description": "RFC 3161 zaman damgalı ve değiştirilemez hukuki onay ve denetim logu",
+      "type": "object",
+      "properties": {
+        "kimlik": { "type": "string", "maxLength": 128 },
+        "sozlesmeTuru": { "type": "string", "maxLength": 100 },
+        "sozlesmeVersiyonu": { "type": "string", "maxLength": 30 },
+        "kullaniciKimlik": { "type": "string", "maxLength": 128 },
+        "kullaniciTelefon": { "type": "string", "maxLength": 40 },
+        "kullaniciAdSoyad": { "type": "string", "maxLength": 150 },
+        "islemTuru": { "type": "string", "maxLength": 50 },
+        "tarihSaat": { "type": "string", "maxLength": 64 },
+        "sunucuUtc": { "type": "string", "maxLength": 64 },
+        "ipAdresi": { "type": "string", "maxLength": 100 },
+        "cihazBilgisi": { "type": "string", "maxLength": 250 },
+        "onaylandiMi": { "type": "boolean" },
+        "ozetHash": { "type": "string", "maxLength": 128 },
+        "sozlesmeMetinHash": { "type": "string", "maxLength": 128 },
+        "tsaSaglayici": { "type": "string", "maxLength": 120 },
+        "tsaTokenBase64": { "type": "string", "maxLength": 20000 },
+        "damgaDurumu": { "type": "string", "maxLength": 30 },
+        "sunucuImzasi": { "type": "string", "maxLength": 128 },
+        "ilgiliKayitId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["kimlik", "sozlesmeTuru", "sozlesmeVersiyonu", "islemTuru", "tarihSaat", "ipAdresi", "cihazBilgisi", "onaylandiMi"]
     }
   },
   "firestore": {
@@ -513,6 +557,14 @@
     "/coklu_menuler/{menuId}": {
       "schema": "CokluMenu",
       "description": "Çoklu çeşit yemek paketleri"
+    },
+    "/sozlesmeler/{sozlesmeId}": {
+      "schema": "Sozlesme",
+      "description": "Hukuki sözleşme metinleri ve sürümleri"
+    },
+    "/hukuki_onay_loglari/{logId}": {
+      "schema": "HukukiOnayLogu",
+      "description": "RFC 3161 zaman damgalı ve değiştirilemez hukuki onay kayıtları"
     }
   }
 }
