@@ -2,7 +2,6 @@ import React from 'react';
 import { kullaniciHafizasiKullan } from '@/src/OrtakHavuz/KullaniciHafizasi';
 import { AnaSayfaVitrini } from '@/src/VitrinOdasi/AnaSayfaVitrini';
 import { MusteriPaneli } from '@/src/VitrinOdasi/MusteriPaneli/MusteriPaneli';
-import { PatronYoneticisiPaneli } from '@/src/VitrinOdasi/PatronPaneli/PatronYoneticisiPaneli';
 
 /**
  * 🚪 Ana Giriş Kapısı (Müşteri Vitrini & Sipariş Ekosistemi)
@@ -12,10 +11,6 @@ export const AnaKapi: React.FC = () => {
 
   if (goruntulenenPanel === 'musteri') {
     return <MusteriPaneli />;
-  }
-
-  if (goruntulenenPanel === 'patron') {
-    return <PatronYoneticisiPaneli />;
   }
 
   return (

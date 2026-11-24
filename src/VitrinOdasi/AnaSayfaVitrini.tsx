@@ -15,7 +15,6 @@ import { KullaniciGirisPenceresi } from './KullaniciGiris/KullaniciGirisPenceres
 import { MobilAnaVitrin } from './MobilAnasayfa/MobilAnaVitrin';
 import { MobilAltMenu } from './MobilAnasayfa/MobilAltMenu';
 import { MusteriPaneli } from './MusteriPaneli/MusteriPaneli';
-import { PatronYoneticisiPaneli } from './PatronPaneli/PatronYoneticisiPaneli';
 import { CerezOnayBari } from './Bilesenler/HukukVeSozlesmeler/CerezOnayBari';
 import { SozlesmePenceresi } from './Bilesenler/HukukVeSozlesmeler/SozlesmePenceresi';
 import { type SozlesmeTuru } from '@/src/MalzemeCekmeceleri';
@@ -183,11 +182,6 @@ export const AnaSayfaVitrini: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
-  // Süper Admin (Patron) Masası
-  if (goruntulenenPanel === 'patron') {
-    return <PatronYoneticisiPaneli />;
-  }
 
   // Müşteri Paneli (Siparişlerim / Profilim)
   if (goruntulenenPanel === 'musteri') {

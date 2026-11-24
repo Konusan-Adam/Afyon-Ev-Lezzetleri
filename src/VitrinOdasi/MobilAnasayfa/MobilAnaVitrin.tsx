@@ -76,7 +76,7 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
   return (
     <div
       className={`w-full min-h-screen pb-24 transition-colors duration-200 ${
-        acikMi ? 'bg-[#FAF4EB] text-gray-900' : 'bg-[#1A0A1D] text-white'
+        acikMi ? 'bg-[#FAF4EB] text-gray-900' : 'bg-[#481D52] text-white'
       }`}
     >
       {/* Mobil ve Tablet İçin Üst Adres Barı */}

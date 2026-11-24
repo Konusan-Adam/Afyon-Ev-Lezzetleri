@@ -89,15 +89,7 @@ export const MobilAltMenu: React.FC<MobilAltMenuOzellikleri> = ({
 
   const paneleGit = () => {
     setHesapMenusuAcik(false);
-    if (aktifKullanici?.rol === 'yonetici') {
-      panelDegistir('patron');
-    } else if (aktifKullanici?.rol === 'asci' || aktifKullanici?.rol === 'ev_mutfagi') {
-      panelDegistir('mutfak');
-    } else if (aktifKullanici?.rol === 'kurye') {
-      panelDegistir('kurye');
-    } else {
-      panelDegistir('musteri');
-    }
+    panelDegistir('musteri');
   };
 
   const guvenliCikisYap = () => {

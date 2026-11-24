@@ -31,8 +31,13 @@ html.acik-tema body {
   color: #2D1033;
 }
 
+body {
+  background-color: #481D52;
+  color: #FFFFFF;
+}
+
 html.koyu-tema body {
-  background-color: #180A1A;
+  background-color: #481D52;
   color: #FFFFFF;
 }
 

@@ -57,7 +57,7 @@ export const SubeDetayVitrini: React.FC<SubeDetayVitriniProps> = ({
   });
 
   return (
-    <div className="w-full min-h-screen bg-[#14061A] text-white pb-28">
+    <div className="w-full min-h-screen bg-[#481D52] text-white pb-28">
       {/* 1. Masaüstü Yol Haritası (Mutfak Vitrini ile Birebir Aynı Tasarım Dili) */}
       <div className="hidden lg:block">
         <SubeYolHaritasi sube={sube} geriDonTiklandi={geriDonTiklandi} />

@@ -47,7 +47,7 @@ export const MobilMutfakVitrini: React.FC<MobilMutfakVitriniOzellikleri> = ({
   }, [yemekler, seciliKategori, aramaMetni]);
 
   return (
-    <div className="w-full bg-[#120415] min-h-screen pb-32 text-white select-none">
+    <div className="w-full bg-[#481D52] min-h-screen pb-32 text-white select-none">
       {mutfak.mola_durumu === true ? (
         <div className="bg-amber-500 text-stone-950 px-4 py-3 text-center text-xs font-black border-b border-amber-600 flex items-center justify-center gap-2">
           <span>

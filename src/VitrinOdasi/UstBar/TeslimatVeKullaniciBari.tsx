@@ -208,21 +208,8 @@ export const TeslimatVeKullaniciBari: React.FC<TeslimatVeKullaniciBariOzellikler
                     </div>
                   </div>
 
-                  {/* Müşteri ve Yönetici İşlemleri */}
+                  {/* Müşteri Hesap İşlemleri */}
                   <div className="space-y-1">
-                    {kullaniciHafizasi.aktifKullanici?.rol === 'yonetici' && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          kullaniciHafizasi.panelDegistir('patron');
-                          setProfilMenuAcik(false);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-amber-600/30 hover:bg-amber-600/50 text-amber-200 text-xs font-bold transition-all cursor-pointer border border-amber-500/50"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-amber-400" />
-                        <span>Patron Masası</span>
-                      </button>
-                    )}
                     <button
                       type="button"
                       onClick={() => {

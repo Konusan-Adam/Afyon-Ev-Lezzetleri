@@ -11,7 +11,7 @@ import {
 } from '@/src/MalzemeCekmeceleri/kullaniciIslemleri';
 import { mevcutUrlPaneliniBul, urlVeBasligiGuncelle } from '@/src/GirisKapisi/RotaYardimcisi';
 
-export type PanelTipi = 'vitrin' | 'patron' | 'musteri' | 'mutfak' | 'kurye';
+export type PanelTipi = 'vitrin' | 'musteri';
 
 interface KullaniciHafizaTipi {
   aktifKullanici: Kullanici | null;
@@ -74,18 +74,7 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
   const [baslangicRolu, setBaslangicRolu] = useState<KullaniciRolu>('musteri');
   const [yukleniyor, setYukleniyor] = useState<boolean>(false);
   const [goruntulenenPanel, setGoruntulenenPanel] = useState<PanelTipi>(() => {
-    const urlPaneli = mevcutUrlPaneliniBul();
-    if (urlPaneli !== 'vitrin') return urlPaneli;
-    try {
-      const kayitliOturum = localStorage.getItem('afyon_oturum_kullanici');
-      if (kayitliOturum) {
-        const parsed = JSON.parse(kayitliOturum);
-        if (parsed?.rol === 'yonetici') return 'patron';
-        if (parsed?.rol === 'asci' || parsed?.rol === 'ev_mutfagi') return 'mutfak';
-        if (parsed?.rol === 'kurye') return 'kurye';
-      }
-    } catch {}
-    return 'vitrin';
+    return mevcutUrlPaneliniBul();
   });
 
   const [yonetimModuAcik, setYonetimModuAcik] = useState<boolean>(false);
@@ -103,20 +92,9 @@ export const KullaniciSaglayici: React.FC<{ children: React.ReactNode }> = ({ ch
     urlVeBasligiGuncelle(yeniPanel);
   };
 
-  const roleGorePaneleYonlendir = (kullanici: Kullanici) => {
-    if (kullanici.rol === 'yonetici') {
-      setGoruntulenenPanel('patron');
-      urlVeBasligiGuncelle('patron');
-    } else if (kullanici.rol === 'asci' || kullanici.rol === 'ev_mutfagi') {
-      setGoruntulenenPanel('mutfak');
-      urlVeBasligiGuncelle('mutfak');
-    } else if (kullanici.rol === 'kurye') {
-      setGoruntulenenPanel('kurye');
-      urlVeBasligiGuncelle('kurye');
-    } else {
-      setGoruntulenenPanel('musteri');
-      urlVeBasligiGuncelle('musteri');
-    }
+  const roleGorePaneleYonlendir = (_kullanici: Kullanici) => {
+    setGoruntulenenPanel('musteri');
+    urlVeBasligiGuncelle('musteri');
   };
 
   const oturumAcVeYonlendir = (kullanici: Kullanici) => {

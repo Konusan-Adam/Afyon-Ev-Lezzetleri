@@ -30,9 +30,6 @@ export function urlVeBasligiGuncelle(panel: PanelTipi): void {
   const basliklar: Record<PanelTipi, string> = {
     vitrin: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
     musteri: 'Afyon Ev Lezzetleri — Müşteri Hesabım',
-    mutfak: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
-    kurye: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
-    patron: 'Afyon Ev Lezzetleri — Müşteri Vitrini',
   };
 
   document.title = basliklar[panel] || 'Afyon Ev Lezzetleri';
