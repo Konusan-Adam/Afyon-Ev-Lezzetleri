@@ -99,7 +99,7 @@ export const MusteriPaneli: React.FC = () => {
     }`;
 
   return (
-    <div className="w-full min-h-screen bg-[#481D52] text-gray-200 select-none pb-16">
+    <div className="w-full min-h-screen bg-[#130713] text-gray-200 select-none pb-16">
       <MusteriPanelUstBaslik
         aktifKullanici={aktifKullanici}
         sonMisafirAd={sonMisafirAd}

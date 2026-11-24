@@ -39,7 +39,7 @@ export const MasaustuMutfakVitrini: React.FC<MasaustuMutfakVitriniOzellikleri> =
   }, [yemekler, seciliKategori, aramaMetni]);
 
   return (
-    <div className="w-full min-h-screen bg-[#481D52] text-white">
+    <div className="w-full min-h-screen bg-[#130713] text-white">
       {mutfak.mola_durumu === true ? (
         <div className="bg-amber-500 text-stone-950 px-4 py-2.5 text-center text-sm font-black border-b border-amber-600 flex items-center justify-center gap-2">
           <span>
