@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Radio, ShieldCheck, Eye, Sparkles } from 'lucide-react';
 import { GelAlSubesi } from '@/src/veritabani/SubeTipleri';
+import { youtubeGomuluUrlUret } from '@/src/MalzemeCekmeceleri/Sube/youtubeYardimcisi';
 
 interface SubeCanliYayinModaliProps {
   sube: GelAlSubesi;
@@ -11,8 +12,9 @@ export const SubeCanliYayinModali: React.FC<SubeCanliYayinModaliProps> = ({
   sube,
   onKapat,
 }) => {
-  // Canlı yayın linki varsa YouTube embed formatına dönüştür, yoksa varsayılan hijyen canlı yayın simülasyonu göster
-  const yayinLinki = sube.youtube_canli_yayin_linki || 'https://www.youtube.com/embed/live_stream?channel=afyonevlezzetleri';
+  // Canlı yayın linkini YouTube'un izin verdiği güvenli embed formatına dönüştür
+  const gomuluYayinLinki = youtubeGomuluUrlUret(sube.youtube_canli_yayin_linki) ||
+    (sube.youtube_canli_yayin_linki?.includes('/embed/') ? sube.youtube_canli_yayin_linki : null);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
@@ -39,12 +41,12 @@ export const SubeCanliYayinModali: React.FC<SubeCanliYayinModaliProps> = ({
 
         {/* Video Yayın Alanı */}
         <div className="relative aspect-video w-full bg-black flex items-center justify-center overflow-hidden">
-          {sube.youtube_canli_yayin_linki ? (
+          {gomuluYayinLinki ? (
             <iframe
-              src={yayinLinki}
+              src={gomuluYayinLinki}
               title={`${sube.ad} Canlı Yayın`}
               className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           ) : (
