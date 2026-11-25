@@ -6,7 +6,20 @@ import { siparisDegerlendirildiMi } from '@/src/MalzemeCekmeceleri/Degerlendirme
 import { SiparisDurumCubugu } from './SiparisDurumCubugu';
 import { TekrarSiparisButonu } from './TekrarSiparisButonu';
 import { tarihSaatFormatla } from '@/src/MalzemeCekmeceleri/Ortak/tarihFormatlayici';
-import { siparisIptalMi, siparisTamamlandiMi } from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/siparisDurumYardimcisi';
+import {
+  siparisIptalMi,
+  siparisTamamlandiMi,
+  siparisMusteriTarafindanIptalEdilebilirMi,
+} from '@/src/MalzemeCekmeceleri/SiparisVeOdeme/siparisDurumYardimcisi';
+
+export interface IptalTetiklemeBilgisi {
+  id: string;
+  kodu: string;
+  odemeYontemi?: string;
+  odemeDurumu?: string;
+  paytrOid?: string;
+  toplamTutar?: number;
+}
 
 interface MusteriSiparisKartiOzellikleri {
   siparis: TestSiparis;
@@ -15,7 +28,7 @@ interface MusteriSiparisKartiOzellikleri {
   sepetPaneliAc: () => void;
   onTakipEt: (kod: string) => void;
   onQrAc: (kod: string) => void;
-  onIptalEt: (bilgi: { id: string; kodu: string }) => void;
+  onIptalEt: (bilgi: IptalTetiklemeBilgisi) => void;
   onDegerlendir: (bilgi: { siparisKimligi: string; siparisKodu: string; mutfakId: string; mutfakAdi: string; yemekler: string[] }) => void;
 }
 
@@ -29,7 +42,7 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
   onIptalEt,
   onDegerlendir,
 }) => {
-  const iptalEdilebilir = sip.durum === 'beklemede' || sip.durum === 'hazirlaniyor';
+  const iptalEdilebilir = siparisMusteriTarafindanIptalEdilebilirMi(sip);
   const yolda = sip.durum === 'yolda';
   const gelAlMi = sip.teslimat_tipi === 'gel_al';
   const tamamlandi = siparisTamamlandiMi(sip.durum);
@@ -58,14 +71,27 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
           <span className="font-bold text-white text-xs">#{sip.siparis_kodu}</span>
           <span className="text-[10px] text-purple-300">({tarihSaatFormatla(sip.olusturma_tarihi)})</span>
         </div>
-        <div className="flex items-center gap-2">
-          {sip.odemeDurumu === 'odendi' && (
+        <div className="flex items-center gap-2 flex-wrap">
+          {sip.odemeDurumu === 'odendi' && !iptal && (
             <span
               title={sip.paytrOid ? `PayTR Referans: ${sip.paytrOid}` : 'PayTR Online Ödeme'}
               className="text-[10px] font-bold text-emerald-300 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-full flex items-center gap-1"
             >
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               <span>PayTR ile Ödendi</span>
+            </span>
+          )}
+          {iptal && sip.odemeDurumu === 'odendi' && (
+            <span
+              title={sip.iade_mesaji || 'PayTR İade Durumu'}
+              className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-600/60 px-2 py-0.5 rounded-full flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3 h-3 text-amber-400" />
+              <span>
+                {sip.iade_durumu === 'tamamlandi' || sip.iade_durumu === 'demo_iade'
+                  ? 'PayTR İadesi Onaylandı (1-7 İş Günü)'
+                  : 'PayTR İade Talebi İletildi'}
+              </span>
             </span>
           )}
           <span className="text-xs font-extrabold text-amber-400">{sip.toplam_tutar} ₺</span>
@@ -139,7 +165,16 @@ export const MusteriSiparisKarti: React.FC<MusteriSiparisKartiOzellikleri> = ({
         {iptalEdilebilir && (
           <button
             type="button"
-            onClick={() => onIptalEt({ id: sip.id, kodu: sip.siparis_kodu || sip.id })}
+            onClick={() =>
+              onIptalEt({
+                id: sip.id,
+                kodu: sip.siparis_kodu || sip.id,
+                odemeYontemi: sip.odeme_yontemi,
+                odemeDurumu: sip.odemeDurumu,
+                paytrOid: sip.paytrOid,
+                toplamTutar: sip.toplam_tutar,
+              })
+            }
             className="text-[11px] text-rose-300 hover:text-rose-200 bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800/60 px-2.5 py-1 rounded-xl flex items-center gap-1 cursor-pointer transition-colors"
           >
             <Ban className="w-3 h-3 text-rose-400" />

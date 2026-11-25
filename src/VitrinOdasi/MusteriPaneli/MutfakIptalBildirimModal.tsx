@@ -58,7 +58,7 @@ export const MutfakIptalBildirimModal: React.FC<MutfakIptalBildirimModalProps> =
             </p>
           )}
           <p className="text-[11px] text-purple-200/80">
-            Ödemeniz PayTR güvencesiyle anında iade işlemleri başlatılmıştır.
+            Online kart (PayTR) ile ödeme yaptıysanız iade talebiniz başlatılmıştır; tutar bankanıza bağlı olarak 1–7 iş günü içinde kartınıza yansır. Kapıda ödeme siparişlerinde ücret tahsil edilmemiştir.
           </p>
         </div>
 

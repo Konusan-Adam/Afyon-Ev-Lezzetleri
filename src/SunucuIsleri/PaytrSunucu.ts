@@ -12,6 +12,7 @@ import {
   paytrOturumDurumGuncelle,
   paytrOturumDurumAl,
 } from './PaytrDurumDeposu';
+import { paytrIadeIslemiYap } from './PaytrIadeServisi';
 
 const router = Router();
 
@@ -136,7 +137,21 @@ router.get('/paytr/durum/:merchantOid', async (req, res) => {
     paytrOid: kayit.merchantOid,
     demoMod: kayit.demoMod,
     hataMesaji: kayit.hataMesaji,
+    iadeDurumu: kayit.iadeDurumu,
+    iadeReferans: kayit.iadeReferans,
+    iadeMesaji: kayit.iadeMesaji,
   });
+});
+
+router.post('/paytr/iade', async (req, res) => {
+  const { merchantOid, tutar, referansNo } = req.body || {};
+  const temizOid = typeof merchantOid === 'string' ? merchantOid.trim() : '';
+  const sayisalTutar = Number(tutar || 0);
+  if (!temizOid || !Number.isFinite(sayisalTutar) || sayisalTutar <= 0) {
+    return res.status(400).json({ basarili: false, iadeDurumu: 'hata', mesaj: 'Geçerli sipariş ödeme kodu ve tutar gereklidir.' });
+  }
+  const sonuc = await paytrIadeIslemiYap(temizOid, sayisalTutar, typeof referansNo === 'string' ? referansNo : undefined);
+  return res.status(sonuc.basarili ? 200 : 400).json(sonuc);
 });
 
 export default router;

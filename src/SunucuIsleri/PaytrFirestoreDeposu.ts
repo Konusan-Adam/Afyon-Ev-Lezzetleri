@@ -25,6 +25,12 @@ export async function paytrFirestoreKaydet(kayit: PaytrOturumKaydi): Promise<boo
     if (kayit.hataMesaji) {
       temizKayit.hataMesaji = kayit.hataMesaji;
     }
+    if (kayit.iadeDurumu) {
+      temizKayit.iadeDurumu = kayit.iadeDurumu;
+      temizKayit.iadeTutariKurus = kayit.iadeTutariKurus || 0;
+      temizKayit.iadeReferans = kayit.iadeReferans || '';
+      temizKayit.iadeMesaji = kayit.iadeMesaji || '';
+    }
     await setDoc(doc(db, KOLEKSIYON_ADI, kayit.merchantOid), temizKayit, { merge: true });
     return true;
   } catch (hata) {

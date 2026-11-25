@@ -88,6 +88,8 @@ export * from "./SiparisTakipModulu/TakipTipleri";
 
 // Sipariş ve Ödeme Logic
 export * from "./SiparisVeOdeme/siparisIslemleri";
+export * from "./SiparisVeOdeme/siparisDurumYardimcisi";
+export * from "./Paytr/paytrIadeIstemcisi";
 
 // Ürün Seçenekleri Logic
 export * from "./UrunSecenekleri/SecenekSablonDeposu";

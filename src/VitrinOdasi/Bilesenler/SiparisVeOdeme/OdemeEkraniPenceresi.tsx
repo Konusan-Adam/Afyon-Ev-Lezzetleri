@@ -402,7 +402,7 @@ export const OdemeEkraniPenceresi: React.FC<OdemeEkraniPenceresiOzellikleri> = (
             teslimatTipi: sonuc.teslimat_tipi,
             misafirMi: !aktifKullanici,
           };
-          (['mesafeli_satis', 'on_bilgilendirme'] as const).forEach((sozlesmeTuru) => {
+          (['mesafeli_satis', 'on_bilgilendirme', 'iptal_iade_kosullari'] as const).forEach((sozlesmeTuru) => {
             hukukiLogKaydet({
               sozlesmeTuru,
               sozlesmeVersiyonu: '1.0.0',

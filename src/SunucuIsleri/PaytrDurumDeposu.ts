@@ -2,6 +2,7 @@ import { paytrFirestoreKaydet, paytrFirestoreGetir } from './PaytrFirestoreDepos
 import { paytrDosyadanOku, paytrDosyayaYaz } from './PaytrDosyaDeposu';
 
 export type PaytrIslemDurumu = 'bekliyor' | 'odendi' | 'hata';
+export type PaytrIadeDurumTipi = 'baslatildi' | 'tamamlandi' | 'hata';
 
 export interface PaytrOturumKaydi {
   merchantOid: string;
@@ -10,6 +11,10 @@ export interface PaytrOturumKaydi {
   demoMod: boolean;
   hataMesaji?: string;
   guncellemeZamani: number;
+  iadeDurumu?: PaytrIadeDurumTipi;
+  iadeTutariKurus?: number;
+  iadeReferans?: string;
+  iadeMesaji?: string;
 }
 
 const oturumHaritasi = new Map<string, PaytrOturumKaydi>(
@@ -51,6 +56,30 @@ export async function paytrOturumDurumGuncelle(
         hataMesaji,
         guncellemeZamani: Date.now(),
       };
+  oturumHaritasi.set(merchantOid, guncel);
+  paytrDosyayaYaz(oturumHaritasi);
+  await paytrFirestoreKaydet(guncel);
+  return guncel;
+}
+
+export async function paytrOturumIadeGuncelle(
+  merchantOid: string,
+  iadeDurumu: PaytrIadeDurumTipi,
+  iadeTutariKurus: number,
+  iadeReferans: string,
+  iadeMesaji: string
+): Promise<PaytrOturumKaydi | null> {
+  const mevcut =
+    oturumHaritasi.get(merchantOid) || (await paytrFirestoreGetir(merchantOid));
+  if (!mevcut) return null;
+  const guncel: PaytrOturumKaydi = {
+    ...mevcut,
+    iadeDurumu,
+    iadeTutariKurus,
+    iadeReferans,
+    iadeMesaji,
+    guncellemeZamani: Date.now(),
+  };
   oturumHaritasi.set(merchantOid, guncel);
   paytrDosyayaYaz(oturumHaritasi);
   await paytrFirestoreKaydet(guncel);

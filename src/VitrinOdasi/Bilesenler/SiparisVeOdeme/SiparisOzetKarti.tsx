@@ -151,7 +151,7 @@ export const SiparisOzetKarti: React.FC<SiparisOzetKartiOzellikleri> = ({
             >
               Ön Bilgilendirme Koşulları
             </button>
-            'nı ve{' '}
+            ,{' '}
             <button
               type="button"
               onClick={() => setAktifSozlesmeTuru('mesafeli_satis')}
@@ -159,7 +159,15 @@ export const SiparisOzetKarti: React.FC<SiparisOzetKartiOzellikleri> = ({
             >
               Mesafeli Satış Sözleşmesi
             </button>
-            'ni okudum, onaylıyorum. <span className="text-rose-400 font-bold">*</span>
+            {' '}ve{' '}
+            <button
+              type="button"
+              onClick={() => setAktifSozlesmeTuru('iptal_iade_kosullari')}
+              className="text-[#DDAF53] font-semibold underline hover:text-amber-300 cursor-pointer inline"
+            >
+              İptal ve İade Koşulları
+            </button>
+            &apos;nı okudum, onaylıyorum. <span className="text-rose-400 font-bold">*</span>
           </div>
         </label>
         {!sozlesmeOnaylandi && (

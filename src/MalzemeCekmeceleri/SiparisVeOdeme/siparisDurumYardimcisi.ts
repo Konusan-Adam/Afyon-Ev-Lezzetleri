@@ -31,3 +31,26 @@ export function standartSiparisDurumuGetir(durum?: string, asama?: string): stri
   }
   return durum?.trim() || asama?.trim() || 'beklemede';
 }
+
+export function siparisMusteriTarafindanIptalEdilebilirMi(siparis: {
+  durum?: string;
+  asama?: string;
+  siparis_kaynagi?: string;
+  sube_id?: string;
+}): boolean {
+  const durum = durumMetniTemizle(siparis.durum);
+  const asama = durumMetniTemizle(siparis.asama);
+  if (IPTAL_DURUMLARI.has(durum) || TAMAMLANAN_DURUMLAR.has(durum)) return false;
+  if (durum === 'yolda' || durum === 'teslime_hazir' || asama === 'yolda' || asama === 'teslime_hazir') {
+    return false;
+  }
+
+  const subeMi = siparis.siparis_kaynagi === 'sube' || Boolean(siparis.sube_id);
+  if (subeMi) {
+    return !durum || durum === 'beklemede' || durum === 'hazirlaniyor';
+  }
+
+  // Ev Mutfağı: Mutfak "hazirlaniyor / ocakta" aşamasına geçtiyse keyfi iptal kapanır
+  if (asama === 'ocakta' || durum === 'hazirlaniyor') return false;
+  return !durum || durum === 'beklemede' || durum === 'onay_bekliyor';
+}

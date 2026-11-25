@@ -13,7 +13,7 @@ import { CanliSiparisTakipModali } from '../Bilesenler/CanliTakip/CanliSiparisTa
 import { MusteriQrKoduModali } from '../Bilesenler/QrTeslimat/MusteriQrKoduModali';
 import { MusteriSiparisIptalPenceresi } from './MusteriSiparisIptalPenceresi';
 import { MusteriPanelUstBaslik } from './MusteriPanelUstBaslik';
-import { MusteriSiparisKarti } from './MusteriSiparisKarti';
+import { MusteriSiparisKarti, type IptalTetiklemeBilgisi } from './MusteriSiparisKarti';
 import { AdreslerimSekmesi } from './AdreslerimSekmesi';
 import { FavorilerimSekmesi } from './FavorilerimSekmesi';
 import { MutfakIptalBildirimModal } from './MutfakIptalBildirimModal';
@@ -24,20 +24,18 @@ export const MusteriPaneli: React.FC = () => {
   const { sepeteEkle, sepetPaneliAc, subelerListesi } = sepetHafizasiKullan();
   const { toplamFavoriSayisi } = favoriHafizasiKullan();
 
-  const [aktifSekme, setAktifSekme] = useState<'siparisler' | 'adresler' | 'favoriler'>(() => {
+  const [aktifSekme, setAktifSekme] = useState<'aktif_siparisler' | 'gecmis_siparisler' | 'adresler' | 'favoriler'>(() => {
     if (typeof window !== 'undefined') {
       const kayitli = localStorage.getItem('afyon_musteri_paneli_sekme');
-      if (kayitli === 'favoriler' || kayitli === 'adresler') {
+      if (kayitli === 'favoriler' || kayitli === 'adresler' || kayitli === 'gecmis_siparisler') {
         localStorage.removeItem('afyon_musteri_paneli_sekme');
         return kayitli;
       }
     }
-    return 'siparisler';
+    return 'aktif_siparisler';
   });
 
-  const [siparisGorunumModu, setSiparisGorunumModu] = useState<'aktif' | 'gecmis'>('aktif');
-
-  const [iptalEdilecekSiparis, setIptalEdilecekSiparis] = useState<{ id: string; kodu: string } | null>(null);
+  const [iptalEdilecekSiparis, setIptalEdilecekSiparis] = useState<IptalTetiklemeBilgisi | null>(null);
   const [takipEdilecekSiparisKodu, setTakipEdilecekSiparisKodu] = useState<string | null>(null);
   const [qrGosterilecekSiparisKodu, setQrGosterilecekSiparisKodu] = useState<string | null>(null);
   const [degerlendirilecekSiparis, setDegerlendirilecekSiparis] = useState<{
@@ -82,20 +80,17 @@ export const MusteriPaneli: React.FC = () => {
 
   const aktifSiparisler = siparisler.filter((s) => siparisAktifMi(s.durum));
   const gecmisSiparisler = siparisler.filter((s) => !siparisAktifMi(s.durum));
-  const gosterilenSiparisler = siparisGorunumModu === 'aktif' ? aktifSiparisler : gecmisSiparisler;
+  const gosterilenSiparisler = aktifSekme === 'gecmis_siparisler' ? gecmisSiparisler : aktifSiparisler;
 
   const qrSeciliSiparis = qrGosterilecekSiparisKodu
     ? siparisler.find((s) => (s.siparis_kodu || s.id || s.siparisKodu) === qrGosterilecekSiparisKodu)
     : undefined;
 
   const sekmeButonSinifi = (aktif: boolean) =>
-    `flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap ${
-      aktif ? 'bg-[#6D237A] text-white shadow-md' : 'bg-[#180A1F] text-gray-400 hover:text-white border border-[#3E1646]'
-    }`;
-
-  const altSekmeButonSinifi = (aktif: boolean) =>
-    `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all ${
-      aktif ? 'bg-amber-500 text-black shadow-sm' : 'bg-[#1C0922] text-gray-400 hover:text-white border border-purple-900/40'
+    `flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer whitespace-nowrap shrink-0 transition-all ${
+      aktif
+        ? 'bg-gradient-to-r from-purple-800 to-purple-900 text-white shadow-md border border-purple-500/60'
+        : 'bg-[#180A1F] text-purple-300/70 hover:text-white border border-purple-900/40 hover:border-purple-800'
     }`;
 
   return (
@@ -111,48 +106,72 @@ export const MusteriPaneli: React.FC = () => {
       />
 
       <main className="anasayfa-genislik px-4 pt-6 space-y-6">
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-purple-950">
-          <button type="button" onClick={() => setAktifSekme('siparisler')} className={sekmeButonSinifi(aktifSekme === 'siparisler')}>
-            <ShoppingBag className="w-4 h-4 text-amber-400" />
-            <span>Siparişlerim ({aktifSiparisler.length > 0 ? `${aktifSiparisler.length} Aktif` : '0'})</span>
+        {/* 🚀 Masaüstünde Tek Sıra, Mobil ve Tablette Sola Kayar Tek Sıra Menü */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar border-b border-purple-950/60 scroll-smooth flex-nowrap">
+          {/* 1. Aktif Siparişlerim */}
+          <button
+            type="button"
+            onClick={() => setAktifSekme('aktif_siparisler')}
+            className={sekmeButonSinifi(aktifSekme === 'aktif_siparisler')}
+          >
+            <Clock className="w-4 h-4 text-amber-400" />
+            <span>Aktif Siparişlerim</span>
+            {aktifSiparisler.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-400 text-stone-950 font-black animate-pulse">
+                {aktifSiparisler.length}
+              </span>
+            )}
           </button>
-          <button type="button" onClick={() => setAktifSekme('adresler')} className={sekmeButonSinifi(aktifSekme === 'adresler')}>
+
+          {/* 2. Geçmiş Siparişlerim */}
+          <button
+            type="button"
+            onClick={() => setAktifSekme('gecmis_siparisler')}
+            className={sekmeButonSinifi(aktifSekme === 'gecmis_siparisler')}
+          >
+            <CheckCircle className="w-4 h-4 text-purple-300" />
+            <span>Geçmiş Siparişlerim</span>
+            {gecmisSiparisler.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-purple-900/80 text-purple-200 font-bold">
+                {gecmisSiparisler.length}
+              </span>
+            )}
+          </button>
+
+          {/* 3. Kayıtlı Adreslerim */}
+          <button
+            type="button"
+            onClick={() => setAktifSekme('adresler')}
+            className={sekmeButonSinifi(aktifSekme === 'adresler')}
+          >
             <MapPin className="w-4 h-4 text-amber-400" />
             <span>Kayıtlı Adreslerim</span>
           </button>
-          <button type="button" onClick={() => setAktifSekme('favoriler')} className={sekmeButonSinifi(aktifSekme === 'favoriler')}>
+
+          {/* 4. Favorilerim */}
+          <button
+            type="button"
+            onClick={() => setAktifSekme('favoriler')}
+            className={sekmeButonSinifi(aktifSekme === 'favoriler')}
+          >
             <Heart className={`w-4 h-4 ${toplamFavoriSayisi > 0 ? 'text-rose-400 fill-rose-500' : 'text-amber-400'}`} />
-            <span>Favorilerim ({toplamFavoriSayisi})</span>
+            <span>Favorilerim</span>
+            {toplamFavoriSayisi > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-black">
+                {toplamFavoriSayisi}
+              </span>
+            )}
           </button>
         </div>
 
-        {aktifSekme === 'siparisler' && (
+        {/* Sipariş Listesi (Aktif veya Geçmiş) */}
+        {(aktifSekme === 'aktif_siparisler' || aktifSekme === 'gecmis_siparisler') && (
           <div className="space-y-4">
-            {/* Aktif / Geçmiş Sipariş Alt Sekme Butonları */}
-            <div className="flex items-center gap-2 pb-2">
-              <button
-                type="button"
-                onClick={() => setSiparisGorunumModu('aktif')}
-                className={altSekmeButonSinifi(siparisGorunumModu === 'aktif')}
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>Aktif Siparişler ({aktifSiparisler.length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSiparisGorunumModu('gecmis')}
-                className={altSekmeButonSinifi(siparisGorunumModu === 'gecmis')}
-              >
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>Geçmiş Siparişler ({gecmisSiparisler.length})</span>
-              </button>
-            </div>
-
             {gosterilenSiparisler.length === 0 ? (
               <div className="py-12 text-center text-gray-400 text-xs bg-[#180A1F] rounded-2xl border border-purple-900/40">
                 <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-amber-400 opacity-50" />
                 <p>
-                  {siparisGorunumModu === 'aktif'
+                  {aktifSekme === 'aktif_siparisler'
                     ? 'Şu an devam eden aktif siparişiniz bulunmuyor.'
                     : 'Geçmişte tamamlanmış veya iptal edilmiş siparişiniz bulunmuyor.'}
                 </p>
@@ -212,6 +231,9 @@ export const MusteriPaneli: React.FC = () => {
         <MusteriSiparisIptalPenceresi
           siparisId={iptalEdilecekSiparis.id}
           siparisKodu={iptalEdilecekSiparis.kodu}
+          odemeYontemi={iptalEdilecekSiparis.odemeYontemi}
+          odemeDurumu={iptalEdilecekSiparis.odemeDurumu}
+          toplamTutar={iptalEdilecekSiparis.toplamTutar}
           onKapat={() => setIptalEdilecekSiparis(null)}
           onIptalEdildi={yenile}
         />

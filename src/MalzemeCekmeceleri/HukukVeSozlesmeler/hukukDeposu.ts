@@ -126,6 +126,30 @@ MADDE 3 - CAYMA HAKKI İSTİSNASI
     icerik: `6502 SAYILI TÜKETİCİNİN KORUNMASI HAKKINDA KANUN VE MESAFELİ SÖZLEŞMELER YÖNETMELİĞİ GEREĞİNCE:
 Sipariş edilen ürünlerin cinsi, miktarı, vergiler dahil toplam satış bedeli, teslimat ücreti, ödeme yöntemi ve tahmini teslimat süresi ödeme onayı öncesinde müşteriye açıkça sunulmuştur. Taze ve çabuk bozulabilir gıda ürünlerinde cayma hakkı istisnası geçerlidir.`
   },
+  iptal_iade_kosullari: {
+    tur: 'iptal_iade_kosullari',
+    baslik: 'Sipariş İptal ve İade Koşulları',
+    kisaBaslik: 'İptal ve İade Koşulları',
+    versiyon: '1.0.0',
+    guncellenmeTarihi: '2026-11-25',
+    zorunluMu: true,
+    konum: 'siparis',
+    silinebilirMi: false,
+    icerik: `1. YASAL DAYANAK VE CAYMA HAKKI İSTİSNASI
+6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği'nin 15/1-c maddesi uyarınca; taze pişirilen, sıcak servis edilen ve çabuk bozulabilen gıda ürünlerinde teslimat sonrasında veya hazırlık başladıktan sonra keyfi cayma hakkı bulunmamaktadır.
+
+2. MÜŞTERİ SİPARİŞ İPTAL KOŞULLARI
+- Ev Mutfağı Siparişleri: Mutfak henüz siparişi onaylayıp hazırlamaya ("Hazırlanıyor / Ocakta") başlamadan önce "Beklemede" aşamasındayken müşteri panelinden ücretsiz iptal edilebilir. Hazırlık başladıktan veya kuryeye teslim edildikten sonra tek taraflı iptal yapılamaz.
+- Gel-Al / Şube Siparişleri: Şube tezgahında sipariş "Teslime Hazır" veya "Yolda" durumuna geçmeden önce iptal edilebilir.
+
+3. AYIPLI, EKSİK VEYA YANLIŞ ÜRÜN DURUMU
+Dökülmüş, bozulmuş, eksik veya yanlış ürün teslim edilmesi halinde müşteri aynı gün içinde sipariş numarası ve görsel kanıt ile WhatsApp Destek hattı üzerinden bildirimde bulunarak inceleme ve iade talep edebilir.
+
+4. ÖDEME İADE SÜRECİ VE SÜRESİ
+- Online Kart (PayTR) Ödemeleri: İptal onaylandığı anda PayTR üzerinden otomatik iade talimatı oluşturulur. İade tutarı, kartı veren bankanın işlem süresine bağlı olarak 1–7 iş günü (banka/debit kartlarında daha uzun olabilir) içinde karta/hesaba yansır.
+- Kapıda Nakit / Kart Ödemeleri: Henüz tahsilat yapılmadığı için iptal halinde bir para iadesi oluşmaz.
+- Mutfak veya Şube Kaynaklı İptal: Yoğunluk veya malzeme tükenmesi nedeniyle sipariş platform/mutfak tarafından iptal edilirse online ödeme otomatik olarak PayTR iade sürecine alınır.`
+  },
   cerez_politikasi: {
     tur: 'cerez_politikasi',
     baslik: 'Çerez (Cookie) Politikası',
