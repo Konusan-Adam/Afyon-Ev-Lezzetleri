@@ -306,6 +306,7 @@ export const AnaSayfaVitrini: React.FC = () => {
         yemekSecildi={yemekSecildiIslemi}
         subeSecildi={subeSecildiIslemi}
         subeUrunSecildi={subeUrunSecildiIslemi}
+        tumSubeleriAcTiklandi={() => setSubelerModaliAcik(true)}
       />
 
       <MasaustuAltBilgi />

@@ -26,6 +26,7 @@ interface MobilAnaVitrinProps {
   yemekSecildi?: (yemek: Yemek) => void;
   subeSecildi?: (sube: GelAlSubesi) => void;
   subeUrunSecildi?: (urun: SubeUrunu) => void;
+  tumSubeleriAcTiklandi?: () => void;
 }
 
 export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({ 
@@ -34,6 +35,7 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
   yemekSecildi,
   subeSecildi,
   subeUrunSecildi,
+  tumSubeleriAcTiklandi,
 }) => {
   const mutfakDegistir = (mutfak: Mutfak | null) => {
     if (disMutfakSecildi) {
@@ -131,6 +133,7 @@ export const MobilAnaVitrin: React.FC<MobilAnaVitrinProps> = ({
             <SubeMenuleriVitrini
               enYakinSube={enYakinSube}
               subeSecildi={subeSecildi}
+              tumSubeleriAcTiklandi={tumSubeleriAcTiklandi}
             />
 
             {/* 2. Sıra: Afyon Ev Mutfakları & Aşçıları (10+ Mutfakta Görünür) */}

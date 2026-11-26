@@ -13,6 +13,7 @@ import { SubeUrunDetayModali } from '../SubeVitrini/SubeUrunDetayModali';
 interface SubeMenuleriVitriniProps {
   enYakinSube?: GelAlSubesi | null;
   subeSecildi?: (sube: GelAlSubesi) => void;
+  tumSubeleriAcTiklandi?: () => void;
 }
 
 function subeKisaAdiGetir(ad?: string): string {
@@ -41,6 +42,7 @@ function kategoriEslesiyorMu(urunKat?: string, seciliKat?: string): boolean {
 export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
   enYakinSube,
   subeSecildi,
+  tumSubeleriAcTiklandi,
 }) => {
   const { gelAlSubeleri } = teslimatHafizasiKullan();
   const { tumUrunler, yukleniyor } = useSubeUrunleri();
@@ -122,13 +124,19 @@ export const SubeMenuleriVitrini: React.FC<SubeMenuleriVitriniProps> = ({
           </span>
         </div>
 
-        {hedefSube && subeSecildi && (
+        {(hedefSube && (subeSecildi || tumSubeleriAcTiklandi)) && (
           <button
             type="button"
-            onClick={() => subeSecildi(hedefSube)}
+            onClick={() => {
+              if (!seciliSubeId && siraliSubeler.length > 1 && tumSubeleriAcTiklandi) {
+                tumSubeleriAcTiklandi();
+              } else if (subeSecildi) {
+                subeSecildi(hedefSube);
+              }
+            }}
             className="text-[11px] sm:text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer transition-colors"
           >
-            <span>Şubeye Git</span>
+            <span>{!seciliSubeId && siraliSubeler.length > 1 ? 'Şube Seç / Git' : 'Şubeye Git'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         )}
